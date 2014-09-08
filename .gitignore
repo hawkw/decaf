@@ -1,17 +1,23 @@
-*.class
-*.log
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
 
-# sbt specific
-.cache/
-.history/
-.lib/
-dist/*
-target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
+# Libraries
+*.lib
+*.a
 
-# Scala-IDE specific
-.scala_dependencies
-.worksheet
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
