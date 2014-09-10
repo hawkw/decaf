@@ -54,10 +54,11 @@ static void DoBeforeEachAction();
   * as a simple substitution mechanism that allows for more readable
   * entries in the Rules section later.
   */
+// Chartypes
 DIGITS                  [0-9]+
 HEX_DIGITs              [0-9a-fA-F]+
 
-BREAK_STMT              break
+// Constants
 FLOAT                   {DIGITS}\.{DIGITS}?
 BOOL_CONST              true|false
 DOUBLE_CONST            {FLOAT}|{FLOAT}E\+{DIGITS}
@@ -66,6 +67,8 @@ STRING_CONST            \"[^\n\"]\"
 CONSTANT                {INT_CONST}|{DOUBLE_CONST}|{BOOL_CONST}|{STRING_CONST}|null
 TYPE_LITERALS           int|double|string|ident
 TYPE                    {TYPE_LITERALS}|{TYPE_LITERALS}\[\]
+//" Statements
+BREAK_STMT              break
 
 
 
