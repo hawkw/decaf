@@ -1,4 +1,4 @@
 decaf
 =====
 
-like C, but less so
+like Java, but less so
