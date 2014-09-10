@@ -21,3 +21,13 @@
 *.i*86
 *.x86_64
 *.hex
+dcc
+
+# Cloud 9
+**/.c9/**
+
+# Jumadinova files
+**/cs420f2014/**
+
+# Compiled LEX
+lex.yy.c
