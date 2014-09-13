@@ -93,18 +93,62 @@ NULL                    null
   * %% markers which delimit the Rules section.
   */
 
-\n                      {}
-[\ ]                    {}
-[\t]                    {}
-void                    return T_Void;
-int                     return T_Int;
-double                  return T_Double;
+\n                      %{
+    yylloc.last_column = 1;
+    yylloc.first_line += 1;
+    yylloc.last_line = yylloc.first_line;
+%}
+[\ ]                    %{
+    yylloc.first_column += 2;
+    yylloc.last_column += 2;
+%}
+
+     /* Tab length is 8, right? */
+[\t]                    %{ yylloc.last_column += 8; %}
+
+void                    %{
+    yylloc.last_column += 3;
+    return T_Void;
+%}
+int                     %{
+    yylloc.last_column += 2;
+    return T_Int;
+%}
+double                  %{
+    yylloc.last_column += 5;
+    return T_Double;
+%}
+\(                      %{
+    yylloc.first_column += 1;
+    yylloc.last_column += 1;
+    return (int)'(';
+%}
+\)                      %{
+    yylloc.first_column += 1;
+    yylloc.last_column += 1;
+    return (int)')';
+%}
+\;                      %{
+    yylloc.first_column += 1;
+    yylloc.last_column += 1;
+    return (int)';';
+%}
 bool                    return T_Bool;
 string                  return T_String;
 class                   return T_Class;
 interface               return T_Interface;
 null                    return T_Null;
 \[\]                    return T_Dims;
+[a-zA-Z][a-zA-Z0-9\_]*  %{
+    int i;
+    for(i = 0; i < MaxIdentLen; i++) {
+        if(yytext[i] == '\0') break;
+        yylval.identifier[i] = yytext[i];
+    }
+    yylval.identifier[i] = '\0';
+    yylloc.last_column += i - 1;
+    return T_Identifier;
+%}
 
 %%
 /* The closing %% above marks the end of the Rules section and the beginning
@@ -130,6 +174,10 @@ void InitScanner()
 {
     PrintDebug("lex", "Initializing scanner");
     yy_flex_debug = false;
+    yylloc.first_line = 1;
+    yylloc.first_column = 1;
+    yylloc.last_line = 1;
+    yylloc.last_column = 1;
 }
 
 
@@ -140,4 +188,11 @@ void InitScanner()
  */
 static void DoBeforeEachAction()
 {
+    yylloc.first_column = yylloc.last_column;
+    yylloc.first_line = yylloc.last_line;
+}
+
+static void error(char* string) {
+    printf("*** Error line %d\n", yylloc.last_line);
+    printf("%s", string);
 }
