@@ -54,30 +54,57 @@ static void DoBeforeEachAction();
   * as a simple substitution mechanism that allows for more readable
   * entries in the Rules section later.
   */
-// Chartypes
+  
+/* Comments */
+LINECOMMENT   \/\/.*$
+OPBK          \/\*
+CLBK          \*\/
+NOTFWSL       [^\/\n]
+NOTSTAROR     [^\*\/\n]
+LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
+BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
+
+/* Chartypes */
 DIGITS                  [0-9]+
 HEX_DIGITs              [0-9a-fA-F]+
 
-// Constants
+/* Constants */
 FLOAT                   {DIGITS}\.{DIGITS}?
-BOOL_CONST              true|false
 DOUBLE_CONST            {FLOAT}|{FLOAT}E\+{DIGITS}
 INT_CONST               {DIGITS}|0[xX]{HEX_DIGITS}
 STRING_CONST            \"[^\n\"]\"
 CONSTANT                {INT_CONST}|{DOUBLE_CONST}|{BOOL_CONST}|{STRING_CONST}|null
 TYPE_LITERALS           int|double|string|ident
 TYPE                    {TYPE_LITERALS}|{TYPE_LITERALS}\[\]
-//" Statements
-BREAK_STMT              break
 
-
-
+/* Keywords */
+VOID                    void
+INT                     int
+DOUBLE                  double
+BOOL                    bool
+STRING                  string
+CLASS                   class
+INTERFACE               interface
+NULL                    null
 
 
 %%             /* BEGIN RULES SECTION */
  /* All patterns and actions should be placed between the start and stop
   * %% markers which delimit the Rules section.
   */
+
+\n                      {}
+[\ ]                    {}
+[\t]                    {}
+void                    return T_Void;
+int                     return T_Int;
+double                  return T_Double;
+bool                    return T_Bool;
+string                  return T_String;
+class                   return T_Class;
+interface               return T_Interface;
+null                    return T_Null;
+\[\]                    return T_Dims;
 
 %%
 /* The closing %% above marks the end of the Rules section and the beginning
