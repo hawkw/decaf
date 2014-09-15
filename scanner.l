@@ -133,6 +133,11 @@ double                  %{
     yylloc.last_column += 1;
     return (int)';';
 %}
+\*                      return (int)'*';
+\<                      return (int)'<';
+\>                      return (int)'>';
+\{                      return (int)'{';
+\}                      return (int)'}';
 bool                    return T_Bool;
 string                  return T_String;
 class                   return T_Class;
