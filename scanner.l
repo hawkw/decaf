@@ -59,10 +59,15 @@ static void DoBeforeEachAction();
 LINECOMMENT   \/\/.*$
 OPBK          \/\*
 CLBK          \*\/
+NOTSTAR       [^\*\n]
 NOTFWSL       [^\/\n]
 NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
 BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
+
+STRTERM       [\"\']
+NOTSTRTERM    [^\"\'\n]
+STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM}
 
 /* Chartypes */
 DIGITS                  [0-9]+
@@ -93,14 +98,17 @@ NULL                    null
   * %% markers which delimit the Rules section.
   */
 
+{LINECOMMENT}
+{BLOCKCOMMENT}
+
 \n|\r\n                     %{
-    yylloc.last_column = 1;
+    yylloc.first_column = 0;
+    yylloc.last_column = 0;
     yylloc.first_line += 1;
     yylloc.last_line = yylloc.first_line;
 %}
 [\ ]                    %{
-    yylloc.first_column += 2;
-    yylloc.last_column += 2;
+    //printf("space %i\n", yylloc.first_column);
 %}
 
      /* Tab length is 8, right? */
@@ -119,25 +127,21 @@ double                  %{
     return T_Double;
 %}
 \(                      %{
-    yylloc.first_column += 1;
-    yylloc.last_column += 1;
     return (int)'(';
 %}
 \)                      %{
-    yylloc.first_column += 1;
-    yylloc.last_column += 1;
     return (int)')';
 %}
 \;                      %{
-    yylloc.first_column += 1;
-    yylloc.last_column += 1;
     return (int)';';
 %}
 \=                      return (int)'=';
 \*                      return (int)'*';
 \<                      return (int)'<';
 \>                      return (int)'>';
-\{                      return (int)'{';
+\{                      %{
+    return (int)'{';
+%}
 \}                      return (int)'}';
 -                       return (int)'-';
 \+                      return (int)'+';
@@ -187,9 +191,9 @@ void InitScanner()
     PrintDebug("lex", "Initializing scanner");
     yy_flex_debug = false;
     yylloc.first_line = 1;
-    yylloc.first_column = 1;
+    yylloc.first_column = 0;
     yylloc.last_line = 1;
-    yylloc.last_column = 1;
+    yylloc.last_column = 0;
 }
 
 
@@ -202,6 +206,8 @@ static void DoBeforeEachAction()
 {
     yylloc.first_column = yylloc.last_column;
     yylloc.first_line = yylloc.last_line;
+    yylloc.first_column += 1;
+    yylloc.last_column += 1;
 }
 
 static void error(char* string) {
