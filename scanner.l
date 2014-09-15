@@ -110,6 +110,13 @@ NULL                    null
     }
 %}
 
+{STRINGLIT} %{
+    yylval.stringConstant = strdup(yytext);
+    yylloc.last_column += (strlen(yytext)-1);
+    // TODO: add support for multiple line string literals
+    return T_StringConstant;
+%}
+
 \n|\r\n                     %{
     yylloc.first_column = 0;
     yylloc.last_column = 0;
