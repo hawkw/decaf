@@ -66,8 +66,8 @@ BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
 
 /* Chartypes */
 DIGITS                  [0-9]+
-HEX_DIGITs              [0-9a-fA-F]+
-
+HEX_DIGITS              [0-9a-fA-F]+
+IDENTIFIER              [a-zA-Z][a-zA-Z0-9\_]*  
 /* Constants */
 FLOAT                   {DIGITS}\.{DIGITS}?
 DOUBLE_CONST            {FLOAT}|{FLOAT}E\+{DIGITS}
@@ -93,7 +93,7 @@ NULL                    null
   * %% markers which delimit the Rules section.
   */
 
-\n                      %{
+\n|\r\n                     %{
     yylloc.last_column = 1;
     yylloc.first_line += 1;
     yylloc.last_line = yylloc.first_line;
@@ -133,18 +133,21 @@ double                  %{
     yylloc.last_column += 1;
     return (int)';';
 %}
+\=                      return (int)'=';
 \*                      return (int)'*';
 \<                      return (int)'<';
 \>                      return (int)'>';
 \{                      return (int)'{';
 \}                      return (int)'}';
+-                       return (int)'-';
+\+                      return (int)'+';
 bool                    return T_Bool;
 string                  return T_String;
 class                   return T_Class;
 interface               return T_Interface;
 null                    return T_Null;
 \[\]                    return T_Dims;
-[a-zA-Z][a-zA-Z0-9\_]*  %{
+{IDENTIFIER} %{
     int i;
     for(i = 0; i < MaxIdentLen; i++) {
         if(yytext[i] == '\0') break;
@@ -153,6 +156,10 @@ null                    return T_Null;
     yylval.identifier[i] = '\0';
     yylloc.last_column += i - 1;
     return T_Identifier;
+%}
+{INT_CONST} %{
+    sscanf(yytext, "%i", &yylval.integerConstant);
+    return T_IntConstant; 
 %}
 
 %%
