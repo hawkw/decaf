@@ -73,6 +73,7 @@ STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM}
 DIGITS                  [0-9]+
 HEX_DIGITS              [0-9a-fA-F]+
 IDENTIFIER              [a-zA-Z][a-zA-Z0-9\_]*  
+
 /* Constants */
 FLOAT                   {DIGITS}\.{DIGITS}?
 DOUBLE_CONST            {FLOAT}|{FLOAT}E\+{DIGITS}
@@ -99,7 +100,15 @@ NULL                    null
   */
 
 {LINECOMMENT}
-{BLOCKCOMMENT}
+{BLOCKCOMMENT} %{
+    int j;
+    for (j = 0; j < strlen(yytext); j++){
+        if(yytext[j] == '\n')  {
+            yylloc.first_line += 1;
+            yylloc.last_line = yylloc.first_line;
+        }
+    }
+%}
 
 \n|\r\n                     %{
     yylloc.first_column = 0;
