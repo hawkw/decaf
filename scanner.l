@@ -161,6 +161,7 @@ double                  %{
 \}                      return (int)'}';
 -                       return (int)'-';
 \+                      return (int)'+';
+\!                      return (int)'!';
 bool                    return T_Bool;
 string                  return T_String;
 class                   return T_Class;
@@ -180,6 +181,10 @@ null                    return T_Null;
 {INT_CONST} %{
     sscanf(yytext, "%i", &yylval.integerConstant);
     return T_IntConstant; 
+%}
+
+.           %{
+    ReportError::UnrecogChar(&yylloc, yytext[0]);
 %}
 
 %%
@@ -228,5 +233,5 @@ static void DoBeforeEachAction()
 
 static void error(char* string) {
     printf("*** Error line %d\n", yylloc.last_line);
-    printf("%s", string);
+    printf("*** %s", string);
 }
