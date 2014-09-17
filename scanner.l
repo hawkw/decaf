@@ -172,7 +172,7 @@ null                    return T_Null;
     int i;
     // Check to see if the identifer is too long, if so, raise a warning
     if (strlen(yytext) > MaxIdentLen) {
-        ReportError::LongIdentifier(&yyloc, yytext);
+        ReportError::LongIdentifier(&yylloc, yytext);
     }
     // Automatically truncate yytext if it is too long
     for(i = 0; i < MaxIdentLen; i++) {
