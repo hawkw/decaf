@@ -65,9 +65,11 @@ NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
 BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
 
+
 STRTERM       [\"\']
 NOTSTRTERM    [^\"\'\n]
-STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM}
+//STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM}
+STRINGLIT       {STRTERM}{NOTSTRTERM}*{STRTERM}
 
 /* Chartypes */
 DIGITS                  [0-9]+
