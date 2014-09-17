@@ -67,7 +67,7 @@ BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
 
 
 STRTERM       [\"\']
-NOTSTRTERM    [^\"\'\n]
+NOTSTRTERM    [^\"\'r\r?\n]
 /* STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM} // This is disabled because it's too good*/
 STRINGLIT      {STRTERM}{NOTSTRTERM}*{STRTERM}?
 
@@ -113,13 +113,11 @@ NULL                    null
 %}
 
 {STRINGLIT} %{
-    yylval.stringConstant = strdup(yytext);
+    yylval.stringConstant = yytext;
     yylloc.last_column += (strlen(yytext)-1);
-    if (yytext[strlen(yytext)-1] != '\'' && yytext[strlen(yytext)-1] != '"') {
+    if (yytext[strlen(yytext)-2] != '\'' && yytext[strlen(yytext)-2] != '"')  {
         ReportError::UntermString(&yylloc, yytext);
-    } else {
-        return T_StringConstant;
-    }
+    } else { return T_StringConstant;}
 %}
 
 \n|\r\n                     %{
@@ -167,6 +165,8 @@ double                  %{
 -                       return (int)'-';
 \+                      return (int)'+';
 \!                      return (int)'!';
+\/                      return (int)'/';
+\.                      return (int)'.';
 bool                    return T_Bool;
 string                  return T_String;
 class                   return T_Class;
