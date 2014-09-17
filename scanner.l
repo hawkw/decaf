@@ -114,7 +114,7 @@ NULL                    null
     yylval.stringConstant = strdup(yytext);
     yylloc.last_column += (strlen(yytext)-1);
     if (yytext[strlen(yytext)] != '\'' && yytext[strlen(yytext)] != '"')
-        ReportError::UntermString(yylloc, yytext);
+        ReportError::UntermString(&yylloc, yytext);
     // TODO: add support for multiple line string literals
     return T_StringConstant;
 %}
