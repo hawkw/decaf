@@ -69,7 +69,7 @@ BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
 STRTERM       [\"\']
 NOTSTRTERM    [^\"\'\n]
 /* STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM} // This is disabled because it's too good*/
-STRINGLIT       {STRTERM}{NOTSTRTERM}*{STRTERM}
+STRINGLIT      {STRTERM}{NOTSTRTERM}*{STRTERM}?
 
 /* Chartypes */
 DIGITS                  [0-9]+
