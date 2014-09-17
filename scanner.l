@@ -83,7 +83,7 @@ CONSTANT                {INT_CONST}|{DOUBLE_CONST}|{BOOL_CONST}|{STRING_CONST}|n
 TYPE_LITERALS           int|double|string|ident
 TYPE                    {TYPE_LITERALS}|{TYPE_LITERALS}\[\]
 
-/* Keywords */
+/* Keywords "*/
 VOID                    void
 INT                     int
 DOUBLE                  double
@@ -113,6 +113,8 @@ NULL                    null
 {STRINGLIT} %{
     yylval.stringConstant = strdup(yytext);
     yylloc.last_column += (strlen(yytext)-1);
+    if (yytext[strlen(yytext)] != '\'' && yytext[strlen(yytext)] != '"')
+        ReportError::UntermString(yylloc, yytext);
     // TODO: add support for multiple line string literals
     return T_StringConstant;
 %}
