@@ -54,7 +54,7 @@ static void DoBeforeEachAction();
   * as a simple substitution mechanism that allows for more readable
   * entries in the Rules section later.
   */
-  
+
 /* Comments */
 LINECOMMENT   \/\/.*$
 OPBK          \/\*
@@ -72,7 +72,7 @@ STRINGLIT     {STRTERM}({NOTSTRTERM}|\n)*{STRTERM}
 /* Chartypes */
 DIGITS                  [0-9]+
 HEX_DIGITS              [0-9a-fA-F]+
-IDENTIFIER              [a-zA-Z][a-zA-Z0-9\_]*  
+IDENTIFIER              [a-zA-Z][a-zA-Z0-9\_]*
 
 /* Constants */
 FLOAT                   {DIGITS}\.{DIGITS}?
@@ -170,6 +170,11 @@ null                    return T_Null;
 \[\]                    return T_Dims;
 {IDENTIFIER} %{
     int i;
+    // Check to see if the identifer is too long, if so, raise a warning
+    if (strlen(yytext) > MaxIdentLen) {
+        ReportError::LongIdentifier(&yyloc, yytext);
+    }
+    // Automatically truncate yytext if it is too long
     for(i = 0; i < MaxIdentLen; i++) {
         if(yytext[i] == '\0') break;
         yylval.identifier[i] = yytext[i];
@@ -180,7 +185,7 @@ null                    return T_Null;
 %}
 {INT_CONST} %{
     sscanf(yytext, "%i", &yylval.integerConstant);
-    return T_IntConstant; 
+    return T_IntConstant;
 %}
 
 .           %{
