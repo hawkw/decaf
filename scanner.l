@@ -111,7 +111,7 @@ NULL                    null
         }
     }
 %}
-{OPBK}\.*{{EOF}} %{ ReportError::UntermComment(); %}
+<OPBK.*><<EOF>> %{ ReportError::UntermComment(); %}
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
