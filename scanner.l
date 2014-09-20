@@ -118,11 +118,11 @@ NULL                    null
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
-    yylloc.last_column += (strlen(yytext)-1);
+    yylloc.last_column += (yyleng);
 
-    if (yytext[strlen(yytext)-2] =='\'' || yytext[strlen(yytext)-2] == '"')  {
+    if (yytext[yyleng-2] =='\'' || yytext[yyleng-2] == '"')  {
         return T_StringConstant;
-    } else if (yytext[strlen(yytext)-1] =='\'' || yytext[strlen(yytext)-1] == '"') {
+    } else if (yytext[yyleng-1] =='\'' || yytext[yyleng-1] == '"') {
         return T_StringConstant;
     } else { ReportError::UntermString(&yylloc, yytext);}
 
