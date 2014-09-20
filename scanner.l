@@ -64,7 +64,7 @@ NOTFWSL       [^\/\n]
 NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
 BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
-UNTEMRCOMMENT {OPBK}.*<<EOF>>
+UNTERMCOMMENT {OPBK}.*
 
 
 STRTERM       [\"\']
@@ -113,7 +113,9 @@ NULL                    null
     }
 %}
 
-{UNTERMCOMMENT} %{ ReportError::UntermComment(); %}
+{UNTERMCOMMENT} %{ 
+    ReportError::UntermComment(); 
+%}
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
