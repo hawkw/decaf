@@ -63,7 +63,7 @@ NOTSTAR       [^\*\n]
 NOTFWSL       [^\/\n]
 NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
-BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}?
+BLOCKCOMMENT  {OPBK}.*{CLBK}?|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}?
 
 
 STRTERM       [\"\']
