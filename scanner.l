@@ -110,8 +110,8 @@ NULL                    null
             yylloc.last_line = yylloc.first_line;
         }
     }
-    if ( (yytext[strlen(yytext) - 3] != '*' || yytext[strlen(yytext) -2] != '/') ||
-         (yytext[strlen(yytext) - 2] != '*' || yytext[strlen(yytext) -1] != '/') ) {
+    if ( (yytext[strlen(yytext) - 2] != '*' || yytext[strlen(yytext) -1] != '/') ||
+         (yytext[strlen(yytext) - 1] != '*' || yytext[strlen(yytext)] != '/') ) {
         ReportError::UntermComment();
     }
 %}
