@@ -110,20 +110,22 @@ NULL                    null
             yylloc.last_line = yylloc.first_line;
         }
     }
-    if (yytext[strlen(yytext) - 3] != '*' || yytext[strlen(yytext) -2] != '/')
+    if ( (yytext[strlen(yytext) - 3] != '*' || yytext[strlen(yytext) -2] != '/') ||
+         (yytext[strlen(yytext) - 2] != '*' || yytext[strlen(yytext) -1] != '/') ) {
         ReportError::UntermComment();
+    }
 %}
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
     yylloc.last_column += (strlen(yytext)-1);
-    
+
     if (yytext[strlen(yytext)-2] =='\'' || yytext[strlen(yytext)-2] == '"')  {
         return T_StringConstant;
     } else if (yytext[strlen(yytext)-1] =='\'' || yytext[strlen(yytext)-1] == '"') {
         return T_StringConstant;
     } else { ReportError::UntermString(&yylloc, yytext);}
-    
+
 %}
 
 \n|\r\n                     %{
