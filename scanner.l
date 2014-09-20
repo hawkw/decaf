@@ -63,7 +63,7 @@ NOTSTAR       [^\*\n]
 NOTFWSL       [^\/\n]
 NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
-BLOCKCOMMENT  {OPBK}.*{CLBK}?|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}?
+BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
 
 
 STRTERM       [\"\']
@@ -110,11 +110,8 @@ NULL                    null
             yylloc.last_line = yylloc.first_line;
         }
     }
-    if ( (yytext[strlen(yytext) - 2] != '*' || yytext[strlen(yytext) -1] != '/') ||
-         (yytext[strlen(yytext) - 1] != '*' || yytext[strlen(yytext)] != '/') ) {
-        ReportError::UntermComment();
-    }
 %}
+{OPBK}\.*<<EOF>> %{ ReportError::UntermComment(); %}
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
