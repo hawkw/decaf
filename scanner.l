@@ -63,8 +63,7 @@ NOTSTAR       [^\*\n]
 NOTFWSL       [^\/\n]
 NOTSTAROR     [^\*\/\n]
 LINE          (({NOTSTAROR}*|{NOTSTAR}{NOTFWSL})+)
-BLOCKCOMMENT  {OPBK}.*{CLBK}|{OPBK}\**({LINE}\n{0,1})+\**{CLBK}
-UNTERMCOMMENT {OPBK}.*
+%x            BLOCKCOMMENT
 
 
 STRTERM       [\"\']
@@ -103,18 +102,14 @@ NULL                    null
   */
 
 {LINECOMMENT}
-{BLOCKCOMMENT} %{
-    int j;
-    for (j = 0; j < strlen(yytext); j++){
-        if(yytext[j] == '\n')  {
-            yylloc.first_line += 1;
-            yylloc.last_line = yylloc.first_line;
-        }
-    }
-%}
-
-{UNTERMCOMMENT} %{ 
-    ReportError::UntermComment(); 
+{OPBK}                              BEGIN(BLOCKCOMMENT);
+<BLOCKCOMMENT>{CLBK}                BEGIN(INITIAL);
+<BLOCKCOMMENT><<EOF>>               ReportError::UntermComment();
+<BLOCKCOMMENT>\n|\r\n                     %{
+    yylloc.first_column = 0;
+    yylloc.last_column = 0;
+    yylloc.first_line += 1;
+    yylloc.last_line = yylloc.first_line;
 %}
 
 {STRINGLIT} %{
