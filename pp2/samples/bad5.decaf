@@ -1,0 +1,16 @@
+class Binky {
+   bool notgood, variables;
+
+   void Dinky() {
+     3 = bad;
+     good  = 4;
+  }
+}
+
+int[143] bad;
+double good;
+
+void main()
+{
+    if (4) Print("Hello");
+}

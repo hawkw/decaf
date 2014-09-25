@@ -1,0 +1,83 @@
+// Note that we don't provide output for this one -- that would give
+// away the solution.
+
+
+void small() {
+
+	int n;
+
+	Print("What is the rank of the card? (1-13)");
+	n = ReadInteger();
+
+	switch (n) {
+		case 1: Print("Ace"); break;
+		case 11: Print("Jack"); break;
+		case 12: Print("Queen"); break;
+		case 13: Print("King"); break;
+		default: Print(n); break;
+	}
+}
+
+void medium() {
+  
+   int a;
+   int b;
+
+   a = ReadInteger();
+   b = ReadInteger();
+
+   switch(((a*22)+b)/14) {
+     case 123:   Print(a);
+		 b = 23;
+
+     case 224:   Print(b); break; 
+ 
+     case 233:   a = b * 2;
+		 b = 3;
+		 a = 23; 
+		 break; 
+
+     case 41:    break;
+
+     default:    break;
+
+     }
+}
+
+void large() {
+	int inputvar;
+	int i;
+
+	Print("Enter a number between 1 and 10, inclusive");
+	inputvar = ReadInteger();
+
+	switch(inputvar) {
+
+		case 2:
+		case 4:
+		case 6:
+		case 8:
+		case 10:
+			for (i = 1; i <= inputvar; i++) 
+				Print(i);
+			Print("even");
+			break;
+
+		case 1:
+		case 3:
+		case 5:
+		case 7:
+		case 9: {
+                        for (i = 1; i <= inputvar; i++)
+                                Print(i);
+                        Print("odd");
+                        break;
+			}
+	
+		default: Print("not between 1 and 10");
+			
+	}
+}
+
+void main()
+{}
