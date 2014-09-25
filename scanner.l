@@ -15,6 +15,7 @@
 #include "scanner.h"
 #include "utility.h" // for PrintDebug()
 #include "errors.h"
+#include "parser.h"
 
 /* Global variable: yylval
  * -----------------------
@@ -243,6 +244,17 @@ static void DoBeforeEachAction()
     yylloc.first_line = yylloc.last_line;
     yylloc.first_column += 1;
     yylloc.last_column += 1;
+}
+
+/* Function: GetLineNumbered()
+ * ---------------------------
+ * Returns string with contents of line numbered n or NULL if the
+ * contents of that line are not available.  The scanner that we will
+ * release later on will have this implemented for you; for now, feel
+ * free to use this stub implementation.
+ */
+const char *GetLineNumbered(int num) {
+  return NULL;
 }
 
 static void error(char* string) {

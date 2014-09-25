@@ -3,13 +3,14 @@
  * ---------------
  * Extra functions needed for Windows compatibility
  */
+#include <stdio.h>
 
 /* This function is used to determine whether or not more files exist
  * to scan after one has been read.  This function says that no extra files
  * will be used.
  */
 extern "C" int yywrap() {
-	return 0;
+	return 1;
 }
 
 /* This function from <unistd.h> is supposed to say whether a file descriptor

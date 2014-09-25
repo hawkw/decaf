@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "utility.h"
 #include "errors.h"
+#include "parser.h"
 #include "scanner.h"
 #include "location.h"
 
@@ -51,14 +52,15 @@ static void PrintOneToken(TokenType token, const char *text, YYSTYPE value,
  * Entry point to the entire program.  We parse the command line and turn
  * on any debugging flags requested by the user when invoking the program.
  * InitScanner() is used to set up the scanner.
+ * InitParser() is used to set up the parser. The call to yyparse() will
+ * attempt to parse a complete program from the input. 
  */
 int main(int argc, char *argv[])
 {
     ParseCommandLine(argc, argv);
     InitScanner();
-    TokenType token;
-    while ((token = (TokenType)yylex()) != 0) 
-        PrintOneToken(token, yytext, yylval, yylloc);
+    InitParser();
+    yyparse();
     return (ReportError::NumErrors() == 0? 0 : -1);
 }
 
