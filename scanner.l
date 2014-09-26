@@ -158,10 +158,11 @@ TYPE                    {TYPE_LITERALS}|{TYPE_LITERALS}\[\]
     sscanf(yytext, "%i", &yylval.integerConstant);
     return T_IntConstant;
 %}
+
 {DOUBLE_CONST} %{
     sscanf(yytext, "%d", &yylval.integerConstant);
     return T_IntConstant;
-}%
+%}
 
 {STRINGLIT} %{
     yylval.stringConstant = yytext;
