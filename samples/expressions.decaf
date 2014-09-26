@@ -1,0 +1,20 @@
+
+
+int foo(int a, double b, bool c) {
+  return a + 2;
+}
+
+void main() {
+  int b;
+  int a;
+  double d;
+
+  d = 2 + 3 * 4 - (6 / 2);
+  b = ReadInteger();
+  a = b + 2;
+  Print(a, b, d);
+  foo(a, d, !true);
+  foo(a + 2, d/2, a == b && d >= 1.0);
+}
+
+

@@ -1,0 +1,37 @@
+interface Colorable {
+   Color GetColor();
+   void SetColor(Color c);
+}
+
+class Color {
+   void SetRGB(int red, int green, int blue) {
+     this.red = red;
+     this.green = green;
+     this.blue = blue;
+  }
+  int red;
+  int green;
+  int blue;
+}
+
+class Shape implements Colorable {
+
+  Color GetColor() { return myColor; }
+  void SetColor(Color c) { myColor = c;}
+
+  Color myColor;
+}
+
+class Rectangle extends Shape {
+
+}
+
+void main() {
+  Colorable s;
+  Color green;
+
+  green = new Color;
+  green.SetRGB(0, 0, 255);
+  s = new Rectangle;
+  s.SetColor(green);
+}

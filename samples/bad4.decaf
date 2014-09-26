@@ -1,0 +1,6 @@
+void main() {
+  x = 123.4.554;
+  y = x;
+  if x Print("wacky");
+  return true;
+}

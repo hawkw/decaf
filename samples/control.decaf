@@ -1,0 +1,22 @@
+void main() {
+  int a;
+  bool done;
+
+  a = 0;
+  while (a < 10) {
+	Print(a, " ");
+	a = a + 1;
+	if (a == 5) break;
+  }
+  if (a % 2 == 0)
+     a = 1;
+  else
+     done = true;
+
+  for (; a <= 10 || done; a = a + 1) {
+     Print(a, " ");
+     if (a == 10) a;
+  }
+  return;
+}
+
