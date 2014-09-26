@@ -99,7 +99,7 @@ Decl (40)
     on left: 4, on right: 2 3
 
 
-state 0
+State 0
 
     0 $accept: . Program $end
 
@@ -110,21 +110,21 @@ state 0
     Decl      go to state 4
 
 
-state 1
+State 1
 
     4 Decl: T_Void .
 
     $default  reduce using rule 4 (Decl)
 
 
-state 2
+State 2
 
     0 $accept: Program . $end
 
     $end  shift, and go to state 5
 
 
-state 3
+State 3
 
     1 Program: DeclList .
     2 DeclList: DeclList . Decl
@@ -136,21 +136,21 @@ state 3
     Decl  go to state 6
 
 
-state 4
+State 4
 
     3 DeclList: Decl .
 
     $default  reduce using rule 3 (DeclList)
 
 
-state 5
+State 5
 
     0 $accept: Program $end .
 
     $default  accept
 
 
-state 6
+State 6
 
     2 DeclList: DeclList Decl .
 
