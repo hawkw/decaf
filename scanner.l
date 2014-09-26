@@ -69,21 +69,13 @@ CONSTANT                {INT_CONST}|{DOUBLE_CONST}|{BOOL_CONST}|{STRING_CONST}|n
 TYPE_LITERALS           int|double|string|ident
 TYPE                    {TYPE_LITERALS}|{TYPE_LITERALS}\[\]
 
-/* Keywords "*/
-VOID                    void
-INT                     int
-DOUBLE                  double
-BOOL                    bool
-STRING                  string
-CLASS                   class
-INTERFACE               interface
-NULL                    null
-
 
 %%             /* BEGIN RULES SECTION */
  /* All patterns and actions should be placed between the start and stop
   * %% markers which delimit the Rules section.
   */
+
+ /* -------------------- Comments ----------------------------- */
 
 {LINECOMMENT}
 {OPBK}                              BEGIN(BLOCKCOMMENT);
@@ -95,18 +87,8 @@ NULL                    null
     yylloc.first_line += 1;
     yylloc.last_line = yylloc.first_line;
 %}
+ /* -------------------- Whitespace ----------------------------- */
 
-{STRINGLIT} %{
-    yylval.stringConstant = yytext;
-    yylloc.last_column += (yyleng);
-
-    if (yytext[yyleng-2] =='\'' || yytext[yyleng-2] == '"')  {
-        return T_StringConstant;
-    } else if (yytext[yyleng-1] =='\'' || yytext[yyleng-1] == '"') {
-        return T_StringConstant;
-    } else { ReportError::UntermString(&yylloc, yytext);}
-
-%}
 
 \n|\r\n                     %{
     yylloc.first_column = 0;
@@ -121,46 +103,79 @@ NULL                    null
      /* Tab length is 8, right? */
 [\t]                    %{ yylloc.last_column += 8; %}
 
-void                    %{
-    yylloc.last_column += 3;
-    return T_Void;
-%}
-int                     %{
-    yylloc.last_column += 2;
-    return T_Int;
-%}
-double                  %{
-    yylloc.last_column += 5;
-    return T_Double;
-%}
-\(                      %{
-    return (int)'(';
-%}
-\)                      %{
-    return (int)')';
-%}
-\;                      %{
-    return (int)';';
-%}
+ /* --------------------- Keywords ------------------------------- */
+"void"              { return T_Void;        }
+"int"               { return T_Int;         }
+"double"            { return T_Double;      }
+"bool"              { return T_Bool;        }
+"string"            { return T_String;      }
+"null"              { return T_Null;        }
+"class"             { return T_Class;       }
+"extends"           { return T_Extends;     }
+"this"              { return T_This;        }
+"interface"         { return T_Interface;   }
+"implements"        { return T_Implements;  }
+"while"             { return T_While;       }
+"for"               { return T_For;         }
+"if"                { return T_If;          }
+"else"              { return T_Else;        }
+"return"            { return T_Return;      }
+"break"             { return T_Break;       }
+"new"               { return T_New;         }
+"NewArray"          { return T_NewArray;    }
+"Print"             { return T_Print;       }
+"ReadInteger"       { return T_ReadInteger; }
+"ReadLine"          { return T_ReadLine;    }
+
+ /* -------------------- Operators ----------------------------- */
+"<="                { return T_LessEqual;   }
+">="                { return T_GreaterEqual;}
+"=="                { return T_Equal;       }
+"!="                { return T_NotEqual;    }
+"&&"                { return T_And;         }
+"||"                { return T_Or;          }
+"[]"                { return T_Dims;        }
+
+\(                      return (int)'(';
+\)                      return (int)')';
+\;                      return (int)';';
 \=                      return (int)'=';
 \*                      return (int)'*';
 \<                      return (int)'<';
 \>                      return (int)'>';
-\{                      %{
-    return (int)'{';
-%}
+\{                      return (int)'{';
 \}                      return (int)'}';
 -                       return (int)'-';
 \+                      return (int)'+';
 \!                      return (int)'!';
 \/                      return (int)'/';
 \.                      return (int)'.';
-bool                    return T_Bool;
-string                  return T_String;
-class                   return T_Class;
-interface               return T_Interface;
-null                    return T_Null;
-\[\]                    return T_Dims;
+
+ /* -------------------- Constants ------------------------------ */
+"true"|"false"      { yylval.boolConstant = (yytext[0] == 't');
+                         return T_BoolConstant; }
+{INT_CONST} %{
+    sscanf(yytext, "%i", &yylval.integerConstant);
+    return T_IntConstant;
+%}
+{DOUBLE_CONST} %{
+    sscanf(yytext, "%d", &yylval.integerConstant);
+    return T_IntConstant;
+}%
+
+{STRINGLIT} %{
+    yylval.stringConstant = yytext;
+    yylloc.last_column += (yyleng);
+
+    if (yytext[yyleng-2] =='\'' || yytext[yyleng-2] == '"')  {
+        return T_StringConstant;
+    } else if (yytext[yyleng-1] =='\'' || yytext[yyleng-1] == '"') {
+        return T_StringConstant;
+    } else { ReportError::UntermString(&yylloc, yytext);}
+
+%}
+
+ /* -------------------- Identifiers --------------------------- */
 {IDENTIFIER} %{
     int i;
     // Check to see if the identifer is too long, if so, raise a warning
@@ -176,11 +191,8 @@ null                    return T_Null;
     yylloc.last_column += i - 1;
     return T_Identifier;
 %}
-{INT_CONST} %{
-    sscanf(yytext, "%i", &yylval.integerConstant);
-    return T_IntConstant;
-%}
 
+ /* -------------------- Unrecognized character --------------- */
 .           %{
     ReportError::UnrecogChar(&yylloc, yytext[0]);
 %}
