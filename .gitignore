@@ -1,33 +1,24 @@
-# Object files
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
-*.ko
-*.obj
-*.elf
-
-# Libraries
-*.lib
 *.a
-
-# Shared objects (inc. Windows DLLs)
-*.dll
 *.so
-*.so.*
-*.dylib
 
-# Executables
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
 *.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-dcc
-
-# Cloud 9
-**/.c9/**
-
-# Jumadinova files
-**/cs420f2014/**
-
-# Compiled LEX
-lex.yy.c
+*.test
+*.prof
