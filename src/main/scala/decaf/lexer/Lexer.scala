@@ -1,5 +1,6 @@
 package decaf.lexer
 
+import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.token._
 
@@ -13,7 +14,9 @@ trait DecafTokens extends Tokens {
   val MaxIdentLen = 31
 
   case class IntConst(chars: String) extends Token {
-    val value: Integer = chars.toInt
+    val value: Integer = if (chars.contains("0x") || chars.contains("0X"))
+                            Integer.parseInt(chars.drop(2), 16)
+                         else chars.toInt
     override def toString = "IntConstant: " + value
   }
 
@@ -45,7 +48,6 @@ trait DecafTokens extends Tokens {
     override def toString = "Operator: " + chars
   }
 
-  
 }
 
 /**
@@ -55,4 +57,32 @@ trait DecafTokens extends Tokens {
 
 class Lexer extends Lexical with DecafTokens {
 
+  val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
+  "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
+  val boolLit = HashSet("true", "false")
+
+  def chrIn(cs: Char*) = elem("", ch => (cs contains ch))
+
+  protected def exponent = chrIn('e','E') ~ chrIn('+', '-').? ~ digit.+
+  protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
+
+  def token: Parser[Token] = (
+    //------------------- Identifiers ------------------------------------------------------------------------------\\
+    letter ~ rep(letter | digit | elem('_'))      ^^ { case first ~ rest => processIdent(first :: rest mkString "") }
+    //------------------- Integer literals -------------------------------------------------------------------------\\
+    | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
+    | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
+    | digit.+ ~ '.' ~ digit.*                           ^^ { case first ~ rest => DoubleConst(first :: rest mkString "") }
+    | digit.+ ~ '.' ~ digit.* ~ exponent.?              ^^ { case first ~ rest ~ exponent => DoubleConst((first :: rest :: exponent.getOrElse("") :: Nil) mkString "") }
+    | failure("Error: Unrecognized character")
+   )
+
+
+  protected def processIdent(chars: String) = if (keywords contains chars)
+                                              Keyword(chars)
+                                            else if (boolLit contains chars)
+                                              BoolConst(chars)
+                                            else Identifier(chars)
+
+  override def whitespace: Parser[Any] = ??? //TODO: WRITE ME
 }
