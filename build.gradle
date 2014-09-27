@@ -1,0 +1,25 @@
+
+apply plugin: "java"
+apply plugin: "scala"
+apply plugin: "idea"
+
+repositories {
+    mavenLocal();
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+// define a configuration for scala compiler plugins
+// the transitive=false means that the plugin won't show up
+// as a dependency in the final output
+configurations {
+    //noinspection GroovyAssignabilityCheck
+    scalaCompilerPlugins { transitive = false }
+}
+
+dependencies {
+    compile "org.scala-lang:scala-library:2.11.2"
+    compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
+    testCompile group: 'org.scalatest', name: 'scalatest_2.11', version: '2.2.0'
+}
+
