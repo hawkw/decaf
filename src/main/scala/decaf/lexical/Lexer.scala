@@ -1,4 +1,4 @@
-package decaf.lexer
+package decaf.lexical
 
 import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
@@ -64,10 +64,11 @@ trait DecafTokens extends Tokens {
  * Created by hawk on 9/27/14.
  */
 
-class Lexer extends Lexical with DecafTokens {
+class DecafLexical extends Lexical with DecafTokens {
 
   val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
   "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
+
   val boolLit = HashSet("true", "false")
 
   def chrIn(cs: Char*) = elem("", ch => cs contains ch)
@@ -76,26 +77,26 @@ class Lexer extends Lexical with DecafTokens {
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
   def token: Parser[Token] = (
-    //------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------\\
+    /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
     letter ~ rep(letter | digit | elem('_'))      ^^ { case first ~ rest => processIdent(first :: rest mkString "") }
-    //------------------- Integer literals -------------------------------------------------------------------------\\
+      /*------------------- Integer literals -------------------------------------------------------------------------*/
     | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
     | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
     | digit.+ ~ '.' ~ digit.* ~ exponent.?              ^^ { case first ~ rest ~ exponent => DoubleConst((first :: rest :: exponent.getOrElse("") :: Nil) mkString "") }
-    //------------------- String literals --------------------------------------------------------------------------\\
+      /*------------------- String literals --------------------------------------------------------------------------*/
     | '\'' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConst(chars mkString "")}
     | '\"' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConst(chars mkString "")}
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
-    //------------------ Operators ---------------------------------------------------------------------------------\\
+      /*------------------ Operators ---------------------------------------------------------------------------------*/
       // Note: we could probably actually be doing a higher level of semantic analysis here - we could have separate
       // operator types for logical, mathematical, bitwise, and equality operators (we're already separating them here)
       | chrIn('>', '<', '!', '=') ~ '=' ^^ { case first ~ last => Operator(first :: last :: Nil mkString "")}
       | (repN(2, '|') | repN(2, '&')) ^^ { case chars => Operator(chars mkString "")}
       | chrIn('+', '-', '!', '/', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
-      //------------------ Delimiters --------------------------------------------------------------------------------\\
+      /*------------------ Delimiters --------------------------------------------------------------------------------*/
       | chrIn(',', '.', ';', '{', '}', '(', ')') ^^ { case char => Delimiter(char.toString)}
-    //------------------ Misc --------------------------------------------------------------------------------------\\
+      /*------------------ Misc --------------------------------------------------------------------------------------*/
     | failure("Error: Unrecognized character")
    )
 
