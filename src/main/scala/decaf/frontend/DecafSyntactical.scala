@@ -9,10 +9,9 @@
 \*                                        */
 
 
-package decaf.syntactical
+package decaf.frontend
 
 import scala.util.parsing.combinator.syntactical.TokenParsers
-import decaf.lexical.{DecafLexical, DecafTokens}
 
 /**
  * Syntactical analyzer for the Decaf programming language

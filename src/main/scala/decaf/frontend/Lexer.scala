@@ -8,7 +8,7 @@
 **                                        **
 \*                                        */
 
-package decaf.lexical
+package decaf.frontend
 
 import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
@@ -91,7 +91,7 @@ class DecafLexical extends Lexical with DecafTokens {
 
   def token: Parser[Token] = (
     /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
-    letter ~ rep(letter | digit | elem('_'))      ^^ { case first ~ rest => processIdent(first :: rest mkString "") }
+    letter ~ opt(rep(letter | digit | elem('_'))) ^^ { case first ~ rest => processIdent(first :: rest.getOrElse("") :: Nil mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
     | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
     | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
@@ -121,7 +121,7 @@ class DecafLexical extends Lexical with DecafTokens {
                                             else Identifier(chars)
 
   override def whitespace: Parser[Any] = rep(
-    chrIn(' ', '\t', '\n', '\r')
+    whitespaceChar
       | '/' ~ '*' ~ comment
       | '/' ~ '/' ~ chrExcept('\n', EofCh).+
       | '/' ~ '*' ~ failure("Unterminated comment") //TODO: Line number of failure
