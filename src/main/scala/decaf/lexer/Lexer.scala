@@ -88,7 +88,11 @@ class Lexer extends Lexical with DecafTokens {
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
     //------------------ Operators ---------------------------------------------------------------------------------\\
-      | chrIn('+', '-', '!', '/', '=', '*', '>', '<') ^^ { case char => Operator(char.toString)}
+      // Note: we could probably actually be doing a higher level of semantic analysis here - we could have separate
+      // operator types for logical, mathematical, bitwise, and equality operators (we're already separating them here)
+      | chrIn('>', '<', '!', '=') ~ '=' ^^ { case first ~ last => Operator(first :: last :: Nil mkString "")}
+      | (repN(2, '|') | repN(2, '&')) ^^ { case chars => Operator(chars mkString "")}
+      | chrIn('+', '-', '!', '/', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       //------------------ Delimiters --------------------------------------------------------------------------------\\
       | chrIn(',', '.', ';', '{', '}', '(', ')') ^^ { case char => Delimiter(char.toString)}
     //------------------ Misc --------------------------------------------------------------------------------------\\
