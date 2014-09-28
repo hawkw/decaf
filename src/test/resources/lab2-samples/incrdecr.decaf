@@ -1,0 +1,14 @@
+// Note that we don't provide output for this one, it would give
+// away the solution.
+
+
+void main() {
+ 
+  int i;
+  int j;
+
+  i++;
+  j = i--;
+  j = i+++j;
+
+}

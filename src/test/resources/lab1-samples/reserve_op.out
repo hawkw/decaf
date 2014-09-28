@@ -1,0 +1,37 @@
+void         line 2 cols 1-4 is T_Void 
+int          line 3 cols 1-3 is T_Int 
+double       line 4 cols 1-6 is T_Double 
+string       line 5 cols 1-6 is T_String 
+class        line 6 cols 1-5 is T_Class 
+interface    line 7 cols 1-9 is T_Interface 
+while        line 8 cols 1-5 is T_While 
+if           line 9 cols 1-2 is T_If 
+else         line 10 cols 1-4 is T_Else 
+this         line 11 cols 1-4 is T_This 
+return       line 12 cols 1-6 is T_Return 
+new          line 13 cols 1-3 is T_New 
+NewArray     line 14 cols 1-8 is T_NewArray 
+break        line 15 cols 1-5 is T_Break 
+true         line 16 cols 1-4 is T_BoolConstant (value = true)
+false        line 17 cols 1-5 is T_BoolConstant (value = false)
++            line 18 cols 1-1 is '+' 
+-            line 19 cols 1-1 is '-' 
+*            line 20 cols 1-1 is '*' 
+/            line 21 cols 1-1 is '/' 
+<            line 22 cols 1-1 is '<' 
+>            line 23 cols 1-1 is '>' 
+=            line 24 cols 1-1 is '=' 
+;            line 25 cols 1-1 is ';' 
+,            line 26 cols 1-1 is ',' 
+!            line 27 cols 1-1 is '!' 
+{            line 28 cols 1-1 is '{' 
+}            line 29 cols 1-1 is '}' 
+(            line 30 cols 1-1 is '(' 
+)            line 31 cols 1-1 is ')' 
+||           line 32 cols 1-2 is T_Or 
+<=           line 33 cols 1-2 is T_LessEqual 
+>=           line 34 cols 1-2 is T_GreaterEqual 
+==           line 35 cols 1-2 is T_Equal 
+Print        line 36 cols 1-5 is T_Print 
+ReadInteger  line 37 cols 1-11 is T_ReadInteger 
+ReadLine     line 38 cols 1-8 is T_ReadLine 

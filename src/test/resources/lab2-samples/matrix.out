@@ -1,0 +1,683 @@
+
+   Program: 
+  4   ClassDecl: 
+  4      Identifier: Matrix
+  7      FnDecl: 
+            (return type) Type: void
+  7         Identifier: Init
+            (body) StmtBlock: 
+  8      FnDecl: 
+            (return type) Type: void
+  8         Identifier: Set
+  8         (formals) VarDecl: 
+               Type: int
+  8            Identifier: x
+  8         (formals) VarDecl: 
+               Type: int
+  8            Identifier: y
+  8         (formals) VarDecl: 
+               Type: int
+  8            Identifier: value
+            (body) StmtBlock: 
+  9      FnDecl: 
+            (return type) Type: int
+  9         Identifier: Get
+  9         (formals) VarDecl: 
+               Type: int
+  9            Identifier: x
+  9         (formals) VarDecl: 
+               Type: int
+  9            Identifier: y
+            (body) StmtBlock: 
+ 11      FnDecl: 
+            (return type) Type: void
+ 11         Identifier: PrintMatrix
+            (body) StmtBlock: 
+ 12            VarDecl: 
+                  Type: int
+ 12               Identifier: i
+ 13            VarDecl: 
+                  Type: int
+ 13               Identifier: j
+               ForStmt: 
+ 14               (init) AssignExpr: 
+ 14                  FieldAccess: 
+ 14                     Identifier: i
+ 14                  Operator: =
+ 14                  IntConstant: 0
+ 14               (test) RelationalExpr: 
+ 14                  FieldAccess: 
+ 14                     Identifier: i
+ 14                  Operator: <
+ 14                  IntConstant: 10
+ 14               (step) AssignExpr: 
+ 14                  FieldAccess: 
+ 14                     Identifier: i
+ 14                  Operator: =
+ 14                  ArithmeticExpr: 
+ 14                     FieldAccess: 
+ 14                        Identifier: i
+ 14                     Operator: +
+ 14                     IntConstant: 1
+                  (body) StmtBlock: 
+                     ForStmt: 
+ 15                     (init) AssignExpr: 
+ 15                        FieldAccess: 
+ 15                           Identifier: j
+ 15                        Operator: =
+ 15                        IntConstant: 0
+ 15                     (test) RelationalExpr: 
+ 15                        FieldAccess: 
+ 15                           Identifier: j
+ 15                        Operator: <
+ 15                        IntConstant: 10
+ 15                     (step) AssignExpr: 
+ 15                        FieldAccess: 
+ 15                           Identifier: j
+ 15                        Operator: =
+ 15                        ArithmeticExpr: 
+ 15                           FieldAccess: 
+ 15                              Identifier: j
+ 15                           Operator: +
+ 15                           IntConstant: 1
+                        (body) PrintStmt: 
+ 16                        (args) Call: 
+ 16                           Identifier: Get
+ 16                           (actuals) FieldAccess: 
+ 16                              Identifier: i
+ 16                           (actuals) FieldAccess: 
+ 16                              Identifier: j
+ 16                        (args) StringConstant: "\t"
+                     PrintStmt: 
+ 17                     (args) StringConstant: "\n"
+ 20      FnDecl: 
+            (return type) Type: void
+ 20         Identifier: SeedMatrix
+            (body) StmtBlock: 
+ 21            VarDecl: 
+                  Type: int
+ 21               Identifier: i
+ 22            VarDecl: 
+                  Type: int
+ 22               Identifier: j
+               ForStmt: 
+ 23               (init) AssignExpr: 
+ 23                  FieldAccess: 
+ 23                     Identifier: i
+ 23                  Operator: =
+ 23                  IntConstant: 0
+ 23               (test) RelationalExpr: 
+ 23                  FieldAccess: 
+ 23                     Identifier: i
+ 23                  Operator: <
+ 23                  IntConstant: 5
+ 23               (step) AssignExpr: 
+ 23                  FieldAccess: 
+ 23                     Identifier: i
+ 23                  Operator: =
+ 23                  ArithmeticExpr: 
+ 23                     FieldAccess: 
+ 23                        Identifier: i
+ 23                     Operator: +
+ 23                     IntConstant: 1
+                  (body) ForStmt: 
+ 24                  (init) AssignExpr: 
+ 24                     FieldAccess: 
+ 24                        Identifier: j
+ 24                     Operator: =
+ 24                     IntConstant: 0
+ 24                  (test) RelationalExpr: 
+ 24                     FieldAccess: 
+ 24                        Identifier: j
+ 24                     Operator: <
+ 24                     IntConstant: 5
+ 24                  (step) AssignExpr: 
+ 24                     FieldAccess: 
+ 24                        Identifier: j
+ 24                     Operator: =
+ 24                     ArithmeticExpr: 
+ 24                        FieldAccess: 
+ 24                           Identifier: j
+ 24                        Operator: +
+ 24                        IntConstant: 1
+ 25                  (body) Call: 
+ 25                     Identifier: Set
+ 25                     (actuals) FieldAccess: 
+ 25                        Identifier: i
+ 25                     (actuals) FieldAccess: 
+ 25                        Identifier: j
+ 25                     (actuals) ArithmeticExpr: 
+ 25                        FieldAccess: 
+ 25                           Identifier: i
+ 25                        Operator: +
+ 25                        FieldAccess: 
+ 25                           Identifier: j
+ 26            Call: 
+ 26               Identifier: Set
+ 26               (actuals) IntConstant: 2
+ 26               (actuals) IntConstant: 3
+ 26               (actuals) IntConstant: 4
+ 27            Call: 
+ 27               Identifier: Set
+ 27               (actuals) IntConstant: 4
+ 27               (actuals) IntConstant: 6
+ 27               (actuals) IntConstant: 2
+ 28            Call: 
+ 28               Identifier: Set
+ 28               (actuals) IntConstant: 2
+ 28               (actuals) IntConstant: 3
+ 28               (actuals) IntConstant: 5
+ 29            Call: 
+ 29               Identifier: Set
+ 29               (actuals) IntConstant: 0
+ 29               (actuals) IntConstant: 0
+ 29               (actuals) IntConstant: 1
+ 30            Call: 
+ 30               Identifier: Set
+ 30               (actuals) IntConstant: 1
+ 30               (actuals) IntConstant: 6
+ 30               (actuals) IntConstant: 3
+ 31            Call: 
+ 31               Identifier: Set
+ 31               (actuals) IntConstant: 7
+ 31               (actuals) IntConstant: 7
+ 31               (actuals) IntConstant: 7
+ 37   ClassDecl: 
+ 37      Identifier: DenseMatrix
+ 37      (extends) NamedType: 
+ 37         Identifier: Matrix
+ 38      VarDecl: 
+ 38         ArrayType: 
+ 38            ArrayType: 
+                  Type: int
+ 38         Identifier: m
+ 39      FnDecl: 
+            (return type) Type: void
+ 39         Identifier: Init
+            (body) StmtBlock: 
+ 40            VarDecl: 
+                  Type: int
+ 40               Identifier: i
+ 41            VarDecl: 
+                  Type: int
+ 41               Identifier: j
+ 44            AssignExpr: 
+ 44               FieldAccess: 
+ 44                  Identifier: m
+ 44               Operator: =
+ 44               NewArrayExpr: 
+ 44                  IntConstant: 10
+ 44                  ArrayType: 
+                        Type: int
+               ForStmt: 
+ 45               (init) AssignExpr: 
+ 45                  FieldAccess: 
+ 45                     Identifier: i
+ 45                  Operator: =
+ 45                  IntConstant: 0
+ 45               (test) RelationalExpr: 
+ 45                  FieldAccess: 
+ 45                     Identifier: i
+ 45                  Operator: <
+ 45                  IntConstant: 10
+ 45               (step) AssignExpr: 
+ 45                  FieldAccess: 
+ 45                     Identifier: i
+ 45                  Operator: =
+ 45                  ArithmeticExpr: 
+ 45                     FieldAccess: 
+ 45                        Identifier: i
+ 45                     Operator: +
+ 45                     IntConstant: 1
+ 46               (body) AssignExpr: 
+ 46                  ArrayAccess: 
+ 46                     FieldAccess: 
+ 46                        Identifier: m
+ 46                     (subscript) FieldAccess: 
+ 46                        Identifier: i
+ 46                  Operator: =
+ 46                  NewArrayExpr: 
+ 46                     IntConstant: 10
+                        Type: int
+               ForStmt: 
+ 49               (init) AssignExpr: 
+ 49                  FieldAccess: 
+ 49                     Identifier: i
+ 49                  Operator: =
+ 49                  IntConstant: 0
+ 49               (test) RelationalExpr: 
+ 49                  FieldAccess: 
+ 49                     Identifier: i
+ 49                  Operator: <
+ 49                  IntConstant: 10
+ 49               (step) AssignExpr: 
+ 49                  FieldAccess: 
+ 49                     Identifier: i
+ 49                  Operator: =
+ 49                  ArithmeticExpr: 
+ 49                     FieldAccess: 
+ 49                        Identifier: i
+ 49                     Operator: +
+ 49                     IntConstant: 1
+                  (body) ForStmt: 
+ 50                  (init) AssignExpr: 
+ 50                     FieldAccess: 
+ 50                        Identifier: j
+ 50                     Operator: =
+ 50                     IntConstant: 0
+ 50                  (test) RelationalExpr: 
+ 50                     FieldAccess: 
+ 50                        Identifier: j
+ 50                     Operator: <
+ 50                     IntConstant: 10
+ 50                  (step) AssignExpr: 
+ 50                     FieldAccess: 
+ 50                        Identifier: j
+ 50                     Operator: =
+ 50                     ArithmeticExpr: 
+ 50                        FieldAccess: 
+ 50                           Identifier: j
+ 50                        Operator: +
+ 50                        IntConstant: 1
+ 51                  (body) AssignExpr: 
+ 51                     ArrayAccess: 
+ 51                        ArrayAccess: 
+ 51                           FieldAccess: 
+ 51                              Identifier: m
+ 51                           (subscript) FieldAccess: 
+ 51                              Identifier: i
+ 51                        (subscript) FieldAccess: 
+ 51                           Identifier: j
+ 51                     Operator: =
+ 51                     IntConstant: 0
+ 53      FnDecl: 
+            (return type) Type: void
+ 53         Identifier: Set
+ 53         (formals) VarDecl: 
+               Type: int
+ 53            Identifier: x
+ 53         (formals) VarDecl: 
+               Type: int
+ 53            Identifier: y
+ 53         (formals) VarDecl: 
+               Type: int
+ 53            Identifier: value
+            (body) StmtBlock: 
+ 54            AssignExpr: 
+ 54               ArrayAccess: 
+ 54                  ArrayAccess: 
+ 54                     FieldAccess: 
+ 54                        Identifier: m
+ 54                     (subscript) FieldAccess: 
+ 54                        Identifier: x
+ 54                  (subscript) FieldAccess: 
+ 54                     Identifier: y
+ 54               Operator: =
+ 54               FieldAccess: 
+ 54                  Identifier: value
+ 56      FnDecl: 
+            (return type) Type: int
+ 56         Identifier: Get
+ 56         (formals) VarDecl: 
+               Type: int
+ 56            Identifier: x
+ 56         (formals) VarDecl: 
+               Type: int
+ 56            Identifier: y
+            (body) StmtBlock: 
+ 57            ReturnStmt: 
+ 57               ArrayAccess: 
+ 57                  ArrayAccess: 
+ 57                     FieldAccess: 
+ 57                        Identifier: m
+ 57                     (subscript) FieldAccess: 
+ 57                        Identifier: x
+ 57                  (subscript) FieldAccess: 
+ 57                     Identifier: y
+ 62   ClassDecl: 
+ 62      Identifier: SparseItem
+ 63      VarDecl: 
+            Type: int
+ 63         Identifier: data
+ 64      VarDecl: 
+            Type: int
+ 64         Identifier: y
+ 65      VarDecl: 
+ 65         NamedType: 
+ 65            Identifier: SparseItem
+ 65         Identifier: next
+ 66      FnDecl: 
+            (return type) Type: void
+ 66         Identifier: Init
+ 66         (formals) VarDecl: 
+               Type: int
+ 66            Identifier: d
+ 66         (formals) VarDecl: 
+               Type: int
+ 66            Identifier: y
+ 66         (formals) VarDecl: 
+ 66            NamedType: 
+ 66               Identifier: SparseItem
+ 66            Identifier: next
+            (body) StmtBlock: 
+ 67            AssignExpr: 
+ 67               FieldAccess: 
+ 67                  This: 
+ 67                  Identifier: data
+ 67               Operator: =
+ 67               FieldAccess: 
+ 67                  Identifier: d
+ 68            AssignExpr: 
+ 68               FieldAccess: 
+ 68                  This: 
+ 68                  Identifier: y
+ 68               Operator: =
+ 68               FieldAccess: 
+ 68                  Identifier: y
+ 69            AssignExpr: 
+ 69               FieldAccess: 
+ 69                  This: 
+ 69                  Identifier: next
+ 69               Operator: =
+ 69               FieldAccess: 
+ 69                  Identifier: next
+ 71      FnDecl: 
+ 71         (return type) NamedType: 
+ 71            Identifier: SparseItem
+ 71         Identifier: GetNext
+            (body) StmtBlock: 
+ 71            ReturnStmt: 
+ 71               FieldAccess: 
+ 71                  Identifier: next
+ 72      FnDecl: 
+            (return type) Type: int
+ 72         Identifier: GetY
+            (body) StmtBlock: 
+ 72            ReturnStmt: 
+ 72               FieldAccess: 
+ 72                  Identifier: y
+ 73      FnDecl: 
+            (return type) Type: int
+ 73         Identifier: GetData
+            (body) StmtBlock: 
+ 73            ReturnStmt: 
+ 73               FieldAccess: 
+ 73                  Identifier: data
+ 74      FnDecl: 
+            (return type) Type: void
+ 74         Identifier: SetData
+ 74         (formals) VarDecl: 
+               Type: int
+ 74            Identifier: val
+            (body) StmtBlock: 
+ 74            AssignExpr: 
+ 74               FieldAccess: 
+ 74                  Identifier: data
+ 74               Operator: =
+ 74               FieldAccess: 
+ 74                  Identifier: val
+ 79   ClassDecl: 
+ 79      Identifier: SparseMatrix
+ 79      (extends) NamedType: 
+ 79         Identifier: Matrix
+ 80      VarDecl: 
+ 80         ArrayType: 
+ 80            NamedType: 
+ 80               Identifier: SparseItem
+ 80         Identifier: m
+ 81      FnDecl: 
+            (return type) Type: void
+ 81         Identifier: Init
+            (body) StmtBlock: 
+ 82            VarDecl: 
+                  Type: int
+ 82               Identifier: i
+ 85            AssignExpr: 
+ 85               FieldAccess: 
+ 85                  Identifier: m
+ 85               Operator: =
+ 85               NewArrayExpr: 
+ 85                  IntConstant: 10
+ 85                  NamedType: 
+ 85                     Identifier: SparseItem
+               ForStmt: 
+ 86               (init) AssignExpr: 
+ 86                  FieldAccess: 
+ 86                     Identifier: i
+ 86                  Operator: =
+ 86                  IntConstant: 0
+ 86               (test) RelationalExpr: 
+ 86                  FieldAccess: 
+ 86                     Identifier: i
+ 86                  Operator: <
+ 86                  IntConstant: 10
+ 86               (step) AssignExpr: 
+ 86                  FieldAccess: 
+ 86                     Identifier: i
+ 86                  Operator: =
+ 86                  ArithmeticExpr: 
+ 86                     FieldAccess: 
+ 86                        Identifier: i
+ 86                     Operator: +
+ 86                     IntConstant: 1
+ 87               (body) AssignExpr: 
+ 87                  ArrayAccess: 
+ 87                     FieldAccess: 
+ 87                        Identifier: m
+ 87                     (subscript) FieldAccess: 
+ 87                        Identifier: i
+ 87                  Operator: =
+ 87                  NullConstant: 
+ 91      FnDecl: 
+ 91         (return type) NamedType: 
+ 91            Identifier: SparseItem
+ 91         Identifier: Find
+ 91         (formals) VarDecl: 
+               Type: int
+ 91            Identifier: x
+ 91         (formals) VarDecl: 
+               Type: int
+ 91            Identifier: y
+            (body) StmtBlock: 
+ 92            VarDecl: 
+ 92               NamedType: 
+ 92                  Identifier: SparseItem
+ 92               Identifier: elem
+ 93            AssignExpr: 
+ 93               FieldAccess: 
+ 93                  Identifier: elem
+ 93               Operator: =
+ 93               ArrayAccess: 
+ 93                  FieldAccess: 
+ 93                     Identifier: m
+ 93                  (subscript) FieldAccess: 
+ 93                     Identifier: x
+               WhileStmt: 
+ 94               (test) EqualityExpr: 
+ 94                  FieldAccess: 
+ 94                     Identifier: elem
+ 94                  Operator: !=
+ 94                  NullConstant: 
+                  (body) StmtBlock: 
+                     IfStmt: 
+ 95                     (test) EqualityExpr: 
+ 95                        Call: 
+ 95                           FieldAccess: 
+ 95                              Identifier: elem
+ 95                           Identifier: GetY
+ 95                        Operator: ==
+ 95                        FieldAccess: 
+ 95                           Identifier: y
+                        (then) StmtBlock: 
+ 96                        ReturnStmt: 
+ 96                           FieldAccess: 
+ 96                              Identifier: elem
+ 98                  AssignExpr: 
+ 98                     FieldAccess: 
+ 98                        Identifier: elem
+ 98                     Operator: =
+ 98                     Call: 
+ 98                        FieldAccess: 
+ 98                           Identifier: elem
+ 98                        Identifier: GetNext
+100            ReturnStmt: 
+100               NullConstant: 
+103      FnDecl: 
+            (return type) Type: void
+103         Identifier: Set
+103         (formals) VarDecl: 
+               Type: int
+103            Identifier: x
+103         (formals) VarDecl: 
+               Type: int
+103            Identifier: y
+103         (formals) VarDecl: 
+               Type: int
+103            Identifier: value
+            (body) StmtBlock: 
+104            VarDecl: 
+104               NamedType: 
+104                  Identifier: SparseItem
+104               Identifier: elem
+105            AssignExpr: 
+105               FieldAccess: 
+105                  Identifier: elem
+105               Operator: =
+105               Call: 
+105                  Identifier: Find
+105                  (actuals) FieldAccess: 
+105                     Identifier: x
+105                  (actuals) FieldAccess: 
+105                     Identifier: y
+               IfStmt: 
+106               (test) EqualityExpr: 
+106                  FieldAccess: 
+106                     Identifier: elem
+106                  Operator: !=
+106                  NullConstant: 
+                  (then) StmtBlock: 
+107                  Call: 
+107                     FieldAccess: 
+107                        Identifier: elem
+107                     Identifier: SetData
+107                     (actuals) FieldAccess: 
+107                        Identifier: value
+                  (else) StmtBlock: 
+109                  AssignExpr: 
+109                     FieldAccess: 
+109                        Identifier: elem
+109                     Operator: =
+109                     NewExpr: 
+109                        NamedType: 
+109                           Identifier: SparseItem
+110                  Call: 
+110                     FieldAccess: 
+110                        Identifier: elem
+110                     Identifier: Init
+110                     (actuals) FieldAccess: 
+110                        Identifier: value
+110                     (actuals) FieldAccess: 
+110                        Identifier: y
+110                     (actuals) ArrayAccess: 
+110                        FieldAccess: 
+110                           Identifier: m
+110                        (subscript) FieldAccess: 
+110                           Identifier: x
+111                  AssignExpr: 
+111                     ArrayAccess: 
+111                        FieldAccess: 
+111                           Identifier: m
+111                        (subscript) FieldAccess: 
+111                           Identifier: x
+111                     Operator: =
+111                     FieldAccess: 
+111                        Identifier: elem
+115      FnDecl: 
+            (return type) Type: int
+115         Identifier: Get
+115         (formals) VarDecl: 
+               Type: int
+115            Identifier: x
+115         (formals) VarDecl: 
+               Type: int
+115            Identifier: y
+            (body) StmtBlock: 
+116            VarDecl: 
+116               NamedType: 
+116                  Identifier: SparseItem
+116               Identifier: elem
+117            AssignExpr: 
+117               FieldAccess: 
+117                  Identifier: elem
+117               Operator: =
+117               Call: 
+117                  Identifier: Find
+117                  (actuals) FieldAccess: 
+117                     Identifier: x
+117                  (actuals) FieldAccess: 
+117                     Identifier: y
+               IfStmt: 
+118               (test) EqualityExpr: 
+118                  FieldAccess: 
+118                     Identifier: elem
+118                  Operator: !=
+118                  NullConstant: 
+                  (then) StmtBlock: 
+119                  ReturnStmt: 
+119                     Call: 
+119                        FieldAccess: 
+119                           Identifier: elem
+119                        Identifier: GetData
+                  (else) StmtBlock: 
+121                  ReturnStmt: 
+121                     IntConstant: 0
+126   FnDecl: 
+         (return type) Type: void
+126      Identifier: main
+         (body) StmtBlock: 
+127         VarDecl: 
+127            NamedType: 
+127               Identifier: Matrix
+127            Identifier: m
+            PrintStmt: 
+128            (args) StringConstant: "Dense Rep \n"
+129         AssignExpr: 
+129            FieldAccess: 
+129               Identifier: m
+129            Operator: =
+129            NewExpr: 
+129               NamedType: 
+129                  Identifier: DenseMatrix
+130         Call: 
+130            FieldAccess: 
+130               Identifier: m
+130            Identifier: Init
+131         Call: 
+131            FieldAccess: 
+131               Identifier: m
+131            Identifier: SeedMatrix
+132         Call: 
+132            FieldAccess: 
+132               Identifier: m
+132            Identifier: PrintMatrix
+            PrintStmt: 
+135            (args) StringConstant: "Sparse Rep \n"
+136         AssignExpr: 
+136            FieldAccess: 
+136               Identifier: m
+136            Operator: =
+136            NewExpr: 
+136               NamedType: 
+136                  Identifier: SparseMatrix
+137         Call: 
+137            FieldAccess: 
+137               Identifier: m
+137            Identifier: Init
+138         Call: 
+138            FieldAccess: 
+138               Identifier: m
+138            Identifier: SeedMatrix
+139         Call: 
+139            FieldAccess: 
+139               Identifier: m
+139            Identifier: PrintMatrix

@@ -1,0 +1,12 @@
+
+*** Error line 3.
+*** Unterminated string constant: "this is not a
+
+valid        line 4 cols 2-6 is T_Identifier 
+string       line 4 cols 8-13 is T_String 
+constant     line 4 cols 15-22 is T_Identifier 
+
+*** Error line 4.
+*** Unterminated string constant: "
+
+"this is okay, though" line 6 cols 1-22 is T_StringConstant (value = "this is okay, though")

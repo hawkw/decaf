@@ -1,0 +1,9 @@
+variable0    line 2 cols 1-9 is T_Identifier 
+Var1         line 4 cols 1-4 is T_Identifier 
+VAR_2        line 6 cols 1-5 is T_Identifier 
+variable_of_many_words_143 line 8 cols 1-26 is T_Identifier 
+vAr4_0987654321 line 10 cols 1-15 is T_Identifier 
+var5___      line 12 cols 1-7 is T_Identifier 
+variable0    line 14 cols 1-9 is T_Identifier 
+variable0    line 16 cols 1-9 is T_Identifier 
+Var1         line 18 cols 1-4 is T_Identifier 

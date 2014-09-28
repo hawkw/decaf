@@ -1,0 +1,6 @@
+
+*** Error line 12.
+  betsy = new Cow, true;
+                 ^
+*** syntax error
+

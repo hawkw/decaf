@@ -1,0 +1,106 @@
+
+   Program: 
+  3   FnDecl: 
+         (return type) Type: int
+  3      Identifier: foo
+  3      (formals) VarDecl: 
+            Type: int
+  3         Identifier: a
+  3      (formals) VarDecl: 
+            Type: double
+  3         Identifier: b
+  3      (formals) VarDecl: 
+            Type: bool
+  3         Identifier: c
+         (body) StmtBlock: 
+  4         ReturnStmt: 
+  4            ArithmeticExpr: 
+  4               FieldAccess: 
+  4                  Identifier: a
+  4               Operator: +
+  4               IntConstant: 2
+  7   FnDecl: 
+         (return type) Type: void
+  7      Identifier: main
+         (body) StmtBlock: 
+  8         VarDecl: 
+               Type: int
+  8            Identifier: b
+  9         VarDecl: 
+               Type: int
+  9            Identifier: a
+ 10         VarDecl: 
+               Type: double
+ 10            Identifier: d
+ 12         AssignExpr: 
+ 12            FieldAccess: 
+ 12               Identifier: d
+ 12            Operator: =
+ 12            ArithmeticExpr: 
+ 12               ArithmeticExpr: 
+ 12                  IntConstant: 2
+ 12                  Operator: +
+ 12                  ArithmeticExpr: 
+ 12                     IntConstant: 3
+ 12                     Operator: *
+ 12                     IntConstant: 4
+ 12               Operator: -
+ 12               ArithmeticExpr: 
+ 12                  IntConstant: 6
+ 12                  Operator: /
+ 12                  IntConstant: 2
+ 13         AssignExpr: 
+ 13            FieldAccess: 
+ 13               Identifier: b
+ 13            Operator: =
+ 13            ReadIntegerExpr: 
+ 14         AssignExpr: 
+ 14            FieldAccess: 
+ 14               Identifier: a
+ 14            Operator: =
+ 14            ArithmeticExpr: 
+ 14               FieldAccess: 
+ 14                  Identifier: b
+ 14               Operator: +
+ 14               IntConstant: 2
+            PrintStmt: 
+ 15            (args) FieldAccess: 
+ 15               Identifier: a
+ 15            (args) FieldAccess: 
+ 15               Identifier: b
+ 15            (args) FieldAccess: 
+ 15               Identifier: d
+ 16         Call: 
+ 16            Identifier: foo
+ 16            (actuals) FieldAccess: 
+ 16               Identifier: a
+ 16            (actuals) FieldAccess: 
+ 16               Identifier: d
+ 16            (actuals) LogicalExpr: 
+ 16               Operator: !
+ 16               BoolConstant: true
+ 17         Call: 
+ 17            Identifier: foo
+ 17            (actuals) ArithmeticExpr: 
+ 17               FieldAccess: 
+ 17                  Identifier: a
+ 17               Operator: +
+ 17               IntConstant: 2
+ 17            (actuals) ArithmeticExpr: 
+ 17               FieldAccess: 
+ 17                  Identifier: d
+ 17               Operator: /
+ 17               IntConstant: 2
+ 17            (actuals) LogicalExpr: 
+ 17               EqualityExpr: 
+ 17                  FieldAccess: 
+ 17                     Identifier: a
+ 17                  Operator: ==
+ 17                  FieldAccess: 
+ 17                     Identifier: b
+ 17               Operator: &&
+ 17               RelationalExpr: 
+ 17                  FieldAccess: 
+ 17                     Identifier: d
+ 17                  Operator: >=
+ 17                  DoubleConstant: 1

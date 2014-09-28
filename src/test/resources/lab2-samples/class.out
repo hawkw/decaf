@@ -1,0 +1,41 @@
+
+   Program: 
+  1   ClassDecl: 
+  1      Identifier: Cow
+  2      VarDecl: 
+            Type: int
+  2         Identifier: height
+  3      VarDecl: 
+            Type: bool
+  3         Identifier: isSpotted
+  4      FnDecl: 
+            (return type) Type: void
+  4         Identifier: Moo
+            (body) StmtBlock: 
+               PrintStmt: 
+  5               (args) FieldAccess: 
+  5                  This: 
+  5                  Identifier: height
+  5               (args) StringConstant: " "
+  5               (args) FieldAccess: 
+  5                  Identifier: isSpotted
+  5               (args) StringConstant: "\n"
+ 10   FnDecl: 
+         (return type) Type: void
+ 10      Identifier: main
+         (body) StmtBlock: 
+ 11         VarDecl: 
+ 11            NamedType: 
+ 11               Identifier: Cow
+ 11            Identifier: betsy
+ 12         AssignExpr: 
+ 12            FieldAccess: 
+ 12               Identifier: betsy
+ 12            Operator: =
+ 12            NewExpr: 
+ 12               NamedType: 
+ 12                  Identifier: Cow
+ 13         Call: 
+ 13            FieldAccess: 
+ 13               Identifier: betsy
+ 13            Identifier: Moo

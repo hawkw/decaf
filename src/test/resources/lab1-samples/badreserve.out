@@ -1,0 +1,10 @@
+voidB        line 1 cols 1-5 is T_Identifier 
+classs       line 3 cols 1-6 is T_Identifier 
+newarray     line 5 cols 1-8 is T_Identifier 
+newArray     line 7 cols 1-8 is T_Identifier 
+Newarray     line 9 cols 1-8 is T_Identifier 
+protected    line 11 cols 1-9 is T_Identifier 
+float        line 13 cols 1-5 is T_Identifier 
+char         line 15 cols 1-4 is T_Identifier 
+short        line 17 cols 1-5 is T_Identifier 
+PrintString  line 19 cols 1-11 is T_Identifier 

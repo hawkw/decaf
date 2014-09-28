@@ -1,0 +1,125 @@
+
+   Program: 
+  1   ClassDecl: 
+  1      Identifier: Animal
+  2      VarDecl: 
+            Type: int
+  2         Identifier: height
+  3      VarDecl: 
+  3         NamedType: 
+  3            Identifier: Animal
+  3         Identifier: mother
+  4      FnDecl: 
+            (return type) Type: void
+  4         Identifier: InitAnimal
+  4         (formals) VarDecl: 
+               Type: int
+  4            Identifier: h
+  4         (formals) VarDecl: 
+  4            NamedType: 
+  4               Identifier: Animal
+  4            Identifier: mom
+            (body) StmtBlock: 
+  5            AssignExpr: 
+  5               FieldAccess: 
+  5                  Identifier: height
+  5               Operator: =
+  5               FieldAccess: 
+  5                  Identifier: h
+  6            AssignExpr: 
+  6               FieldAccess: 
+  6                  Identifier: mother
+  6               Operator: =
+  6               FieldAccess: 
+  6                  Identifier: mom
+  9      FnDecl: 
+            (return type) Type: int
+  9         Identifier: GetHeight
+            (body) StmtBlock: 
+ 10            ReturnStmt: 
+ 10               FieldAccess: 
+ 10                  Identifier: height
+ 13      FnDecl: 
+ 13         (return type) NamedType: 
+ 13            Identifier: Animal
+ 13         Identifier: GetMom
+            (body) StmtBlock: 
+ 14            ReturnStmt: 
+ 14               FieldAccess: 
+ 14                  Identifier: mother
+ 18   ClassDecl: 
+ 18      Identifier: Cow
+ 18      (extends) NamedType: 
+ 18         Identifier: Animal
+ 19      VarDecl: 
+            Type: bool
+ 19         Identifier: isSpotted
+ 20      FnDecl: 
+            (return type) Type: void
+ 20         Identifier: InitCow
+ 20         (formals) VarDecl: 
+               Type: int
+ 20            Identifier: h
+ 20         (formals) VarDecl: 
+ 20            NamedType: 
+ 20               Identifier: Animal
+ 20            Identifier: m
+ 20         (formals) VarDecl: 
+               Type: bool
+ 20            Identifier: spot
+            (body) StmtBlock: 
+ 21            AssignExpr: 
+ 21               FieldAccess: 
+ 21                  Identifier: isSpotted
+ 21               Operator: =
+ 21               FieldAccess: 
+ 21                  Identifier: spot
+ 22            Call: 
+ 22               Identifier: InitAnimal
+ 22               (actuals) FieldAccess: 
+ 22                  Identifier: h
+ 22               (actuals) FieldAccess: 
+ 22                  Identifier: m
+ 24      FnDecl: 
+            (return type) Type: bool
+ 24         Identifier: IsSpottedCow
+            (body) StmtBlock: 
+ 25            ReturnStmt: 
+ 25               FieldAccess: 
+ 25                  Identifier: isSpotted
+ 30   FnDecl: 
+         (return type) Type: void
+ 30      Identifier: main
+         (body) StmtBlock: 
+ 31         VarDecl: 
+ 31            NamedType: 
+ 31               Identifier: Cow
+ 31            Identifier: betsy
+ 32         VarDecl: 
+ 32            NamedType: 
+ 32               Identifier: Animal
+ 32            Identifier: b
+ 33         AssignExpr: 
+ 33            FieldAccess: 
+ 33               Identifier: betsy
+ 33            Operator: =
+ 33            NewExpr: 
+ 33               NamedType: 
+ 33                  Identifier: Cow
+ 35         Call: 
+ 35            FieldAccess: 
+ 35               Identifier: betsy
+ 35            Identifier: InitCow
+ 35            (actuals) IntConstant: 5
+ 35            (actuals) NullConstant: 
+ 35            (actuals) BoolConstant: true
+ 36         AssignExpr: 
+ 36            FieldAccess: 
+ 36               Identifier: b
+ 36            Operator: =
+ 36            FieldAccess: 
+ 36               Identifier: betsy
+ 37         Call: 
+ 37            FieldAccess: 
+ 37               Identifier: b
+ 37            Identifier: GetMom

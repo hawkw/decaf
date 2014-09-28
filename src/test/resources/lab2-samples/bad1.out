@@ -1,0 +1,6 @@
+
+*** Error line 1.
+void foo(int) {
+            ^
+*** syntax error
+

@@ -1,0 +1,63 @@
+
+   Program: 
+  1   VarDecl: 
+         Type: int
+  1      Identifier: a
+  2   VarDecl: 
+  2      ArrayType: 
+            Type: int
+  2      Identifier: b
+  4   FnDecl: 
+         (return type) Type: int
+  4      Identifier: tester
+  4      (formals) VarDecl: 
+            Type: int
+  4         Identifier: d
+         (body) StmtBlock: 
+  5         ReturnStmt: 
+  5            ArithmeticExpr: 
+  5               ArrayAccess: 
+  5                  FieldAccess: 
+  5                     Identifier: b
+  5                  (subscript) FieldAccess: 
+  5                     Identifier: d
+  5               Operator: +
+  5               FieldAccess: 
+  5                  Identifier: d
+  8   FnDecl: 
+         (return type) Type: void
+  8      Identifier: main
+         (body) StmtBlock: 
+  9         VarDecl: 
+               Type: int
+  9            Identifier: a
+ 10         VarDecl: 
+               Type: int
+ 10            Identifier: c
+ 12         AssignExpr: 
+ 12            FieldAccess: 
+ 12               Identifier: a
+ 12            Operator: =
+ 12            IntConstant: 3
+ 13         AssignExpr: 
+ 13            FieldAccess: 
+ 13               Identifier: b
+ 13            Operator: =
+ 13            NewArrayExpr: 
+ 13               IntConstant: 3
+                  Type: int
+ 14         AssignExpr: 
+ 14            FieldAccess: 
+ 14               Identifier: c
+ 14            Operator: =
+ 14            ArithmeticExpr: 
+ 14               FieldAccess: 
+ 14                  Identifier: a
+ 14               Operator: +
+ 14               FieldAccess: 
+ 14                  Identifier: b
+            PrintStmt: 
+ 15            (args) Call: 
+ 15               Identifier: tester
+ 15               (actuals) FieldAccess: 
+ 15                  Identifier: c

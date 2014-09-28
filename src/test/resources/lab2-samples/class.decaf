@@ -1,0 +1,14 @@
+class Cow {
+  int height;
+  bool isSpotted;
+  void Moo() {
+    Print ( this.height, " ", isSpotted, "\n" );
+  }
+}
+
+
+void main() {
+  Cow betsy;
+  betsy = new Cow;
+  betsy.Moo();
+}

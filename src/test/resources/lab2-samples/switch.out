@@ -1,0 +1,212 @@
+
+   Program: 
+  5   FnDecl: 
+         (return type) Type: void
+  5      Identifier: small
+         (body) StmtBlock: 
+  7         VarDecl: 
+               Type: int
+  7            Identifier: n
+            PrintStmt: 
+  9            (args) StringConstant: "What is the rank of the card? (1-13)"
+ 10         AssignExpr: 
+ 10            FieldAccess: 
+ 10               Identifier: n
+ 10            Operator: =
+ 10            ReadIntegerExpr: 
+            SwitchStmt: 
+ 12            FieldAccess: 
+ 12               Identifier: n
+               Case: 
+ 13               IntConstant: 1
+                  PrintStmt: 
+ 13                  (args) StringConstant: "Ace"
+ 13               BreakStmt: 
+               Case: 
+ 14               IntConstant: 11
+                  PrintStmt: 
+ 14                  (args) StringConstant: "Jack"
+ 14               BreakStmt: 
+               Case: 
+ 15               IntConstant: 12
+                  PrintStmt: 
+ 15                  (args) StringConstant: "Queen"
+ 15               BreakStmt: 
+               Case: 
+ 16               IntConstant: 13
+                  PrintStmt: 
+ 16                  (args) StringConstant: "King"
+ 16               BreakStmt: 
+               Default: 
+                  PrintStmt: 
+ 17                  (args) FieldAccess: 
+ 17                     Identifier: n
+ 17               BreakStmt: 
+ 21   FnDecl: 
+         (return type) Type: void
+ 21      Identifier: medium
+         (body) StmtBlock: 
+ 23         VarDecl: 
+               Type: int
+ 23            Identifier: a
+ 24         VarDecl: 
+               Type: int
+ 24            Identifier: b
+ 26         AssignExpr: 
+ 26            FieldAccess: 
+ 26               Identifier: a
+ 26            Operator: =
+ 26            ReadIntegerExpr: 
+ 27         AssignExpr: 
+ 27            FieldAccess: 
+ 27               Identifier: b
+ 27            Operator: =
+ 27            ReadIntegerExpr: 
+            SwitchStmt: 
+ 29            ArithmeticExpr: 
+ 29               ArithmeticExpr: 
+ 29                  ArithmeticExpr: 
+ 29                     FieldAccess: 
+ 29                        Identifier: a
+ 29                     Operator: *
+ 29                     IntConstant: 22
+ 29                  Operator: +
+ 29                  FieldAccess: 
+ 29                     Identifier: b
+ 29               Operator: /
+ 29               IntConstant: 14
+               Case: 
+ 30               IntConstant: 123
+                  PrintStmt: 
+ 30                  (args) FieldAccess: 
+ 30                     Identifier: a
+ 31               AssignExpr: 
+ 31                  FieldAccess: 
+ 31                     Identifier: b
+ 31                  Operator: =
+ 31                  IntConstant: 23
+               Case: 
+ 33               IntConstant: 224
+                  PrintStmt: 
+ 33                  (args) FieldAccess: 
+ 33                     Identifier: b
+ 33               BreakStmt: 
+               Case: 
+ 35               IntConstant: 233
+ 35               AssignExpr: 
+ 35                  FieldAccess: 
+ 35                     Identifier: a
+ 35                  Operator: =
+ 35                  ArithmeticExpr: 
+ 35                     FieldAccess: 
+ 35                        Identifier: b
+ 35                     Operator: *
+ 35                     IntConstant: 2
+ 36               AssignExpr: 
+ 36                  FieldAccess: 
+ 36                     Identifier: b
+ 36                  Operator: =
+ 36                  IntConstant: 3
+ 37               AssignExpr: 
+ 37                  FieldAccess: 
+ 37                     Identifier: a
+ 37                  Operator: =
+ 37                  IntConstant: 23
+ 38               BreakStmt: 
+               Case: 
+ 40               IntConstant: 41
+ 40               BreakStmt: 
+               Default: 
+ 42               BreakStmt: 
+ 47   FnDecl: 
+         (return type) Type: void
+ 47      Identifier: large
+         (body) StmtBlock: 
+ 48         VarDecl: 
+               Type: int
+ 48            Identifier: inputvar
+ 49         VarDecl: 
+               Type: int
+ 49            Identifier: i
+            PrintStmt: 
+ 51            (args) StringConstant: "Enter a number between 1 and 10, inclusive"
+ 52         AssignExpr: 
+ 52            FieldAccess: 
+ 52               Identifier: inputvar
+ 52            Operator: =
+ 52            ReadIntegerExpr: 
+            SwitchStmt: 
+ 54            FieldAccess: 
+ 54               Identifier: inputvar
+               Case: 
+ 56               IntConstant: 2
+               Case: 
+ 57               IntConstant: 4
+               Case: 
+ 58               IntConstant: 6
+               Case: 
+ 59               IntConstant: 8
+               Case: 
+ 60               IntConstant: 10
+                  ForStmt: 
+ 61                  (init) AssignExpr: 
+ 61                     FieldAccess: 
+ 61                        Identifier: i
+ 61                     Operator: =
+ 61                     IntConstant: 1
+ 61                  (test) RelationalExpr: 
+ 61                     FieldAccess: 
+ 61                        Identifier: i
+ 61                     Operator: <=
+ 61                     FieldAccess: 
+ 61                        Identifier: inputvar
+ 61                  (step) PostfixExpr: 
+ 61                     FieldAccess: 
+ 61                        Identifier: i
+ 61                     Operator: ++
+                     (body) PrintStmt: 
+ 62                     (args) FieldAccess: 
+ 62                        Identifier: i
+                  PrintStmt: 
+ 63                  (args) StringConstant: "even"
+ 64               BreakStmt: 
+               Case: 
+ 66               IntConstant: 1
+               Case: 
+ 67               IntConstant: 3
+               Case: 
+ 68               IntConstant: 5
+               Case: 
+ 69               IntConstant: 7
+               Case: 
+ 70               IntConstant: 9
+                  StmtBlock: 
+                     ForStmt: 
+ 71                     (init) AssignExpr: 
+ 71                        FieldAccess: 
+ 71                           Identifier: i
+ 71                        Operator: =
+ 71                        IntConstant: 1
+ 71                     (test) RelationalExpr: 
+ 71                        FieldAccess: 
+ 71                           Identifier: i
+ 71                        Operator: <=
+ 71                        FieldAccess: 
+ 71                           Identifier: inputvar
+ 71                     (step) PostfixExpr: 
+ 71                        FieldAccess: 
+ 71                           Identifier: i
+ 71                        Operator: ++
+                        (body) PrintStmt: 
+ 72                        (args) FieldAccess: 
+ 72                           Identifier: i
+                     PrintStmt: 
+ 73                     (args) StringConstant: "odd"
+ 74                  BreakStmt: 
+               Default: 
+                  PrintStmt: 
+ 77                  (args) StringConstant: "not between 1 and 10"
+ 82   FnDecl: 
+         (return type) Type: void
+ 82      Identifier: main
+         (body) StmtBlock: 

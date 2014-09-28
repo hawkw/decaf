@@ -1,0 +1,6 @@
+
+*** Error line 2.
+  x = 123.4.554;
+            ^^^
+*** syntax error
+

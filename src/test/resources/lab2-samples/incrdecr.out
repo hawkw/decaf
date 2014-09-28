@@ -1,0 +1,36 @@
+
+   Program: 
+  5   FnDecl: 
+         (return type) Type: void
+  5      Identifier: main
+         (body) StmtBlock: 
+  7         VarDecl: 
+               Type: int
+  7            Identifier: i
+  8         VarDecl: 
+               Type: int
+  8            Identifier: j
+ 10         PostfixExpr: 
+ 10            FieldAccess: 
+ 10               Identifier: i
+ 10            Operator: ++
+ 11         AssignExpr: 
+ 11            FieldAccess: 
+ 11               Identifier: j
+ 11            Operator: =
+ 11            PostfixExpr: 
+ 11               FieldAccess: 
+ 11                  Identifier: i
+ 11               Operator: --
+ 12         AssignExpr: 
+ 12            FieldAccess: 
+ 12               Identifier: j
+ 12            Operator: =
+ 12            ArithmeticExpr: 
+ 12               PostfixExpr: 
+ 12                  FieldAccess: 
+ 12                     Identifier: i
+ 12                  Operator: ++
+ 12               Operator: +
+ 12               FieldAccess: 
+ 12                  Identifier: j

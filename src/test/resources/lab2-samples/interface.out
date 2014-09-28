@@ -1,0 +1,133 @@
+
+   Program: 
+  1   InterfaceDecl: 
+  1      Identifier: Colorable
+  2      FnDecl: 
+  2         (return type) NamedType: 
+  2            Identifier: Color
+  2         Identifier: GetColor
+  3      FnDecl: 
+            (return type) Type: void
+  3         Identifier: SetColor
+  3         (formals) VarDecl: 
+  3            NamedType: 
+  3               Identifier: Color
+  3            Identifier: c
+  6   ClassDecl: 
+  6      Identifier: Color
+  7      FnDecl: 
+            (return type) Type: void
+  7         Identifier: SetRGB
+  7         (formals) VarDecl: 
+               Type: int
+  7            Identifier: red
+  7         (formals) VarDecl: 
+               Type: int
+  7            Identifier: green
+  7         (formals) VarDecl: 
+               Type: int
+  7            Identifier: blue
+            (body) StmtBlock: 
+  8            AssignExpr: 
+  8               FieldAccess: 
+  8                  This: 
+  8                  Identifier: red
+  8               Operator: =
+  8               FieldAccess: 
+  8                  Identifier: red
+  9            AssignExpr: 
+  9               FieldAccess: 
+  9                  This: 
+  9                  Identifier: green
+  9               Operator: =
+  9               FieldAccess: 
+  9                  Identifier: green
+ 10            AssignExpr: 
+ 10               FieldAccess: 
+ 10                  This: 
+ 10                  Identifier: blue
+ 10               Operator: =
+ 10               FieldAccess: 
+ 10                  Identifier: blue
+ 12      VarDecl: 
+            Type: int
+ 12         Identifier: red
+ 13      VarDecl: 
+            Type: int
+ 13         Identifier: green
+ 14      VarDecl: 
+            Type: int
+ 14         Identifier: blue
+ 17   ClassDecl: 
+ 17      Identifier: Shape
+ 17      (implements) NamedType: 
+ 17         Identifier: Colorable
+ 19      FnDecl: 
+ 19         (return type) NamedType: 
+ 19            Identifier: Color
+ 19         Identifier: GetColor
+            (body) StmtBlock: 
+ 19            ReturnStmt: 
+ 19               FieldAccess: 
+ 19                  Identifier: myColor
+ 20      FnDecl: 
+            (return type) Type: void
+ 20         Identifier: SetColor
+ 20         (formals) VarDecl: 
+ 20            NamedType: 
+ 20               Identifier: Color
+ 20            Identifier: c
+            (body) StmtBlock: 
+ 20            AssignExpr: 
+ 20               FieldAccess: 
+ 20                  Identifier: myColor
+ 20               Operator: =
+ 20               FieldAccess: 
+ 20                  Identifier: c
+ 22      VarDecl: 
+ 22         NamedType: 
+ 22            Identifier: Color
+ 22         Identifier: myColor
+ 25   ClassDecl: 
+ 25      Identifier: Rectangle
+ 25      (extends) NamedType: 
+ 25         Identifier: Shape
+ 29   FnDecl: 
+         (return type) Type: void
+ 29      Identifier: main
+         (body) StmtBlock: 
+ 30         VarDecl: 
+ 30            NamedType: 
+ 30               Identifier: Colorable
+ 30            Identifier: s
+ 31         VarDecl: 
+ 31            NamedType: 
+ 31               Identifier: Color
+ 31            Identifier: green
+ 33         AssignExpr: 
+ 33            FieldAccess: 
+ 33               Identifier: green
+ 33            Operator: =
+ 33            NewExpr: 
+ 33               NamedType: 
+ 33                  Identifier: Color
+ 34         Call: 
+ 34            FieldAccess: 
+ 34               Identifier: green
+ 34            Identifier: SetRGB
+ 34            (actuals) IntConstant: 0
+ 34            (actuals) IntConstant: 0
+ 34            (actuals) IntConstant: 255
+ 35         AssignExpr: 
+ 35            FieldAccess: 
+ 35               Identifier: s
+ 35            Operator: =
+ 35            NewExpr: 
+ 35               NamedType: 
+ 35                  Identifier: Rectangle
+ 36         Call: 
+ 36            FieldAccess: 
+ 36               Identifier: s
+ 36            Identifier: SetColor
+ 36            (actuals) FieldAccess: 
+ 36               Identifier: green

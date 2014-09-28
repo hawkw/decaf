@@ -1,0 +1,98 @@
+
+   Program: 
+  1   FnDecl: 
+         (return type) Type: void
+  1      Identifier: main
+         (body) StmtBlock: 
+  2         VarDecl: 
+               Type: int
+  2            Identifier: a
+  3         VarDecl: 
+               Type: bool
+  3            Identifier: done
+  5         AssignExpr: 
+  5            FieldAccess: 
+  5               Identifier: a
+  5            Operator: =
+  5            IntConstant: 0
+            WhileStmt: 
+  6            (test) RelationalExpr: 
+  6               FieldAccess: 
+  6                  Identifier: a
+  6               Operator: <
+  6               IntConstant: 10
+               (body) StmtBlock: 
+                  PrintStmt: 
+  7                  (args) FieldAccess: 
+  7                     Identifier: a
+  7                  (args) StringConstant: " "
+  8               AssignExpr: 
+  8                  FieldAccess: 
+  8                     Identifier: a
+  8                  Operator: =
+  8                  ArithmeticExpr: 
+  8                     FieldAccess: 
+  8                        Identifier: a
+  8                     Operator: +
+  8                     IntConstant: 1
+                  IfStmt: 
+  9                  (test) EqualityExpr: 
+  9                     FieldAccess: 
+  9                        Identifier: a
+  9                     Operator: ==
+  9                     IntConstant: 5
+  9                  (then) BreakStmt: 
+            IfStmt: 
+ 11            (test) EqualityExpr: 
+ 11               ArithmeticExpr: 
+ 11                  FieldAccess: 
+ 11                     Identifier: a
+ 11                  Operator: %
+ 11                  IntConstant: 2
+ 11               Operator: ==
+ 11               IntConstant: 0
+ 12            (then) AssignExpr: 
+ 12               FieldAccess: 
+ 12                  Identifier: a
+ 12               Operator: =
+ 12               IntConstant: 1
+ 14            (else) AssignExpr: 
+ 14               FieldAccess: 
+ 14                  Identifier: done
+ 14               Operator: =
+ 14               BoolConstant: true
+            ForStmt: 
+               (init) Empty: 
+ 16            (test) LogicalExpr: 
+ 16               RelationalExpr: 
+ 16                  FieldAccess: 
+ 16                     Identifier: a
+ 16                  Operator: <=
+ 16                  IntConstant: 10
+ 16               Operator: ||
+ 16               FieldAccess: 
+ 16                  Identifier: done
+ 16            (step) AssignExpr: 
+ 16               FieldAccess: 
+ 16                  Identifier: a
+ 16               Operator: =
+ 16               ArithmeticExpr: 
+ 16                  FieldAccess: 
+ 16                     Identifier: a
+ 16                  Operator: +
+ 16                  IntConstant: 1
+               (body) StmtBlock: 
+                  PrintStmt: 
+ 17                  (args) FieldAccess: 
+ 17                     Identifier: a
+ 17                  (args) StringConstant: " "
+                  IfStmt: 
+ 18                  (test) EqualityExpr: 
+ 18                     FieldAccess: 
+ 18                        Identifier: a
+ 18                     Operator: ==
+ 18                     IntConstant: 10
+ 18                  (then) FieldAccess: 
+ 18                     Identifier: a
+ 20         ReturnStmt: 
+               Empty: 
