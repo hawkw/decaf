@@ -1,3 +1,13 @@
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
+
 package decaf.lexical
 
 import scala.collection.immutable.HashSet
@@ -7,6 +17,9 @@ import scala.util.parsing.input.CharArrayReader.EofCh
 
 /**
  * Tokens for the Decaf programming language.
+ *
+ * TODO: Consider separating Keyword/Operator/Delimiter into separate types for each (a la JJ's C implementation)
+ * TODO: Add line number tracking to tokens
  *
  * @author Hawk Weisman
  * Created by hawk on 9/27/14.
