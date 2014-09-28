@@ -51,6 +51,10 @@ trait DecafTokens extends Tokens {
     override def toString = "Operator: " + chars
   }
 
+  case class Delimiter(chars: String) extends Token {
+    override def toString = "Delimiter: " + chars
+  }
+
 }
 
 /**
@@ -84,7 +88,9 @@ class Lexer extends Lexical with DecafTokens {
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
     //------------------ Operators ---------------------------------------------------------------------------------\\
-    | chrIn('+', '-', '!', '/', '.', '=', '*', '>', '<', ';', '{', '}', '(', ')') ^^ {case char => Operator(char :: Nil mkString "")}
+      | chrIn('+', '-', '!', '/', '=', '*', '>', '<') ^^ { case char => Operator(char.toString)}
+      //------------------ Delimiters --------------------------------------------------------------------------------\\
+      | chrIn(',', '.', ';', '{', '}', '(', ')') ^^ { case char => Delimiter(char.toString)}
     //------------------ Misc --------------------------------------------------------------------------------------\\
     | failure("Error: Unrecognized character")
    )
