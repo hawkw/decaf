@@ -76,6 +76,11 @@ class Lexer extends Lexical with DecafTokens {
     //------------------- String literals --------------------------------------------------------------------------\\
     | '\'' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConst(chars mkString "")}
     | '\"' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConst(chars mkString "")}
+    | '\'' ~> failure("Unterminated string constant: ")
+    | '\"' ~> failure("Unterminated string constant: ")
+    //------------------ Operators ---------------------------------------------------------------------------------\\
+    | chrIn('+', '-', '!', '/', '.', '=', '*', '>', '<', ';', '{', '}', '(', ')') ^^ {case char => Operator(char :: Nil mkString "")}
+    //------------------ Misc --------------------------------------------------------------------------------------\\
     | failure("Error: Unrecognized character")
    )
 
