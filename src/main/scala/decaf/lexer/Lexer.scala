@@ -3,8 +3,11 @@ package decaf.lexer
 import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.token._
+import scala.util.parsing.input.CharArrayReader.EofCh
 
 /**
+ * Tokens for the Decaf programming language.
+ *
  * @author Hawk Weisman
  * Created by hawk on 9/27/14.
  */
@@ -51,6 +54,8 @@ trait DecafTokens extends Tokens {
 }
 
 /**
+ * Lexical analyzer for Decaf tokens.
+ *
  * @author Hawk Weisman
  * Created by hawk on 9/27/14.
  */
@@ -76,8 +81,8 @@ class Lexer extends Lexical with DecafTokens {
     //------------------- String literals --------------------------------------------------------------------------\\
     | '\'' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConst(chars mkString "")}
     | '\"' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConst(chars mkString "")}
-    | '\'' ~> failure("Unterminated string constant: ")
-    | '\"' ~> failure("Unterminated string constant: ")
+      | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
+      | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
     //------------------ Operators ---------------------------------------------------------------------------------\\
     | chrIn('+', '-', '!', '/', '.', '=', '*', '>', '<', ';', '{', '}', '(', ')') ^^ {case char => Operator(char :: Nil mkString "")}
     //------------------ Misc --------------------------------------------------------------------------------------\\
@@ -91,5 +96,15 @@ class Lexer extends Lexical with DecafTokens {
                                               BoolConst(chars)
                                             else Identifier(chars)
 
-  override def whitespace: Parser[Any] = ??? //TODO: WRITE ME
+  override def whitespace: Parser[Any] = rep(
+    chrIn(' ', '\t', '\n', '\r')
+      | '/' ~ '*' ~ comment
+      | '/' ~ '/' ~ chrExcept('\n', EofCh).+
+      | '/' ~ '*' ~ failure("Unterminated comment") //TODO: Line number of failure
+  )
+
+  def comment: Parser[Any] = (
+    '*' ~ '/' ^^ { case _ => ' '}
+      | chrExcept(EofCh) ~ comment
+    )
 }
