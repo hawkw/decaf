@@ -61,19 +61,21 @@ class Lexer extends Lexical with DecafTokens {
   "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
   val boolLit = HashSet("true", "false")
 
-  def chrIn(cs: Char*) = elem("", ch => (cs contains ch))
+  def chrIn(cs: Char*) = elem("", ch => cs contains ch)
 
   protected def exponent = chrIn('e','E') ~ chrIn('+', '-').? ~ digit.+
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
   def token: Parser[Token] = (
-    //------------------- Identifiers ------------------------------------------------------------------------------\\
+    //------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------\\
     letter ~ rep(letter | digit | elem('_'))      ^^ { case first ~ rest => processIdent(first :: rest mkString "") }
     //------------------- Integer literals -------------------------------------------------------------------------\\
     | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
     | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
-    | digit.+ ~ '.' ~ digit.*                           ^^ { case first ~ rest => DoubleConst(first :: rest mkString "") }
     | digit.+ ~ '.' ~ digit.* ~ exponent.?              ^^ { case first ~ rest ~ exponent => DoubleConst((first :: rest :: exponent.getOrElse("") :: Nil) mkString "") }
+    //------------------- String literals --------------------------------------------------------------------------\\
+    | '\'' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConst(chars mkString "")}
+    | '\"' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConst(chars mkString "")}
     | failure("Error: Unrecognized character")
    )
 
