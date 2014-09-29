@@ -14,6 +14,7 @@ import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.token._
 import scala.util.parsing.input.CharArrayReader.EofCh
+import scala.util.parsing.input.Positional
 
 /**
  * Tokens for the Decaf programming language.
@@ -29,43 +30,57 @@ trait DecafTokens extends Tokens {
 
   val MaxIdentLen = 31
 
-  case class IntConst(chars: String) extends Token {
-    val value: Integer = if (chars.contains("0x") || chars.contains("0X"))
-                            Integer.parseInt(chars.drop(2), 16)
-                         else chars.toInt
-    override def toString = "IntConstant: " + value
+  abstract class DecafToken(val chars: String) extends Token with Positional {
+    def value: Any = None
+
+    def name = "T_" + this.getClass.getSimpleName
+
+    def spaces = " " * (13 - chars.length)
+
+    def line = pos.line
+
+    def first_col = pos.column
+
+    def last_col = pos.column + (chars.length - 1)
+
+    override def toString = value match {
+      case None => s"$chars $spaces line $line cols $first_col-$last_col is $name"
+      case _ => s"$chars $spaces line $line cols $first_col-$last_col is $name (value = $value)"
+    }
   }
 
-  case class BoolConst(chars: String) extends Token {
-    val value: Boolean = chars.toBoolean
-    override def toString = "BoolConstant: " + value
+  case class IntConstant(ch: String) extends DecafToken(ch) {
+    override def value: Integer = if (chars.contains("0x") || chars.contains("0X"))
+      Integer.parseInt(chars.drop(2), 16)
+    else chars.toInt
   }
 
-  case class StringConst(chars: String) extends Token {
-    val value = chars
-    override def toString = "StringConstant: \"" + value + "\""
+  case class BoolConstant(ch: String) extends DecafToken(ch) {
+    override def value: Boolean = chars.toBoolean
   }
 
-  case class DoubleConst(chars: String) extends Token {
-    val value = chars.toDouble
-    override def toString = "DoubleConstant: " + value
+  case class StringConstant(ch: String) extends DecafToken(ch) {
+    override def value: String = chars
   }
 
-  case class Identifier(chars: String) extends Token {
-    val value = chars.take(MaxIdentLen)
-    override def toString = "Identifier: " + value
+  case class DoubleConstant(ch: String) extends DecafToken(ch) {
+    override def value: Double = chars.toDouble
   }
 
-  case class Keyword(chars: String) extends Token {
-    override def toString = "Keyword: " + chars
+  case class Identifier(ch: String) extends DecafToken(ch) {
+    override def value: String = chars.take(MaxIdentLen)
   }
 
-  case class Operator(chars: String) extends Token {
-    override def toString = "Operator: " + chars
+  case class Keyword(ch: String) extends DecafToken(ch) {
+    override def name = "T_" + chars.capitalize
   }
 
-  case class Delimiter(chars: String) extends Token {
-    override def toString = "Delimiter: " + chars
+  case class Operator(ch: String) extends DecafToken(ch) {
+    override def name = s"\'$chars\'"
+  }
+
+  case class Delimiter(ch: String) extends DecafToken(ch) {
+    override def name = s"\'$chars\'"
   }
 
 }
@@ -77,7 +92,9 @@ trait DecafTokens extends Tokens {
  * Created by hawk on 9/27/14.
  */
 
-class DecafLexical extends Lexical with DecafTokens {
+class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafTokens {
+
+  type Token = DecafToken
 
   val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
   "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
@@ -89,16 +106,18 @@ class DecafLexical extends Lexical with DecafTokens {
   protected def exponent = chrIn('e','E') ~ chrIn('+', '-').? ~ digit.+
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
-  def token: Parser[Token] = (
+  def token: Parser[Token] = if (trackPos) positioned(_token) else _token
+
+  private def _token: Parser[Token] = (
     /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
     letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
-    | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
-    | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
-    | digit.+ ~ '.' ~ digit.* ~ exponent.?              ^^ { case first ~ rest ~ exponent => DoubleConst((first :: rest :: exponent.getOrElse("") :: Nil) mkString "") }
+      | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
+      | digit ~ rep(digit) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
+      | digit.+ ~ '.' ~ digit.* ~ exponent.? ^^ { case first ~ rest ~ exponent => DoubleConstant((first :: rest :: exponent.getOrElse("") :: Nil) mkString "")}
       /*------------------- String literals --------------------------------------------------------------------------*/
-    | '\'' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConst(chars mkString "")}
-    | '\"' ~ rep( chrExcept('\'', '\"', '\n') ) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConst(chars mkString "")}
+      | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant(chars mkString "")}
+      | '\"' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConstant(chars mkString "")}
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       /*------------------ Operators ---------------------------------------------------------------------------------*/
@@ -117,7 +136,7 @@ class DecafLexical extends Lexical with DecafTokens {
   protected def processIdent(chars: String) = if (keywords contains chars)
                                               Keyword(chars)
                                             else if (boolLit contains chars)
-                                              BoolConst(chars)
+    BoolConstant(chars)
                                             else Identifier(chars)
 
   def whitespace: Parser[Any] = rep(
