@@ -57,7 +57,7 @@ trait DecafTokens extends Tokens {
   }
 
   case class Keyword(chars: String) extends Token {
-    override def toString = chars
+    override def toString = "Keyword: " + chars
   }
 
   case class Operator(chars: String) extends Token {
@@ -91,7 +91,7 @@ class DecafLexical extends Lexical with DecafTokens {
 
   def token: Parser[Token] = (
     /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
-    letter ~ opt(rep(letter | digit | elem('_'))) ^^ { case first ~ rest => processIdent(first :: rest.getOrElse("") :: Nil mkString "")}
+    letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
     | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter)    ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
     | digit ~ rep(digit)                                ^^ { case first ~ rest => IntConst(first :: rest mkString "") }
@@ -120,7 +120,7 @@ class DecafLexical extends Lexical with DecafTokens {
                                               BoolConst(chars)
                                             else Identifier(chars)
 
-  override def whitespace: Parser[Any] = rep(
+  def whitespace: Parser[Any] = rep(
     whitespaceChar
       | '/' ~ '*' ~ comment
       | '/' ~ '/' ~ chrExcept('\n', EofCh).+
