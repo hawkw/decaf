@@ -14,7 +14,7 @@ object StdoutTest extends DecafLexical {
   def main(args: Array[String]) {
     val program2 = Source.fromFile("build/resources/test/lab1-samples/program2.decaf").toArray
     val tokens = program(new CharArrayReader(program2, 0)).get
-    tokens.foreach(t => println(t.toString))
+    tokens.filter(!_.isInstanceOf[Character]).foreach(t => println(t.toString))
   }
 
 }
