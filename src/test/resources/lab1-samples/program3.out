@@ -16,7 +16,7 @@ weight       line 6 cols 17-22 is T_Identifier
 =            line 6 cols 24-24 is '=' 
 weight       line 6 cols 26-31 is T_Identifier 
 *            line 6 cols 33-33 is '*' 
-2.0          line 6 cols 35-37 is T_DoubleConstant (value = 2)
+2.0          line 6 cols 35-37 is T_DoubleConstant (value = 2.0)
 ;            line 6 cols 38-38 is ';' 
 }            line 6 cols 39-39 is '}' 
 }            line 7 cols 1-1 is '}' 

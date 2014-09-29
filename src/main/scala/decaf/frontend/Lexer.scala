@@ -69,7 +69,7 @@ trait DecafTokens extends Tokens {
   case class DoubleConstant(ch: String) extends DecafToken(ch) {
     override def value: Double = chars.toDouble
 
-    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
+    override def toString = f"$chars%s$spaces%s line $line%s cols $first_col%d-$last_col%d is $name%s (value = $value%01.1f)"
   }
 
   case class Identifier(ch: String) extends DecafToken(ch) {
