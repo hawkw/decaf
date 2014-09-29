@@ -37,7 +37,10 @@ dependencies {
 
 
 task lexstdout(dependsOn: classes, type: JavaExec) {
-    description "Print lexer output to stdout"
+    description "Print lexer output to stdout. Use `-Psrc=<source>` to set the source file, default is program2.decaf"
     main = 'decaf.test.StdoutTest'
+    if (project.hasProperty('src')) {
+        args src, ""
+    }
     classpath = sourceSets.main.runtimeClasspath
 }
