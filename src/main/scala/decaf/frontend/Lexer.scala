@@ -35,7 +35,7 @@ trait DecafTokens extends Tokens {
 
     def name = "T_" + this.getClass.getSimpleName
 
-    def spaces = " " * (13 - chars.length)
+    def spaces = " " * (12 - chars.length)
 
     def line = pos.line
 
@@ -43,28 +43,33 @@ trait DecafTokens extends Tokens {
 
     def last_col = pos.column + (chars.length - 1)
 
-    override def toString = value match {
-      case None => s"$chars $spaces line $line cols $first_col-$last_col is $name"
-      case _ => s"$chars $spaces line $line cols $first_col-$last_col is $name (value = $value)"
-    }
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name"
   }
 
   case class IntConstant(ch: String) extends DecafToken(ch) {
     override def value: Integer = if (chars.contains("0x") || chars.contains("0X"))
       Integer.parseInt(chars.drop(2), 16)
     else chars.toInt
+
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class BoolConstant(ch: String) extends DecafToken(ch) {
     override def value: Boolean = chars.toBoolean
+
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class StringConstant(ch: String) extends DecafToken(ch) {
     override def value: String = chars
+
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class DoubleConstant(ch: String) extends DecafToken(ch) {
     override def value: Double = chars.toDouble
+
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class Identifier(ch: String) extends DecafToken(ch) {
@@ -82,6 +87,8 @@ trait DecafTokens extends Tokens {
   case class Delimiter(ch: String) extends DecafToken(ch) {
     override def name = s"\'$chars\'"
   }
+
+  case class Ignore() extends DecafToken("")
 
 }
 
@@ -113,13 +120,18 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
     letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
       | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
+      | digit.+ ~ '.' ~ digit.* ~ exponent.? ^^ { case first ~ rest ~ exponent => DoubleConstant(List(first, rest, exponent.getOrElse("")) mkString "")}
       | digit ~ rep(digit) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
-      | digit.+ ~ '.' ~ digit.* ~ exponent.? ^^ { case first ~ rest ~ exponent => DoubleConstant((first :: rest :: exponent.getOrElse("") :: Nil) mkString "")}
       /*------------------- String literals --------------------------------------------------------------------------*/
       | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant(chars mkString "")}
       | '\"' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConstant(chars mkString "")}
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
+      /*------------------ Whitespace ---------------------------------------------------------------------------------*/
+      | chrIn(' ', '\n', '\t') ^^^ Ignore()
+      | '/' ~ '*' ~ comment ^^^ Ignore()
+      | '/' ~ '/' ~ rep(chrExcept(EofCh, '\n')) ^^^ Ignore()
+      | '/' ~ '*' ~> failure("unclosed comment")
       /*------------------ Operators ---------------------------------------------------------------------------------*/
       // Note: we could probably actually be doing a higher level of semantic analysis here - we could have separate
       // operator types for logical, mathematical, bitwise, and equality operators (we're already separating them here)
@@ -139,15 +151,17 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
     BoolConstant(chars)
                                             else Identifier(chars)
 
-  def whitespace: Parser[Any] = rep(
+
+  def whitespace: Parser[Any] = rep[Any](
     whitespaceChar
       | '/' ~ '*' ~ comment
-      | '/' ~ '/' ~ chrExcept('\n', EofCh).+
-      | '/' ~ '*' ~ failure("Unterminated comment") //TODO: Line number of failure
+      | '/' ~ '/' ~ rep(chrExcept(EofCh, '\n'))
+      | '/' ~ '*' ~ failure("unclosed comment")
   )
 
-  def comment: Parser[Any] = (
+  protected def comment: Parser[Any] = (
     '*' ~ '/' ^^ { case _ => ' '}
       | chrExcept(EofCh) ~ comment
     )
+
 }
