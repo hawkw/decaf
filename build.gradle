@@ -35,3 +35,9 @@ dependencies {
     testCompile group: 'org.scalatest', name: 'scalatest_2.11', version: '2.2.0'
 }
 
+
+task lexstdout(dependsOn: classes, type: JavaExec) {
+    description "Print lexer output to stdout"
+    main = 'decaf.test.StdoutTest'
+    classpath = sourceSets.main.runtimeClasspath
+}
