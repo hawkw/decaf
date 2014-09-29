@@ -10,11 +10,8 @@ import scala.util.parsing.input.CharArrayReader
  *
  * @deprecated Eventually this should be replaced by a ScalaTest test suite
  *             Created by hawk on 9/28/14.
- */
-object StdoutTest extends DecafLexical {
-
-  def program: Parser[List[Any]] = rep(token | whitespaceChar)
-
+ *
+               object StdoutTest extends DecafLexical {
   def main(args: Array[String]) {
     val source = if (args.length > 0) {
       Source.fromFile(args(0)).toArray
@@ -26,3 +23,4 @@ object StdoutTest extends DecafLexical {
   }
 
 }
+ */

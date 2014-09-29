@@ -113,6 +113,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
   protected def exponent = chrIn('e','E') ~ chrIn('+', '-').? ~ digit.+
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
+  def program: Parser[List[Any]] = rep(token) ^^ { case tokens => tokens.filter(!_.isInstanceOf[Ignore])}
+
   def token: Parser[Token] = if (trackPos) positioned(_token) else _token
 
   private def _token: Parser[Token] = (
