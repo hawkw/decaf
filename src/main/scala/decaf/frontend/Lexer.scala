@@ -62,13 +62,11 @@ trait DecafTokens extends Tokens {
 
   case class StringConstant(ch: String) extends DecafToken(ch) {
     override def value: String = chars
-
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class DoubleConstant(ch: String) extends DecafToken(ch) {
     override def value: Double = chars.toDouble
-
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
@@ -125,8 +123,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | digit.+ ~ '.' ~ digit.+ ~ exponent.? ^^ { case first ~ '.' ~ rest ~ exponent => DoubleConstant(first.mkString("") + '.' + rest.mkString("") + exponent.getOrElse(""))}
       | digit ~ rep(digit) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
       /*------------------- String literals --------------------------------------------------------------------------*/
-      | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant(chars mkString "")}
-      | '\"' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConstant(chars mkString "")}
+      | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant("\'" + chars.mkString("") + "\'")}
+      | '\"' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConstant("\"" + chars.mkString("") + "\"")}
       | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
       /*------------------ Whitespace ---------------------------------------------------------------------------------*/
