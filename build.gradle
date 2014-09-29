@@ -1,17 +1,6 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.github.maiflai:gradle-scalatest:0.4'
-    }
-}
-
 apply plugin: "java"
 apply plugin: "scala"
 apply plugin: "idea"
-apply plugin: 'scalatest'
-
 
 repositories {
     mavenLocal();
@@ -35,8 +24,6 @@ tasks.withType(ScalaCompile) {
 dependencies {
     compile "org.scala-lang:scala-library:2.11.2"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
-
-    testRuntime 'org.pegdown:pegdown:1.1.0'
     testCompile 'org.scalatest:scalatest_2.11:2.2.0'
 }
 
