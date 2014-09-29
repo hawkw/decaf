@@ -37,7 +37,21 @@ dependencies {
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
 
     testRuntime 'org.pegdown:pegdown:1.1.0'
-    testCompile group: 'org.scalatest', name: 'scalatest_2.11', version: '2.2.0'
+    testCompile 'org.scalatest:scalatest_2.11:2.2.0'
+}
+
+test << {
+    ant.taskdef(
+            name: 'scalatest',
+            classname: 'org.scalatest.tools.ScalaTestAntTask',
+            classpath: classpath.asPath
+    )
+    ant.scalatest(
+            runpath: testClassesDir,
+            haltonfailure: 'true',
+            fork: 'false') {
+        reporter(type: 'stderr')
+    }
 }
 
 
