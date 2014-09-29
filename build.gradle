@@ -27,6 +27,11 @@ configurations {
     scalaCompilerPlugins { transitive = false }
 }
 
+tasks.withType(ScalaCompile) {
+    // use zinc-based incremental compiler
+    scalaCompileOptions.useAnt = false
+}
+
 dependencies {
     compile "org.scala-lang:scala-library:2.11.2"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
