@@ -69,7 +69,7 @@ trait DecafTokens extends Tokens {
   case class DoubleConstant(ch: String) extends DecafToken(ch) {
     override def value: Double = chars.toDouble
 
-    override def toString = f"$chars%s$spaces%s line $line%s cols $first_col%d-$last_col%d is $name%s (value = $value%01.1f)"
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class Identifier(ch: String) extends DecafToken(ch) {
@@ -121,7 +121,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
     /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
     letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
-      | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
+      | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter) ^^ { case '0' ~ xes ~ digits => IntConstant("0" + xes + digits.mkString(""))}
       | digit.+ ~ '.' ~ digit.+ ~ exponent.? ^^ { case first ~ '.' ~ rest ~ exponent => DoubleConstant(first.mkString("") + '.' + rest.mkString("") + exponent.getOrElse(""))}
       | digit ~ rep(digit) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
       /*------------------- String literals --------------------------------------------------------------------------*/
