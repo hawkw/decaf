@@ -11,7 +11,7 @@ trait DecafAST {
   abstract sealed class ASTNode (val location: Option[Position]) {
     protected var parent: ASTNode = null
 
-    def getName: String
+    def getName: String = this.getClass.getSimpleName
 
     override def toString = print(0)
 
@@ -39,14 +39,13 @@ trait DecafAST {
   case class Identifier(loc: Option[Position], val name: String) extends ASTNode(loc) {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
-    def getName = name
+
+    override def getName = name
     def printChildren(indentLevel: Int): Unit = getName
   }
 
   case class Program(decls: List[Decl]) extends ASTNode(None) {
     decls.foreach{d => d.parent = this}
-
-    def getName: String = "Program"
 
     def printChildren(indentLevel: Int): String = decls.reduceLeft[String]{
       (acc, decl) => acc + decl.print(indentLevel +1)
@@ -66,8 +65,6 @@ trait DecafAST {
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
 
-    def getName: String = "StmtBlock"
-
     protected def printChildren(indentLevel: Int): String = {
       decls.reduceLeft[String] {
         (acc, decl) => acc + decl.print(indentLevel + 1)
@@ -83,7 +80,6 @@ trait DecafAST {
 
   case class VarDecl(n: Identifier, val t: Type) extends Decl(n) {
     t.parent = this
-    def getName = "VarDecl"
     def printChildren(indentLevel: Int) = {n.print(indentLevel +1) + id.print(indentLevel+1)}
   }
 
@@ -104,7 +100,6 @@ trait DecafAST {
     implements.foreach{nt => nt.parent = this}
     members.foreach{d => d.parent = this}
 
-    def getName = "ClassDecl"
     def printChildren(indentLevel: Int) = {
       if (extnds.isDefined) {
         extnds.get.print(indentLevel+1, Some("(extends)"))
@@ -116,8 +111,42 @@ trait DecafAST {
     }
   }
 
+  case class InterfaceDecl(name: Identifier, val members: List[Decl]) extends Decl(name) {
+    members.foreach { d => d.parent = this}
+
+    def printChildren(indentLevel: Int) = name.print(indentLevel + 1) + members.reduceLeft[String] {
+      (acc, decl) => acc + decl.print(indentLevel + 1)
+    }
+
+    override def getName: String = "InterfaceDecl"
+  }
+
+  case class FnDecl(name: Identifier,
+                    val returnType: Type,
+                    val formals: List[VarDecl]) extends Decl(name) {
+    name.parent = this
+    returnType.parent = this
+    formals.foreach { d => d.parent = this}
+    private var body: Stmt = null
+
+    def setFunctionBody(b: Stmt) {
+      this.body = b; b.parent = this
+    }
+
+    def printChildren(indentLevel: Int) = returnType.print(indentLevel + 1, Some("(return type)")) +
+      id.print(indentLevel + 1) +
+      formals.reduceLeft[String] { (acc, decl) => acc + decl.print(indentLevel + 1, Some("(formals)"))} +
+      (if (body != null) {
+        body.print(indentLevel + 1, Some("(body)"))
+      } else {
+        ""
+      })
+
+    override def getName: String = "FnDecl"
+  }
+
   abstract case class Type(val typeName: String, loc: Option[Position]) extends ASTNode(None) {
-    def getName: String = "Type"
+    override def getName = "Type"
     protected def printChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
