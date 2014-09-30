@@ -126,7 +126,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
     letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
       | '0' ~ chrIn('x', 'X') ~ rep(digit | hexLetter) ^^ { case '0' ~ xes ~ digits => IntConstant("0" + xes + digits.mkString(""))}
-      | digit.+ ~ '.' ~ digit.+ ~ exponent.? ^^ { case first ~ '.' ~ rest ~ exponent => DoubleConstant(first.mkString("") + '.' + rest.mkString("") + exponent.getOrElse(""))}
+      | digit.+ ~ '.' ~ digit.* ~ exponent.? ^^ { case first ~ '.' ~ rest ~ exponent => DoubleConstant(first.mkString("") + '.' + rest.mkString("") + exponent.getOrElse(""))}
       | digit ~ rep(digit) ^^ { case first ~ rest => IntConstant(first :: rest mkString "")}
       /*------------------- String literals --------------------------------------------------------------------------*/
       | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant("\'" + chars.mkString("") + "\'")}
