@@ -114,7 +114,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
 
   def chrIn(cs: Char*) = elem("", ch => cs contains ch)
 
-  protected def exponent = chrIn('e','E') ~ chrIn('+', '-').? ~ digit.+
+  protected def exponent = chrIn('e', 'E') ~ chrIn('+', '-').? ~ digit.+ ^^ { case first ~ sign ~ rest => first :: sign.getOrElse("") :: rest mkString ("")}
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
   def program: Parser[List[Any]] = rep(token) ^^ { case tokens => tokens.filter(!_.isInstanceOf[Ignore])}
