@@ -17,9 +17,9 @@ trait DecafAST {
 
     /**
      * Prettyprint the node, given an indentation level and optionally a label
-     * @param indentLevel
-     * @param label
-     * @return
+     * @param indentLevel the level to indent the node's name
+     * @param label an optional label to attach to the node's
+     * @return a String containing the prettyprint representation of the node
      */
     protected def print (indentLevel: Int, label: Option[String]=None): String = {
       val spaces = 3
@@ -36,7 +36,7 @@ trait DecafAST {
     protected def printChildren (indentLevel: Int): String
   }
 
-  case class Identifier(loc: Option[Position], val name: String) extends ASTNode(loc) {
+  case class Identifier(loc: Option[Position], name: String) extends ASTNode(loc) {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
 
@@ -52,10 +52,11 @@ trait DecafAST {
     } + "\n"
   }
 
+  /*----------------------- Statements ----------------------------------------------------------------------------*/
   abstract case class Stmt(locat: Option[Position]) extends ASTNode(locat)
 
-  case class StmtBlock (val decls: List[Decl],
-                        val stmts: List[Stmt],
+  case class StmtBlock(decls: List[Decl],
+                       stmts: List[Stmt],
                         loc: Option[Position]) extends Stmt(loc) {
 
     def this(decls: List[Decl], stmts: List[Stmt]) = this(decls, stmts, None)
@@ -74,19 +75,24 @@ trait DecafAST {
     }
   }
 
+  /*----------------------- Expressions ----------------------------------------------------------------------------*/
+  abstract class Expr(locat: Option[Position]) extends Stmt(locat)
+
+
+  /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
   }
 
-  case class VarDecl(n: Identifier, val t: Type) extends Decl(n) {
+  case class VarDecl(n: Identifier, t: Type) extends Decl(n) {
     t.parent = this
     def printChildren(indentLevel: Int) = {n.print(indentLevel +1) + id.print(indentLevel+1)}
   }
 
   case class ClassDecl(name: Identifier,
-                       val extnds: Option[NamedType]=None,
-                       val implements: List[NamedType],
-                       val members: List[Decl]) extends Decl(name) {
+                       extnds: Option[NamedType] = None,
+                       implements: List[NamedType],
+                       members: List[Decl]) extends Decl(name) {
     def this(name: Identifier,
              ext: NamedType,
              implements: List[NamedType],
@@ -111,7 +117,7 @@ trait DecafAST {
     }
   }
 
-  case class InterfaceDecl(name: Identifier, val members: List[Decl]) extends Decl(name) {
+  case class InterfaceDecl(name: Identifier, members: List[Decl]) extends Decl(name) {
     members.foreach { d => d.parent = this}
 
     def printChildren(indentLevel: Int) = name.print(indentLevel + 1) + members.reduceLeft[String] {
@@ -122,8 +128,8 @@ trait DecafAST {
   }
 
   case class FnDecl(name: Identifier,
-                    val returnType: Type,
-                    val formals: List[VarDecl]) extends Decl(name) {
+                    returnType: Type,
+                    formals: List[VarDecl]) extends Decl(name) {
     name.parent = this
     returnType.parent = this
     formals.foreach { d => d.parent = this}
@@ -145,7 +151,8 @@ trait DecafAST {
     override def getName: String = "FnDecl"
   }
 
-  abstract case class Type(val typeName: String, loc: Option[Position]) extends ASTNode(None) {
+  /*----------------------- Types ---------------------------------------------------------------------------------*/
+  abstract case class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
     override def getName = "Type"
     protected def printChildren(indentLevel: Int): String = typeName
   }
