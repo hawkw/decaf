@@ -11,15 +11,15 @@ trait DecafAST {
   abstract sealed class ASTNode (val location: Option[Position]) {
     protected var parent: ASTNode = null
 
-    def getName: String
+    def getName: String = this.getClass.getSimpleName
 
     override def toString = print(0)
 
     /**
      * Prettyprint the node, given an indentation level and optionally a label
-     * @param indentLevel
-     * @param label
-     * @return
+     * @param indentLevel the level to indent the node's name
+     * @param label an optional label to attach to the node's
+     * @return a String containing the prettyprint representation of the node
      */
     protected def print (indentLevel: Int, label: Option[String]=None): String = {
       val spaces = 3
@@ -36,27 +36,27 @@ trait DecafAST {
     protected def printChildren (indentLevel: Int): String
   }
 
-  case class Identifier(loc: Option[Position], val name: String) extends ASTNode(loc) {
+  case class Identifier(loc: Option[Position], name: String) extends ASTNode(loc) {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
-    def getName = name
+
+    override def getName = name
     def printChildren(indentLevel: Int): Unit = getName
   }
 
   case class Program(decls: List[Decl]) extends ASTNode(None) {
     decls.foreach{d => d.parent = this}
 
-    def getName: String = "Program"
-
     def printChildren(indentLevel: Int): String = decls.reduceLeft[String]{
       (acc, decl) => acc + decl.print(indentLevel +1)
     } + "\n"
   }
 
+  /*----------------------- Statements ----------------------------------------------------------------------------*/
   abstract case class Stmt(locat: Option[Position]) extends ASTNode(locat)
 
-  case class StmtBlock (val decls: List[Decl],
-                        val stmts: List[Stmt],
+  case class StmtBlock(decls: List[Decl],
+                       stmts: List[Stmt],
                         loc: Option[Position]) extends Stmt(loc) {
 
     def this(decls: List[Decl], stmts: List[Stmt]) = this(decls, stmts, None)
@@ -65,8 +65,6 @@ trait DecafAST {
 
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
-
-    def getName: String = "StmtBlock"
 
     protected def printChildren(indentLevel: Int): String = {
       decls.reduceLeft[String] {
@@ -77,20 +75,24 @@ trait DecafAST {
     }
   }
 
+  /*----------------------- Expressions ----------------------------------------------------------------------------*/
+  abstract class Expr(locat: Option[Position]) extends Stmt(locat)
+
+
+  /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
   }
 
-  case class VarDecl(n: Identifier, val t: Type) extends Decl(n) {
+  case class VarDecl(n: Identifier, t: Type) extends Decl(n) {
     t.parent = this
-    def getName = "VarDecl"
     def printChildren(indentLevel: Int) = {n.print(indentLevel +1) + id.print(indentLevel+1)}
   }
 
   case class ClassDecl(name: Identifier,
-                       val extnds: Option[NamedType]=None,
-                       val implements: List[NamedType],
-                       val members: List[Decl]) extends Decl(name) {
+                       extnds: Option[NamedType] = None,
+                       implements: List[NamedType],
+                       members: List[Decl]) extends Decl(name) {
     def this(name: Identifier,
              ext: NamedType,
              implements: List[NamedType],
@@ -104,7 +106,6 @@ trait DecafAST {
     implements.foreach{nt => nt.parent = this}
     members.foreach{d => d.parent = this}
 
-    def getName = "ClassDecl"
     def printChildren(indentLevel: Int) = {
       if (extnds.isDefined) {
         extnds.get.print(indentLevel+1, Some("(extends)"))
@@ -116,8 +117,43 @@ trait DecafAST {
     }
   }
 
-  abstract case class Type(val typeName: String, loc: Option[Position]) extends ASTNode(None) {
-    def getName: String = "Type"
+  case class InterfaceDecl(name: Identifier, members: List[Decl]) extends Decl(name) {
+    members.foreach { d => d.parent = this}
+
+    def printChildren(indentLevel: Int) = name.print(indentLevel + 1) + members.reduceLeft[String] {
+      (acc, decl) => acc + decl.print(indentLevel + 1)
+    }
+
+    override def getName: String = "InterfaceDecl"
+  }
+
+  case class FnDecl(name: Identifier,
+                    returnType: Type,
+                    formals: List[VarDecl]) extends Decl(name) {
+    name.parent = this
+    returnType.parent = this
+    formals.foreach { d => d.parent = this}
+    private var body: Stmt = null
+
+    def setFunctionBody(b: Stmt) {
+      this.body = b; b.parent = this
+    }
+
+    def printChildren(indentLevel: Int) = returnType.print(indentLevel + 1, Some("(return type)")) +
+      id.print(indentLevel + 1) +
+      formals.reduceLeft[String] { (acc, decl) => acc + decl.print(indentLevel + 1, Some("(formals)"))} +
+      (if (body != null) {
+        body.print(indentLevel + 1, Some("(body)"))
+      } else {
+        ""
+      })
+
+    override def getName: String = "FnDecl"
+  }
+
+  /*----------------------- Types ---------------------------------------------------------------------------------*/
+  abstract case class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
+    override def getName = "Type"
     protected def printChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
