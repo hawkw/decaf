@@ -79,7 +79,13 @@ trait DecafTokens extends Tokens {
   }
 
   case class Operator(ch: String) extends DecafToken(ch) {
-    override def name = s"\'$chars\'"
+    override def name = chars match{
+      case "||" =>"T_Or"
+      case "<=" => "T_LessEqual"
+      case ">=" => "T_GreaterEqual"
+      case "==" => "T_Equal"
+      case _ => s"\'$chars\'"
+    }
   }
 
   case class Delimiter(ch: String) extends DecafToken(ch) {
