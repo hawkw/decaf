@@ -63,8 +63,8 @@ class LexerSamplesSpec extends FlatSpec with Matchers {
   }
 
   it should "tokenize reserved words and operators" in {
-    val program2 = Source fromFile "build/resources/test/lab1-samples/reserve-op.frag" toArray
-    val expected = Source fromFile "build/resources/test/lab1-samples/reserve-op.out" getLines
+    val program2 = Source fromFile "build/resources/test/lab1-samples/reserve_op.frag" toArray
+    val expected = Source fromFile "build/resources/test/lab1-samples/reserve_op.out" getLines
     val tokens = target.program(new CharArrayReader(program2, 0)).get.toIterator
 
     for (line <- expected) {
