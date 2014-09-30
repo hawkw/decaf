@@ -76,9 +76,103 @@ trait DecafAST {
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
-  abstract class Expr(locat: Option[Position]) extends Stmt(locat)
+  abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
 
+  case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
+    override def getName = "Empty"
 
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class IntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class DoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class BoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class StringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = value
+  }
+
+  case class NullConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class Operator(loc: Position, token: String) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = token
+  }
+
+  case class CompoundExpr(loc: Position, right: Expr, op: Operator, left: Option[Expr]) extends Expr(Some(loc)) {
+    def this(loc: Position, right: Expr, op: Operator) = this(loc, right, op, None)
+
+    def this(loc: Position, right: Expr, op: Operator, left: Expr) = this(loc, right, op, Some(left))
+
+    op.parent = this
+    right.parent = this
+    if (left.isDefined) left.get.parent = this
+
+    def printChildren(indentLevel: Int): String = {
+      if (left.isDefined) left.get.print(indentLevel + 1)
+      else {
+        ""
+      } + op.print(indentLevel + 1) + right.print(indentLevel + 1)
+    }
+  }
+
+  case class ArithmeticExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+
+  case class RelationalExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+
+  case class EqualityExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+
+  case class LogicalExpr(l: Position, rhs: Expr, o: Operator, lhs: Option[Expr]) extends CompoundExpr(l, rhs, o, lhs) {
+    def this(l: Position, rhs: Expr, o: Operator) = this(l, rhs, o, None)
+
+    def this(l: Position, rhs: Expr, o: Operator, lhs: Expr) = this(l, rhs, o, Some(lhs))
+  }
+
+  case class AssignExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+
+  case class LValue(loc: Position) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class This(loc: Position) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends Expr(Some(loc)) {
+    base.parent = this
+    subscript.parent = this
+
+    def printChildren(indentLevel: Int): String = {
+      base.print(indentLevel + 1)
+      subscript.print(indentLevel + 1, Some("(subscript"))
+    }
+  }
+
+  case class FieldAccess(loc: Position, base: Option[Expr], field: Identifier) extends Expr(Some(loc)) {
+    def this(loc: Position, base: Expr, field: Identifier) = this(loc, Some(base), field)
+
+    def this(loc: Position, field: Identifier) = this(loc, None, field)
+
+    field.parent = this
+    if (base.isDefined) base.get.parent = this
+
+    override protected def printChildren(indentLevel: Int): String = {
+      if (base.isDefined) base.get.print(indentLevel + 1)
+      else {
+        ""
+      } +
+        field.print(indentLevel + 1)
+    }
+  }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
