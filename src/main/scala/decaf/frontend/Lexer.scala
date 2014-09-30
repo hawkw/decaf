@@ -26,11 +26,11 @@ import scala.util.parsing.input.Positional
  * Created by hawk on 9/27/14.
  */
 
-trait DecafTokens extends Tokens {
+sealed trait DecafTokens extends Tokens {
 
   val MaxIdentLen = 31
 
-  abstract class DecafToken(val chars: String) extends Token with Positional {
+  sealed abstract class DecafToken(val chars: String) extends Token with Positional {
     def value: Any = None
 
     def name = "T_" + this.getClass.getSimpleName
