@@ -42,6 +42,8 @@ sealed trait DecafTokens extends Tokens {
 
     def last_col = pos.column + (chars.length - 1)
 
+    def getPos = this.pos
+
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name"
   }
 
@@ -88,7 +90,10 @@ sealed trait DecafTokens extends Tokens {
   }
 
   case class Delimiter(ch: String) extends DecafToken(ch) {
-    override def name = s"\'$chars\'"
+    override def name = chars match{
+      case "[]" => "T_Dims"
+      case _ => s"\'$chars\'"
+    }
   }
 
   case class Ignore() extends DecafToken("")
@@ -144,7 +149,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | (repN(2, '|') | repN(2, '&')) ^^ { case chars => Operator(chars mkString "")}
       | chrIn('+', '-', '!', '/', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       /*------------------ Delimiters --------------------------------------------------------------------------------*/
-      | chrIn(',', '.', ';', '{', '}', '(', ')') ^^ { case char => Delimiter(char.toString)}
+      | '[' ~ ']' ^^ { case _ => Delimiter("[]") }
+      | chrIn(',', '.', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
       /*------------------ Misc --------------------------------------------------------------------------------------*/
     | failure("Error: Unrecognized character")
    )
