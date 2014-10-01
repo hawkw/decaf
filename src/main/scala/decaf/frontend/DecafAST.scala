@@ -25,7 +25,7 @@ trait DecafAST {
     /**
      * Returns the name of this node type for printing.
      *
-     * By default, this is the class name of the node. For some nodes, such as [[Identifier]], this should be something
+     * By default, this is the class name of the node. For some nodes, such as [[ASTIdentifier]], this should be something
      * else; those nodes can override this method.
      *
      * @return a String containing the name of this node type for printing
@@ -77,7 +77,7 @@ trait DecafAST {
     protected[DecafAST] def stringifyChildren (indentLevel: Int): String
   }
 
-  case class Identifier(loc: Option[Position], name: String) extends ASTNode(loc) {
+  case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
 
@@ -151,9 +151,11 @@ trait DecafAST {
      def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ReturnStmt(loc: Position, expr: Expr) extends Stmt(Some(loc)) {
-    expr.parent = this
-     def stringifyChildren(indentLevel: Int): String = expr.stringify(indentLevel + 1)
+  case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(Some(loc)) {
+    if (expr.isDefined)
+      expr.get.parent = this
+
+    def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
   }
 
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
@@ -246,10 +248,10 @@ trait DecafAST {
     }
   }
 
-  case class FieldAccess(loc: Position, base: Option[Expr], field: Identifier) extends Expr(Some(loc)) {
-    def this(loc: Position, base: Expr, field: Identifier) = this(loc, Some(base), field)
+  case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends Expr(Some(loc)) {
+    def this(loc: Position, base: Expr, field: ASTIdentifier) = this(loc, Some(base), field)
 
-    def this(loc: Position, field: Identifier) = this(loc, None, field)
+    def this(loc: Position, field: ASTIdentifier) = this(loc, None, field)
 
     field.parent = this
     if (base.isDefined) base.get.parent = this
@@ -263,10 +265,10 @@ trait DecafAST {
     }
   }
 
-  case class Call(loc: Position, base: Option[Expr], field: Identifier, args: List[Expr]) extends Expr(Some(loc)) {
-    def this(loc: Position, base: Expr, field: Identifier, args: List[Expr]) = this(loc, Some(base), field, args)
+  case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(Some(loc)) {
+    def this(loc: Position, base: Expr, field: ASTIdentifier, args: List[Expr]) = this(loc, Some(base), field, args)
 
-    def this(loc: Position, field: Identifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
+    def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
      def stringifyChildren(indentLevel: Int): String = if (base.isDefined) base.get.stringify(indentLevel + 1)
     else {
@@ -294,24 +296,24 @@ trait DecafAST {
      def stringifyChildren(indentLevel: Int): String = ""
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
-  abstract class Decl(id: Identifier) extends ASTNode(id.loc) {
+  abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
     id.parent = this
   }
 
-  case class VarDecl(n: Identifier, t: Type) extends Decl(n) {
+  case class VarDecl(n: ASTIdentifier, t: Type) extends Decl(n) {
     t.parent = this
     def stringifyChildren(indentLevel: Int) = {t.stringify(indentLevel +1) + n.stringify(indentLevel+1)}
   }
 
-  case class ClassDecl(name: Identifier,
+  case class ClassDecl(name: ASTIdentifier,
                        extnds: Option[NamedType] = None,
                        implements: List[NamedType],
                        members: List[Decl]) extends Decl(name) {
-    def this(name: Identifier,
+    def this(name: ASTIdentifier,
              ext: NamedType,
              implements: List[NamedType],
              members: List[Decl]) = this(name, Some(ext),implements,members)
-    def this(name: Identifier,
+    def this(name: ASTIdentifier,
              implements: List[NamedType],
              members: List[Decl]) = this(name, None, implements,members)
 
@@ -331,7 +333,7 @@ trait DecafAST {
     }
   }
 
-  case class InterfaceDecl(name: Identifier, members: List[Decl]) extends Decl(name) {
+  case class InterfaceDecl(name: ASTIdentifier, members: List[Decl]) extends Decl(name) {
     members.foreach { d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel + 1) + members.foldLeft[String](""){
@@ -341,7 +343,7 @@ trait DecafAST {
     override def getName: String = "InterfaceDecl"
   }
 
-  case class FnDecl(name: Identifier,
+  case class FnDecl(name: ASTIdentifier,
                     returnType: Type,
                     formals: List[VarDecl]) extends Decl(name) {
     name.parent = this
@@ -379,7 +381,7 @@ trait DecafAST {
   case class StringType() extends Type("string", None)
   case class ErrorType() extends Type("error", None)
 
-  case class NamedType(name: Identifier) extends Type(name.getName, name.loc) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.getName, name.loc) {
     override def getName = "NamedType"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
