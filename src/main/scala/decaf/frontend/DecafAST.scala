@@ -193,6 +193,14 @@ trait DecafAST {
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
     override protected def printChildren(indentLevel: Int): String = size.print(indentLevel + 1) + elemType.print(indentLevel + 1)
   }
+
+  case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
