@@ -9,7 +9,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 trait DecafAST {
 
   abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
-    protected var parent: ASTNode = null
+    protected[DecafAST] var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
 
     def getName: String = this.getClass.getSimpleName
@@ -22,7 +22,7 @@ trait DecafAST {
      * @param label an optional label to attach to the node's
      * @return a String containing the prettyprint representation of the node
      */
-    protected def print (indentLevel: Int, label: Option[String]=None): String = {
+    protected[DecafAST] def print (indentLevel: Int, label: Option[String]=None): String = {
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
@@ -34,7 +34,7 @@ trait DecafAST {
 
       result.toString()
     }
-    protected def printChildren (indentLevel: Int): String
+    protected[DecafAST] def printChildren (indentLevel: Int): String
   }
 
   case class Identifier(loc: Option[Position], name: String) extends ASTNode(loc) {
