@@ -107,6 +107,23 @@ trait DecafAST {
     }
   }
 
+  case class BreakStmt(loc: Position) extends Stmt(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = ""
+  }
+
+  case class ReturnStmt(loc: Position, expr: Expr) extends Stmt(Some(loc)) {
+    expr.parent = this
+    override protected def printChildren(indentLevel: Int): String = expr.print(indentLevel + 1)
+  }
+
+  case class PrintStmt(args: List[Expr]) extends Stmt(None) {
+    args.foreach{e => e.parent = this}
+
+    override protected def printChildren(indentLevel: Int): String = args.reduceLeft[String]{
+      (acc, expr) => acc + expr.print(indentLevel + 1)
+    }
+  }
+
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
 
