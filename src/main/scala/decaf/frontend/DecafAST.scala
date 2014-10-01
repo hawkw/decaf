@@ -48,7 +48,7 @@ trait DecafAST {
   case class Program(decls: List[Decl]) extends ASTNode(None) {
     decls.foreach{d => d.parent = this}
 
-    def printChildren(indentLevel: Int): String = decls.reduceLeft[String]{
+    def printChildren(indentLevel: Int): String = decls.foldLeft[String](""){
       (acc, decl) => acc + decl.print(indentLevel +1)
     } + "\n"
   }
@@ -63,9 +63,9 @@ trait DecafAST {
     stmts.foreach(s => s.parent = this)
 
     protected def printChildren(indentLevel: Int): String = {
-      decls.reduceLeft[String] {
+      decls.foldLeft[String](""){
         (acc, decl) => acc + decl.print(indentLevel + 1)
-      } + stmts.reduceLeft[String] {
+      } + stmts.foldLeft[String](""){
         (acc, stmt) => acc + stmt.print(indentLevel + 1)
       }
     }
@@ -119,7 +119,7 @@ trait DecafAST {
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
     args.foreach{e => e.parent = this}
 
-    override protected def printChildren(indentLevel: Int): String = args.reduceLeft[String]{
+    override protected def printChildren(indentLevel: Int): String = args.foldLeft[String](""){
       (acc, expr) => acc + expr.print(indentLevel + 1)
     }
   }
@@ -232,7 +232,7 @@ trait DecafAST {
     else {
       ""
     } +
-      field.print(indentLevel + 1) + args.reduceLeft[String] { (acc, expr) => acc + expr.print(indentLevel + 1, Some("(actuals)"))}
+      field.print(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.print(indentLevel + 1, Some("(actuals)"))}
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
@@ -283,9 +283,9 @@ trait DecafAST {
     def printChildren(indentLevel: Int) = {
       if (extnds.isDefined) {
         extnds.get.print(indentLevel+1, Some("(extends)"))
-      } else {""} + implements.reduceLeft[String]{
+      } else {""} + implements.foldLeft[String](""){
         (acc, nt) => acc + nt.print(indentLevel + 1, Some("(implements)"))
-      } + members.reduceLeft[String] {
+      } + members.foldLeft[String](""){
         (acc, decl) => acc + decl.print(indentLevel + 1)
       }
     }
@@ -294,7 +294,7 @@ trait DecafAST {
   case class InterfaceDecl(name: Identifier, members: List[Decl]) extends Decl(name) {
     members.foreach { d => d.parent = this}
 
-    def printChildren(indentLevel: Int) = name.print(indentLevel + 1) + members.reduceLeft[String] {
+    def printChildren(indentLevel: Int) = name.print(indentLevel + 1) + members.foldLeft[String](""){
       (acc, decl) => acc + decl.print(indentLevel + 1)
     }
 
@@ -315,7 +315,7 @@ trait DecafAST {
 
     def printChildren(indentLevel: Int) = returnType.print(indentLevel + 1, Some("(return type)")) +
       name.print(indentLevel + 1) +
-      formals.reduceLeft[String] { (acc, decl) => acc + decl.print(indentLevel + 1, Some("(formals)"))} +
+      formals.foldLeft[String](""){ (acc, decl) => acc + decl.print(indentLevel + 1, Some("(formals)"))} +
       (if (body != null) {
         body.print(indentLevel + 1, Some("(body)"))
       } else {
