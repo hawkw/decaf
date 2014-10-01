@@ -195,7 +195,7 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = value
   }
 
-  case class ASTNullConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+  case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
     override def getName = "NullConstant"
     def stringifyChildren(indentLevel: Int): String = ""
   }
