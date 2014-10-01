@@ -62,7 +62,7 @@ trait DecafAST {
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
 
-    protected def printChildren(indentLevel: Int): String = {
+    def printChildren(indentLevel: Int): String = {
       decls.foldLeft[String](""){
         (acc, decl) => acc + decl.print(indentLevel + 1)
       } + stmts.foldLeft[String](""){
@@ -83,7 +83,7 @@ trait DecafAST {
     step.parent = this
     loopBody.parent = this
 
-    override protected def printChildren(indentLevel: Int): String = {
+     def printChildren(indentLevel: Int): String = {
       init.print(indentLevel + 1, Some("(init)")) +
         test.print(indentLevel + 1, Some("(test)")) +
         step.print(indentLevel + 1, Some("(step)")) +
@@ -92,7 +92,7 @@ trait DecafAST {
   }
 
   case class WhileStmt(test: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
-    override protected def printChildren(indentLevel: Int): String = test.print(indentLevel + 1, Some("(test)")) +
+     def printChildren(indentLevel: Int): String = test.print(indentLevel + 1, Some("(test)")) +
       loopBody.print(indentLevel + 1, Some("(body)"))
   }
 
@@ -100,7 +100,7 @@ trait DecafAST {
     def this(test: Expr, testBody: Stmt, elseBody: Stmt)  = this(test, testBody, Some(elseBody))
     def this(test: Expr, testBody: Stmt) = this(test, testBody, None)
     if (elseBody.isDefined) {elseBody.get.parent = this}
-    override protected def printChildren(indentLevel: Int): String = {
+     def printChildren(indentLevel: Int): String = {
       test.print(indentLevel + 1, Some("(test)")) +
         testBody.print(indentLevel + 1, Some("(body)")) +
         (if (elseBody.isDefined) elseBody.get.print(indentLevel + 1) else "")
@@ -108,18 +108,18 @@ trait DecafAST {
   }
 
   case class BreakStmt(loc: Position) extends Stmt(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class ReturnStmt(loc: Position, expr: Expr) extends Stmt(Some(loc)) {
     expr.parent = this
-    override protected def printChildren(indentLevel: Int): String = expr.print(indentLevel + 1)
+     def printChildren(indentLevel: Int): String = expr.print(indentLevel + 1)
   }
 
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
     args.foreach{e => e.parent = this}
 
-    override protected def printChildren(indentLevel: Int): String = args.foldLeft[String](""){
+     def printChildren(indentLevel: Int): String = args.foldLeft[String](""){
       (acc, expr) => acc + expr.print(indentLevel + 1)
     }
   }
@@ -130,31 +130,31 @@ trait DecafAST {
   case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
     override def getName = "Empty"
 
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class IntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = value.toString
+     def printChildren(indentLevel: Int): String = value.toString
   }
 
   case class DoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = value.toString
+     def printChildren(indentLevel: Int): String = value.toString
   }
 
   case class BoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = value.toString
+     def printChildren(indentLevel: Int): String = value.toString
   }
 
   case class StringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = value
+     def printChildren(indentLevel: Int): String = value
   }
 
   case class NullConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class Operator(loc: Position, token: String) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = token
+     def printChildren(indentLevel: Int): String = token
   }
 
   abstract class CompoundExpr(loc: Position, right: Expr, op: Operator, left: Option[Expr]) extends Expr(Some(loc)) {
@@ -189,11 +189,11 @@ trait DecafAST {
   case class AssignExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
   case class LValue(loc: Position) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class This(loc: Position) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends Expr(Some(loc)) {
@@ -214,7 +214,7 @@ trait DecafAST {
     field.parent = this
     if (base.isDefined) base.get.parent = this
 
-    override protected def printChildren(indentLevel: Int): String = {
+     def printChildren(indentLevel: Int): String = {
       if (base.isDefined) base.get.print(indentLevel + 1)
       else {
         ""
@@ -228,7 +228,7 @@ trait DecafAST {
 
     def this(loc: Position, field: Identifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
-    override protected def printChildren(indentLevel: Int): String = if (base.isDefined) base.get.print(indentLevel + 1)
+     def printChildren(indentLevel: Int): String = if (base.isDefined) base.get.print(indentLevel + 1)
     else {
       ""
     } +
@@ -237,21 +237,21 @@ trait DecafAST {
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
     cType.parent = this
-    override protected def printChildren(indentLevel: Int): String = cType.print(indentLevel + 1)
+     def printChildren(indentLevel: Int): String = cType.print(indentLevel + 1)
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
     size.parent = this
     elemType.parent = this
-    override protected def printChildren(indentLevel: Int): String = size.print(indentLevel + 1) + elemType.print(indentLevel + 1)
+     def printChildren(indentLevel: Int): String = size.print(indentLevel + 1) + elemType.print(indentLevel + 1)
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
 
   case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
-    override protected def printChildren(indentLevel: Int): String = ""
+     def printChildren(indentLevel: Int): String = ""
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: Identifier) extends ASTNode(id.loc) {
