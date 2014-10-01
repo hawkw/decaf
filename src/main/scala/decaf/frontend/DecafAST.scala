@@ -70,9 +70,31 @@ trait DecafAST {
     }
   }
 
-  case class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
-    override protected def printChildren(indentLevel: Int): String = ???
+  abstract case class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
+    testExpr.parent = this
+    body.parent = this
   }
+
+  abstract case class LoopStmt(te: Expr, b: Stmt) extends ConditionalStmt(te, b)
+
+  case class ForStmt(init: Expr, test: Expr, step: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
+    init.parent = this
+    step.parent = this
+    loopBody.parent = this
+
+    override protected def printChildren(indentLevel: Int): String = {
+      init.print(indentLevel + 1, Some("(init)")) +
+        test.print(indentLevel + 1, Some("(test)")) +
+        step.print(indentLevel + 1, Some("(step)")) +
+        body.print(indentLevel + 1, Some("(body)"))
+    }
+  }
+
+  case class WhileStmt(test: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
+    override protected def printChildren(indentLevel: Int): String = test.print(indentLevel + 1, Some("(test)")) +
+      body.print(indentLevel + 1, Some("(body)"))
+  }
+
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
