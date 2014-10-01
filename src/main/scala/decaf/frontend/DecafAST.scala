@@ -157,7 +157,7 @@ trait DecafAST {
     override protected def printChildren(indentLevel: Int): String = token
   }
 
-  case class CompoundExpr(loc: Position, right: Expr, op: Operator, left: Option[Expr]) extends Expr(Some(loc)) {
+  abstract class CompoundExpr(loc: Position, right: Expr, op: Operator, left: Option[Expr]) extends Expr(Some(loc)) {
     def this(loc: Position, right: Expr, op: Operator) = this(loc, right, op, None)
 
     def this(loc: Position, right: Expr, op: Operator, left: Expr) = this(loc, right, op, Some(left))
