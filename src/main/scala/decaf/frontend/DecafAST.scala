@@ -54,7 +54,7 @@ trait DecafAST {
   }
 
   /*----------------------- Statements ----------------------------------------------------------------------------*/
-  abstract case class Stmt(locat: Option[Position]) extends ASTNode(locat)
+  abstract class Stmt(locat: Option[Position]) extends ASTNode(locat)
 
   case class StmtBlock(decls: List[Decl],
                        stmts: List[Stmt]) extends Stmt(None) {
@@ -71,12 +71,12 @@ trait DecafAST {
     }
   }
 
-  abstract case class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
+  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
     testExpr.parent = this
     body.parent = this
   }
 
-  abstract case class LoopStmt(te: Expr, b: Stmt) extends ConditionalStmt(te, b)
+  abstract class LoopStmt(te: Expr, b: Stmt) extends ConditionalStmt(te, b)
 
   case class ForStmt(init: Expr, test: Expr, step: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
     init.parent = this
@@ -87,13 +87,13 @@ trait DecafAST {
       init.print(indentLevel + 1, Some("(init)")) +
         test.print(indentLevel + 1, Some("(test)")) +
         step.print(indentLevel + 1, Some("(step)")) +
-        body.print(indentLevel + 1, Some("(body)"))
+        loopBody.print(indentLevel + 1, Some("(body)"))
     }
   }
 
   case class WhileStmt(test: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
     override protected def printChildren(indentLevel: Int): String = test.print(indentLevel + 1, Some("(test)")) +
-      body.print(indentLevel + 1, Some("(body)"))
+      loopBody.print(indentLevel + 1, Some("(body)"))
   }
 
   case class IfStmt(test: Expr, testBody: Stmt, elseBody: Option[Stmt]) extends ConditionalStmt(test, testBody) {
@@ -125,7 +125,7 @@ trait DecafAST {
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
-  abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
+  abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
   case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
     override def getName = "Empty"
@@ -254,7 +254,7 @@ trait DecafAST {
     override protected def printChildren(indentLevel: Int): String = ""
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
-  abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
+  abstract class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
   }
 
@@ -314,7 +314,7 @@ trait DecafAST {
     }
 
     def printChildren(indentLevel: Int) = returnType.print(indentLevel + 1, Some("(return type)")) +
-      id.print(indentLevel + 1) +
+      name.print(indentLevel + 1) +
       formals.reduceLeft[String] { (acc, decl) => acc + decl.print(indentLevel + 1, Some("(formals)"))} +
       (if (body != null) {
         body.print(indentLevel + 1, Some("(body)"))
@@ -326,9 +326,9 @@ trait DecafAST {
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
-  abstract case class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
+  abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
     override def getName = "Type"
-    protected def printChildren(indentLevel: Int): String = typeName
+    protected[DecafAST] def printChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
   case class IntType() extends Type("int", None)
