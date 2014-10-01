@@ -19,8 +19,10 @@ import scala.util.parsing.combinator.syntactical.TokenParsers
  * @author Hawk Weisman
  *         Created by hawk on 9/28/14.
  */
-class DecafSyntactical extends TokenParsers {
+class DecafSyntactical extends TokenParsers with DecafAST {
   type Tokens = DecafTokens
   val lexical = new DecafLexical
+
+  def program = ???
 
 }
