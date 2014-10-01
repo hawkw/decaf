@@ -260,7 +260,7 @@ trait DecafAST {
 
   case class VarDecl(n: Identifier, t: Type) extends Decl(n) {
     t.parent = this
-    def printChildren(indentLevel: Int) = {n.print(indentLevel +1) + id.print(indentLevel+1)}
+    def printChildren(indentLevel: Int) = {t.print(indentLevel +1) + n.print(indentLevel+1)}
   }
 
   case class ClassDecl(name: Identifier,
