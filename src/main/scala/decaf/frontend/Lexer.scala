@@ -20,7 +20,6 @@ import scala.util.parsing.input.Positional
  * Tokens for the Decaf programming language.
  *
  * TODO: Consider separating Keyword/Operator/Delimiter into separate types for each (a la JJ's C implementation)
- * TODO: Add line number tracking to tokens
  *
  * @author Hawk Weisman
  * Created by hawk on 9/27/14.
@@ -131,8 +130,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       /*------------------- String literals --------------------------------------------------------------------------*/
       | '\'' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\'' ^^ { case '\'' ~ chars ~ '\'' => StringConstant("\'" + chars.mkString("") + "\'")}
       | '\"' ~ rep(chrExcept('\'', '\"', '\n')) ~ '\"' ^^ { case '\"' ~ chars ~ '\"' => StringConstant("\"" + chars.mkString("") + "\"")}
-      | '\'' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
-      | '\"' ~> failure("Unterminated string constant: ") //TODO: Line number of failure
+      | '\'' ~> failure("Unterminated string constant: ")
+      | '\"' ~> failure("Unterminated string constant: ")
       /*------------------ Whitespace ---------------------------------------------------------------------------------*/
       | chrIn(' ', '\n', '\t') ^^^ Ignore()
       | '/' ~ '*' ~ comment ^^^ Ignore()
