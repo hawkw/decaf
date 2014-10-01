@@ -234,7 +234,7 @@ trait DecafAST {
     def this(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) = this(l, rhs, o, Some(lhs))
   }
 
-  case class AssignExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class AssignExpr(l: Position, rhs: Expr, lhs: Expr) extends CompoundExpr(l, rhs, ASTOperator(lhs.pos, "="), lhs)
 
   case class LValue(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
