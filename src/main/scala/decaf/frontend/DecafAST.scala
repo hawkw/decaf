@@ -175,34 +175,40 @@ trait DecafAST {
      def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class IntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
+  case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
+    override def getName = "IntConstant"
      def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class DoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = value.toString
+  case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
+    override def getName = "DoubleConstant"
+    def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class BoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = value.toString
+  case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+    override def getName = "BoolConstant"
+    def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class StringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = value
+  case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
+    override def getName = "StringConstant"
+    def stringifyChildren(indentLevel: Int): String = value
   }
 
-  case class NullConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+  case class ASTNullConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+    override def getName = "NullConstant"
+    def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class Operator(loc: Position, token: String) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = token
+  case class ASTOperator(loc: Position, token: String) extends Expr(Some(loc)) {
+    override def getName = "Operator"
+    def stringifyChildren(indentLevel: Int): String = token
   }
 
-  abstract class CompoundExpr(loc: Position, right: Expr, op: Operator, left: Option[Expr]) extends Expr(Some(loc)) {
-    def this(loc: Position, right: Expr, op: Operator) = this(loc, right, op, None)
+  abstract class CompoundExpr(loc: Position, right: Expr, op: ASTOperator, left: Option[Expr]) extends Expr(Some(loc)) {
+    def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, right, op, None)
 
-    def this(loc: Position, right: Expr, op: Operator, left: Expr) = this(loc, right, op, Some(left))
+    def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, right, op, Some(left))
 
     op.parent = this
     right.parent = this
@@ -216,19 +222,19 @@ trait DecafAST {
     }
   }
 
-  case class ArithmeticExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class ArithmeticExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
-  case class RelationalExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class RelationalExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
-  case class EqualityExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class EqualityExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
-  case class LogicalExpr(l: Position, rhs: Expr, o: Operator, lhs: Option[Expr]) extends CompoundExpr(l, rhs, o, lhs) {
-    def this(l: Position, rhs: Expr, o: Operator) = this(l, rhs, o, None)
+  case class LogicalExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Option[Expr]) extends CompoundExpr(l, rhs, o, lhs) {
+    def this(l: Position, rhs: Expr, o: ASTOperator) = this(l, rhs, o, None)
 
-    def this(l: Position, rhs: Expr, o: Operator, lhs: Expr) = this(l, rhs, o, Some(lhs))
+    def this(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) = this(l, rhs, o, Some(lhs))
   }
 
-  case class AssignExpr(l: Position, rhs: Expr, o: Operator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class AssignExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
   case class LValue(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
