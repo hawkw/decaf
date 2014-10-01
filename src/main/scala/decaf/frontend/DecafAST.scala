@@ -1,6 +1,6 @@
 package decaf.frontend
 
-import scala.util.parsing.input.Position
+import scala.util.parsing.input.{NoPosition, Positional, Position}
 
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
@@ -8,8 +8,9 @@ import scala.util.parsing.input.Position
  */
 trait DecafAST {
 
-  abstract sealed class ASTNode (val location: Option[Position]) {
+  abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
     protected var parent: ASTNode = null
+    this.setPos(location.getOrElse(NoPosition))
 
     def getName: String = this.getClass.getSimpleName
 
@@ -95,6 +96,7 @@ trait DecafAST {
       body.print(indentLevel + 1, Some("(body)"))
   }
 
+  case class IfStmt(test: Expr,)
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
