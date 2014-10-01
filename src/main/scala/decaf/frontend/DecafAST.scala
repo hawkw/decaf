@@ -32,7 +32,7 @@ trait DecafAST {
       result ++= " " * (indentLevel*spaces) + label.getOrElse("") + getName
       result ++= printChildren(indentLevel)
 
-      result.toString
+      result.toString()
     }
     protected def printChildren (indentLevel: Int): String
   }
@@ -96,7 +96,16 @@ trait DecafAST {
       body.print(indentLevel + 1, Some("(body)"))
   }
 
-  case class IfStmt(test: Expr,)
+  case class IfStmt(test: Expr, testBody: Stmt, elseBody: Option[Stmt]) extends ConditionalStmt(test, testBody) {
+    def this(test: Expr, testBody: Stmt, elseBody: Stmt)  = this(test, testBody, Some(elseBody))
+    def this(test: Expr, testBody: Stmt) = this(test, testBody, None)
+    if (elseBody.isDefined) {elseBody.get.parent = this}
+    override protected def printChildren(indentLevel: Int): String = {
+      test.print(indentLevel + 1, Some("(test)")) +
+        testBody.print(indentLevel + 1, Some("(body)")) +
+        (if (elseBody.isDefined) elseBody.get.print(indentLevel + 1) else "")
+    }
+  }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract case class Expr(where: Option[Position]) extends Stmt(where) {}
