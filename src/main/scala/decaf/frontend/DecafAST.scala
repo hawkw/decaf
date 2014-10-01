@@ -56,12 +56,7 @@ trait DecafAST {
   abstract case class Stmt(locat: Option[Position]) extends ASTNode(locat)
 
   case class StmtBlock(decls: List[Decl],
-                       stmts: List[Stmt],
-                        loc: Option[Position]) extends Stmt(loc) {
-
-    def this(decls: List[Decl], stmts: List[Stmt]) = this(decls, stmts, None)
-
-    def this(decls: List[Decl], stmts: List[Stmt], loc: Position) = this(decls, stmts,Some(loc))
+                       stmts: List[Stmt]) extends Stmt(None) {
 
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
@@ -73,6 +68,10 @@ trait DecafAST {
         (acc, stmt) => acc + stmt.print(indentLevel + 1)
       }
     }
+  }
+
+  case class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
+    override protected def printChildren(indentLevel: Int): String = ???
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
@@ -187,10 +186,13 @@ trait DecafAST {
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
+    cType.parent = this
     override protected def printChildren(indentLevel: Int): String = cType.print(indentLevel + 1)
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
+    size.parent = this
+    elemType.parent = this
     override protected def printChildren(indentLevel: Int): String = size.print(indentLevel + 1) + elemType.print(indentLevel + 1)
   }
 
