@@ -173,6 +173,26 @@ trait DecafAST {
         field.print(indentLevel + 1)
     }
   }
+
+  case class Call(loc: Position, base: Option[Expr], field: Identifier, args: List[Expr]) extends Expr(Some(loc)) {
+    def this(loc: Position, base: Expr, field: Identifier, args: List[Expr]) = this(loc, Some(base), field, args)
+
+    def this(loc: Position, field: Identifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
+
+    override protected def printChildren(indentLevel: Int): String = if (base.isDefined) base.get.print(indentLevel + 1)
+    else {
+      ""
+    } +
+      field.print(indentLevel + 1) + args.reduceLeft[String] { (acc, expr) => acc + expr.print(indentLevel + 1, Some("(actuals)"))}
+  }
+
+  case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = cType.print(indentLevel + 1)
+  }
+
+  case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
+    override protected def printChildren(indentLevel: Int): String = size.print(indentLevel + 1) + elemType.print(indentLevel + 1)
+  }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract case class Decl(id: Identifier) extends ASTNode(id.loc) {
     id.parent = this
