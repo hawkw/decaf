@@ -12,6 +12,7 @@
 package decaf.frontend
 
 import scala.util.parsing.combinator.Parsers
+import scala.util.parsing.input.Reader
 
 /**
  * Syntactical analyzer for the Decaf programming language
@@ -22,8 +23,9 @@ import scala.util.parsing.combinator.Parsers
 class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
   type Tokens <: DecafToken
   override type Elem = DecafToken
-  val lexical = new DecafLexical
 
+  val lexical = new DecafLexical
+  def parse(source: String): Program = phrase(program)(new lexical.Scanner(source).asInstanceOf[Input]).get
   def program: Parser[Program] = rep(decl) ^^{case decls => new Program(decls.asInstanceOf[List[Decl]])}
   def decl = (
     variableDecl
