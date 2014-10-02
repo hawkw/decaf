@@ -21,6 +21,7 @@ trait DecafAST {
   abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
     protected[DecafAST] var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
+    def getPos = this.location.getOrElse(null)
 
     /**
      * Returns the name of this node type for printing.
@@ -236,15 +237,13 @@ trait DecafAST {
 
   case class AssignExpr(l: Position, rhs: Expr, lhs: Expr) extends CompoundExpr(l, rhs, ASTOperator(lhs.pos, "="), lhs)
 
-  case class LValue(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
-  }
+  abstract class LValue(loc: Position) extends Expr(Some(loc))
 
   case class This(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends Expr(Some(loc)) {
+  case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends LValue(loc) {
     base.parent = this
     subscript.parent = this
 
@@ -254,7 +253,7 @@ trait DecafAST {
     }
   }
 
-  case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends Expr(Some(loc)) {
+  case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
     def this(loc: Position, base: Expr, field: ASTIdentifier) = this(loc, Some(base), field)
 
     def this(loc: Position, field: ASTIdentifier) = this(loc, None, field)
