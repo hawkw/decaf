@@ -72,8 +72,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
     )
   def lValue: Parser[LValue] = (
-    //ident ^^{ case i => i } //TODO: Figure out
-    expr.? ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, e, i)
+    ident ^^{ case i => FieldAccess(i.getPos, None, i)}
+    | expr.? ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, e, i)
     }
     | expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{ case first ~ Delimiter("[") ~ last ~ Delimiter("]") =>
       ArrayAccess(first.getPos, first, last)
