@@ -206,10 +206,10 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = token
   }
 
-  abstract class CompoundExpr(loc: Position, right: Expr, op: ASTOperator, left: Option[Expr]) extends Expr(Some(loc)) {
-    def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, right, op, None)
+  abstract class CompoundExpr(loc: Position, left: Option[Expr], op: ASTOperator, right: Expr) extends Expr(Some(loc)) {
+    def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
-    def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, right, op, Some(left))
+    def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
 
     op.parent = this
     right.parent = this
@@ -224,19 +224,19 @@ trait DecafAST {
   }
 
 
-  case class ArithmeticExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
+  case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
-  case class RelationalExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
+  case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
-  case class EqualityExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
+  case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
-  case class LogicalExpr(l: Position, lhs: Expr, o: Operator, rhs: Option[Expr]) extends CompoundExpr(l, lhs, o, rhs) {
-    def this(l: Position, lhs: Expr, o: Operator) = this(l, lhs, o, None)
+  case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
+    def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
-    def this(l: Position, lhs: Expr, o: Operator, rhs: Expr) = this(l, lhs, o, Some(rhs))
+    def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
   }
 
-  case class AssignExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
+  case class AssignExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
