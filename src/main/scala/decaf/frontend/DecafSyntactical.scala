@@ -70,6 +70,20 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | Keyword("this") ^^{ case k => This(k.getPos) }
     //| call // TODO: Implement
     | Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
+    | expr ~ Operator("+") ~ expr ^^{ case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right) }
+    | expr ~ Operator("-") ~ expr ^^{ case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right) }
+    | expr ~ Operator("*") ~ expr ^^{ case left ~ Operator("*") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "*"), right) }
+    | expr ~ Operator("%") ~ expr ^^{ case left ~ Operator("%") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "%"), right) }
+    | expr ~ Operator("/") ~ expr ^^{ case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right) }
+    | expr ~ Operator(">") ~ expr ^^{ case left ~ Operator(">") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right) }
+    | expr ~ Operator(">=") ~ expr ^^{ case left ~ Operator(">=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right) }
+    | expr ~ Operator("<=") ~ expr ^^{ case left ~ Operator("<=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right) }
+    | expr ~ Operator("<") ~ expr ^^{ case left ~ Operator("<") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right) }
+    | expr ~ Operator("==") ~ expr ^^{ case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right) }
+    | expr ~ Operator("!=") ~ expr ^^{ case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right) }
+    | expr ~ Operator("&&") ~ expr ^^{ case left ~ Operator("&&") ~ right => LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) }
+    | expr ~ Operator("||") ~ expr ^^{ case left ~ Operator("||") ~ right => LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
+    | Operator("!") ~ expr ^^{ case Operator("!") ~ right => LogicalExpr(ASTOperator(right.getPos, "!"), right) }
     )
   def lValue: Parser[LValue] = (
     ident ^^{ case i => FieldAccess(i.getPos, None, i)}
