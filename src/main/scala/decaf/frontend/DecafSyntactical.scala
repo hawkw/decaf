@@ -30,7 +30,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
   def decl = (
     variableDecl
     | functionDecl
-    //| classDecl
+    | classDecl
     //| interfaceDecl
     )
   def functionDecl = (
@@ -150,17 +150,33 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
       }
     )
   def call: Parser[Call] = (
-    ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
-      case field ~ Delimiter("(") ~ args ~ Delimiter(")") => new Call(field.getPos, field, args)
+    ident <~  Delimiter("(") ~ repsep(expr, Delimiter(",")) <~ Delimiter(")") ^^{
+      case field ~ args => new Call(field.getPos, field, args)
     }
-    | expr ~ Delimiter(".") ~ ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
-      case base ~ Delimiter(".") ~ field ~ Delimiter("(") ~ args ~ Delimiter(")") => new Call(base.getPos, base, field, args)
+    | expr <~ Delimiter(".") ~ ident <~  Delimiter("(") ~ repsep(expr, Delimiter(",")) <~ Delimiter(")") ^^{
+      case base ~ field  ~ args  => new Call(base.getPos, base, field, args)
     }
     )
-  def variableDecl = typ ~ ident ~ Delimiter(";") ^^{
-    case t ~ e => VarDecl(e.asInstanceOf[ASTIdentifier], t.asInstanceOf[Type])
+  def variableDecl: Parser[Decl] = typ ~ ident <~ Delimiter(";") ^^{
+    case t ~ e  => VarDecl(e, t)
   }
-  def ident = elem("ident", _.isInstanceOf[Identifier]) ^^{ case i:Identifier => ASTIdentifier(Some(i.getPos), i.value)}
+  def functionDecl: Parser[Decl] = (
+    returnType ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock ^^{
+      case rt ~ name ~ Delimiter("(") ~ fs ~ Delimiter(")") ~ body => FnDecl( name, rt, fs, body)
+    }
+    )
+  def classDecl: Parser[Decl] =
+    Keyword("class") ~> ident ~ extendPart.? ~ implementsPart ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
+      case name ~ ext  ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp, fields)
+    }
+  def extendPart: Parser[NamedType] = Keyword("extends") ~> className
+  def implementsPart: Parser[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
+  def field: Parser[Decl] = (variableDecl | functionDecl)
+  def returnType: Parser[Type] = typ | Keyword("void") ^^^ VoidType()
+  def className: Parser[NamedType] = ident ^^{ case i=> NamedType(i) }
+  def ident: Parser[ASTIdentifier] = elem("ident", _.isInstanceOf[Identifier]) ^^{
+    case i:Identifier => ASTIdentifier(Some(i.getPos), i.value)
+  }
   def typ: Parser[Type] = (
     _typ
     | _typ ~ Delimiter("[]") ^^{ case t ~ dims => ArrayType(Some(dims.getPos), t)}
