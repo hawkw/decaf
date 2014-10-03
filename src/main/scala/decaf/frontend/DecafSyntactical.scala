@@ -81,9 +81,13 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | expr ~ Operator("<") ~ expr ^^{ case left ~ Operator("<") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right) }
     | expr ~ Operator("==") ~ expr ^^{ case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right) }
     | expr ~ Operator("!=") ~ expr ^^{ case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right) }
-    | expr ~ Operator("&&") ~ expr ^^{ case left ~ Operator("&&") ~ right => LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) }
-    | expr ~ Operator("||") ~ expr ^^{ case left ~ Operator("||") ~ right => LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
-    | Operator("!") ~ expr ^^{ case Operator("!") ~ right => LogicalExpr(ASTOperator(right.getPos, "!"), right) }
+    | expr ~ Operator("&&") ~ expr ^^{ case left ~ Operator("&&") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) }
+    | expr ~ Operator("||") ~ expr ^^{ case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
+    | Operator("!") ~ expr ^^{ case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right) }
+    | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos) }
+    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos) }
+    | Keyword("new") ~ ident ^^{ case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))}
+    | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{ case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)}
     )
   def lValue: Parser[LValue] = (
     ident ^^{ case i => FieldAccess(i.getPos, None, i)}
