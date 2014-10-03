@@ -68,7 +68,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | const
     | lValue
     | Keyword("this") ^^{ case k => This(k.getPos) }
-    //| call // TODO: Implement
+    | call
     | Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
     | expr ~ Operator("+") ~ expr ^^{ case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right) }
     | expr ~ Operator("-") ~ expr ^^{ case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right) }
@@ -85,7 +85,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | expr ~ Operator("||") ~ expr ^^{ case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
     | Operator("!") ~ expr ^^{ case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right) }
     | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos) }
-    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos) }
+    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExp`r(k.getPos) }
     | Keyword("new") ~ ident ^^{ case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))}
     | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{ case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)}
     )
@@ -96,6 +96,14 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{ case first ~ Delimiter("[") ~ last ~ Delimiter("]") =>
       ArrayAccess(first.getPos, first, last)
       }
+    )
+  def call: Parser[Call] = (
+    ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
+      case field ~ Delimiter("(") ~ args ~ Delimiter(")") => new Call(field.getPos, field, args)
+    }
+    | expr ~ Delimiter(".") ~ ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
+      case base ~ Delimiter(".") ~ field ~ Delimiter("(") ~ args ~ Delimiter(")") => new Call(base.getPos, base, field, args)
+    }
     )
   def variableDecl = typ ~ ident ~ Delimiter(";") ^^{
     case t ~ e => VarDecl(e.asInstanceOf[ASTIdentifier], t.asInstanceOf[Type])
