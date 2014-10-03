@@ -14,7 +14,7 @@ class ParserSpec extends FlatSpec with Matchers {
   "The parser" should "correctly parse a simple program" in {
     val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -22,7 +22,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle control flow" in {
       val source = Source fromFile "build/resources/test/lab2-samples/control.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/control.out" mkString
-      val ast = target.parse(source)
+      val ast = target.parse(source).get
 
       ast.toString should include (expected)
   }
@@ -30,7 +30,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle classes" in {
     val source = Source fromFile "build/resources/test/lab2-samples/class.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/class.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -38,7 +38,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle expressions" in {
     val source = Source fromFile "build/resources/test/lab2-samples/expressions.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/expressions.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -62,7 +62,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle the increment and decrement operators" in {
     val source = Source fromFile "build/resources/test/lab2-samples/incrdecr.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/incrdecr.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -71,7 +71,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "correctly parse a complex program" in {
     val source = Source fromFile "build/resources/test/lab2-samples/switch.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/switch.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -79,7 +79,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "correctly parse a the matrix math program" in {
     val source = Source fromFile "build/resources/test/lab2-samples/matrix.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
