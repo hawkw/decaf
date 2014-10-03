@@ -37,7 +37,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     typ ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
     | Keyword("void") ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
     )
-  def formals = repsep(typ ~ ident, Delimiter(",")).?
+  def formals = repsep(variableDecl, Delimiter(",")).?
   def stmtBlock = Delimiter("{") ~ (variableDecl | stmt).* ~ Delimiter("}") ^^{
     case Delimiter("{") ~ stuff ~ Delimiter("}") => StmtBlock(
       stuff.filter(_.isInstanceOf[VarDecl]).asInstanceOf[List[VarDecl]],
@@ -150,21 +150,20 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
       }
     )
   def call: Parser[Call] = (
-    ident <~  Delimiter("(") ~ repsep(expr, Delimiter(",")) <~ Delimiter(")") ^^{
-      case field ~ args => new Call(field.getPos, field, args)
+    ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
+      case field ~ Delimiter("(") ~ args ~ Delimiter(")")  => new Call(field.getPos, field, args)
     }
-    | expr <~ Delimiter(".") ~ ident <~  Delimiter("(") ~ repsep(expr, Delimiter(",")) <~ Delimiter(")") ^^{
-      case base ~ field  ~ args  => new Call(base.getPos, base, field, args)
+    | expr ~ Delimiter(".") ~ ident ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
+      case base ~ Delimiter(".") ~ field ~ Delimiter("(") ~ args ~ Delimiter(")")  =>
+        new Call(base.getPos, base, field, args)
     }
     )
   def variableDecl: Parser[Decl] = typ ~ ident <~ Delimiter(";") ^^{
     case t ~ e  => VarDecl(e, t)
   }
-  def functionDecl: Parser[Decl] = (
-    returnType ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock ^^{
+  def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock ^^{
       case rt ~ name ~ Delimiter("(") ~ fs ~ Delimiter(")") ~ body => FnDecl( name, rt, fs, body)
     }
-    )
   def classDecl: Parser[Decl] =
     Keyword("class") ~> ident ~ extendPart.? ~ implementsPart ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
       case name ~ ext  ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp, fields)
