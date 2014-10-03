@@ -236,7 +236,7 @@ trait DecafAST {
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
   }
 
-  case class AssignExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
+  case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs)
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
