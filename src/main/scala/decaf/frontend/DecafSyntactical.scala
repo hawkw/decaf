@@ -50,7 +50,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | ifStmt
     | whileStmt
     | forStmt
-    //| breakStmt // TODO: Implement
+    | breakStmt
     | Keyword("return") ~ expr.? ~ Delimiter(";") ^^{ case k ~ thing ~ _ => ReturnStmt(k.getPos, thing)}
     )
   def ifStmt: Parser[Stmt] =
@@ -65,6 +65,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
       case Keyword("for") ~ Delimiter("(") ~ i ~ Delimiter(";") ~ t ~ Delimiter(";") ~ s ~ Delimiter(")") ~ b =>
         ForStmt(i,t,s,b)
     }
+  def breakStmt: Parser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.getPos)}
   def const: Parser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
     | elem("doubleConst", _.isInstanceOf[DoubleConstant])
