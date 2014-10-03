@@ -25,7 +25,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
   override type Elem = DecafToken
 
   val lexical = new DecafLexical
-  def parse(source: String): Program = phrase(program)(new lexical.Scanner(source).asInstanceOf[Input]).get
+  def parse(source: String): Option[Program] = phrase(program)(new lexical.Scanner(source).asInstanceOf[Input]) match {
+    case Success(result, _) => Some(result)
+    case _ => None
+  }
   def program: Parser[Program] = rep(decl) ^^{case decls => new Program(decls.asInstanceOf[List[Decl]])}
   def decl = (
     variableDecl
