@@ -37,7 +37,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     typ ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
     | Keyword("void") ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
     )
-  def formals = repsep(typ ~ ident, Delimiter(","))?
+  def formals = repsep(typ ~ ident, Delimiter(",")).?
   def stmtBlock = Delimiter("{") ~ (variableDecl | stmt).* ~ Delimiter("}") ^^{
     case Delimiter("{") ~ stuff ~ Delimiter("}") => StmtBlock(
       stuff.filter(_.isInstanceOf[VarDecl]).asInstanceOf[List[VarDecl]],
@@ -85,7 +85,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | expr ~ Operator("||") ~ expr ^^{ case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
     | Operator("!") ~ expr ^^{ case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right) }
     | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos) }
-    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExp`r(k.getPos) }
+    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{ case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos) }
     | Keyword("new") ~ ident ^^{ case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))}
     | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{ case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)}
     )
