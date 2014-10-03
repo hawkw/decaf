@@ -231,7 +231,7 @@ trait DecafAST {
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
-    def this(l: Position, rhs: Expr, o: ASTOperator) = this(l, None, o, rhs)
+    def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
   }
