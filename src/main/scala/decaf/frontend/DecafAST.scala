@@ -354,15 +354,12 @@ trait DecafAST {
 
   case class FnDecl(name: ASTIdentifier,
                     returnType: Type,
-                    formals: List[VarDecl]) extends Decl(name) {
+                    formals: List[VarDecl],
+                    body: StmtBlock) extends Decl(name) {
     name.parent = this
     returnType.parent = this
+    body.parent = this
     formals.foreach { d => d.parent = this}
-    private var body: Stmt = null
-
-    def setFunctionBody(b: Stmt) {
-      this.body = b; b.parent = this
-    }
 
     def stringifyChildren(indentLevel: Int) = returnType.stringify(indentLevel + 1, Some("(return type)")) +
       name.stringify(indentLevel + 1) +
