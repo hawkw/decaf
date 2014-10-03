@@ -48,7 +48,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
       case e ~ d => if (e.isDefined) {e.asInstanceOf[Stmt]} else {EmptyExpr(d.getPos)}
     }
     | ifStmt
-    //| whileStmt // TODO: Implement
+    | whileStmt
     //| forStmt // TODO: Implement
     //| breakStmt // TODO: Implement
     | Keyword("return") ~ expr.? ~ Delimiter(";") ^^{ case k ~ thing ~ _ => ReturnStmt(k.getPos, thing)}
@@ -57,6 +57,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ opt(Keyword("else") ~> stmt) ^^{
       case Keyword("if") ~ Delimiter("(") ~ test ~ Delimiter(")") ~ testbody ~ elsebody => IfStmt(test,testbody,elsebody)
     }
+  def whileStmt: Parser[Stmt] = Keyword("while") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ^^{
+    case Keyword("while") ~ Delimiter("(") ~ test ~ Delimiter(")") ~ loopbody => WhileStmt(test,loopbody)
+  }
   def const: Parser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
     | elem("doubleConst", _.isInstanceOf[DoubleConstant])
