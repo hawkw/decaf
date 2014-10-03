@@ -206,10 +206,10 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = token
   }
 
-  abstract class CompoundExpr(loc: Position, right: Expr, op: ASTOperator, left: Option[Expr]) extends Expr(Some(loc)) {
-    def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, right, op, None)
+  abstract class CompoundExpr(loc: Position, left: Option[Expr], op: ASTOperator, right: Expr) extends Expr(Some(loc)) {
+    def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
-    def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, right, op, Some(left))
+    def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
 
     op.parent = this
     right.parent = this
