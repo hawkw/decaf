@@ -159,7 +159,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
   protected def processIdent(chars: String) = if (keywords contains chars)
                                               Keyword(chars)
                                             else if (boolLit contains chars)
-    BoolConstant(chars)
+                                              BoolConstant(chars)
                                             else Identifier(chars)
 
 

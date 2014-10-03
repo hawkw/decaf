@@ -33,11 +33,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
     | classDecl
     //| interfaceDecl
     )
-  def functionDecl = (
-    typ ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
-    | Keyword("void") ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock
-    )
-  def formals = repsep(variableDecl, Delimiter(",")).?
+  def formals = repsep(variableDecl, Delimiter(","))
   def stmtBlock = Delimiter("{") ~ (variableDecl | stmt).* ~ Delimiter("}") ^^{
     case Delimiter("{") ~ stuff ~ Delimiter("}") => StmtBlock(
       stuff.filter(_.isInstanceOf[VarDecl]).asInstanceOf[List[VarDecl]],
@@ -158,7 +154,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
         new Call(base.getPos, base, field, args)
     }
     )
-  def variableDecl: Parser[Decl] = typ ~ ident <~ Delimiter(";") ^^{
+  def variableDecl: Parser[VarDecl] = typ ~ ident <~ Delimiter(";") ^^{
     case t ~ e  => VarDecl(e, t)
   }
   def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock ^^{
