@@ -223,19 +223,20 @@ trait DecafAST {
     }
   }
 
-  case class ArithmeticExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
 
-  case class RelationalExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class ArithmeticExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
-  case class EqualityExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) extends CompoundExpr(l, rhs, o, lhs)
+  case class RelationalExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
-  case class LogicalExpr(l: Position, rhs: Expr, o: ASTOperator, lhs: Option[Expr]) extends CompoundExpr(l, rhs, o, lhs) {
-    def this(l: Position, rhs: Expr, o: ASTOperator) = this(l, rhs, o, None)
+  case class EqualityExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
-    def this(l: Position, rhs: Expr, o: ASTOperator, lhs: Expr) = this(l, rhs, o, Some(lhs))
+  case class LogicalExpr(l: Position, lhs: Expr, o: Operator, rhs: Option[Expr]) extends CompoundExpr(l, lhs, o, rhs) {
+    def this(l: Position, lhs: Expr, o: Operator) = this(l, lhs, o, None)
+
+    def this(l: Position, lhs: Expr, o: Operator, rhs: Expr) = this(l, lhs, o, Some(rhs))
   }
 
-  case class AssignExpr(l: Position, rhs: Expr, lhs: Expr) extends CompoundExpr(l, rhs, ASTOperator(lhs.pos, "="), lhs)
+  case class AssignExpr(l: Position, lhs: Expr, o: Operator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs)
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
