@@ -119,15 +119,18 @@ trait DecafAST {
 
   abstract class LoopStmt(te: Expr, b: Stmt) extends ConditionalStmt(te, b)
 
-  case class ForStmt(init: Expr, test: Expr, step: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
-    init.parent = this
-    step.parent = this
+  case class ForStmt(init: Option[Expr],
+                     test: Expr,
+                     step: Option[Expr],
+                     loopBody: Stmt) extends LoopStmt(test, loopBody) {
+    if (init.isDefined) init.get.parent = this
+    if (step.isDefined) step.get.parent = this
     loopBody.parent = this
 
      def stringifyChildren(indentLevel: Int): String = {
-      init.stringify(indentLevel + 1, Some("(init)")) +
+        if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} +
         test.stringify(indentLevel + 1, Some("(test)")) +
-        step.stringify(indentLevel + 1, Some("(step)")) +
+        ( if (step.isDefined) { step.get.stringify(indentLevel + 1, Some("(step)")) } else {""} ) +
         loopBody.stringify(indentLevel + 1, Some("(body)"))
     }
   }
