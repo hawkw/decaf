@@ -34,7 +34,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
     it should "handle control flow" in {
@@ -42,7 +42,7 @@ class ParserSpec extends FlatSpec with Matchers {
         val expected = Source fromFile "build/resources/test/lab2-samples/control.out" mkString
         val ast = target.parse(source).get
 
-        ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
     it should "handle classes" in {
@@ -58,7 +58,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/expressions.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
     it should "handle functions" in {
@@ -66,7 +66,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/functions.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
     it should "handle inheritance" in {
@@ -82,7 +82,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/incrdecr.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
 
@@ -91,7 +91,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/switch.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll( """(?m)\s+$""", "") should include(expected.replaceAll( """(?m)\s+$""", ""))
     }
 
     it should "correctly parse a the matrix math program" in {
@@ -99,7 +99,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
 }
