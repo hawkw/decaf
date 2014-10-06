@@ -174,7 +174,7 @@ trait DecafAST {
   abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
   case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "Empty: "
+    override def getName = "Empty:"
 
      def stringifyChildren(indentLevel: Int): String = ""
   }
@@ -219,10 +219,10 @@ trait DecafAST {
     if (left.isDefined) left.get.parent = this
 
     def stringifyChildren(indentLevel: Int): String = {
-      (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+      right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
       else {
         ""
-      }) + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
+      })
     }
   }
 
@@ -349,7 +349,7 @@ trait DecafAST {
       (acc, decl) => acc + decl.stringify(indentLevel + 1)
     }
 
-    override def getName: String = "InterfaceDecl: "
+    override def getName: String = "InterfaceDecl:"
   }
 
   case class FnDecl(name: ASTIdentifier,
@@ -370,7 +370,7 @@ trait DecafAST {
         ""
       })
 
-    override def getName: String = "FnDecl: "
+    override def getName: String = "FnDecl:"
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
@@ -388,13 +388,13 @@ trait DecafAST {
   case class ErrorType() extends Type("error", None)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, name.loc) {
-    override def getName = "NamedType: "
+    override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
   case class ArrayType(locat: Option[Position], elemType: Type) extends Type("", locat) {
-    override def getName = "ArrayType: "
+    override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }
