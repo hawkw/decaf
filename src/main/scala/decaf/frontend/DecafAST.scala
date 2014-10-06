@@ -83,7 +83,7 @@ trait DecafAST {
     def this (loc: Position, name:String) = this (Some(loc), name)
 
     override def getName = name
-    def stringifyChildren(indentLevel: Int) = getName
+    def stringifyChildren(indentLevel: Int) = ""
   }
 
   case class Program(decls: List[Decl]) extends ASTNode(None) {
