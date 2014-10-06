@@ -31,7 +31,7 @@ trait DecafAST {
      *
      * @return a String containing the name of this node type for printing
      */
-    protected[DecafAST] def getName: String = this.getClass.getSimpleName
+    protected[DecafAST] def getName: String = this.getClass.getSimpleName + ":"
 
     /**
      * Returns a String representation of the tree with this node as the root node.
@@ -59,7 +59,7 @@ trait DecafAST {
       if (location.isDefined)
         result ++= ("%" + spaces + "d").format(location.get.line)
       else result ++= " "* spaces
-      result ++= " " * (indentLevel*spaces) + label.getOrElse("") + getName
+      result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
       result.toString()
@@ -82,7 +82,7 @@ trait DecafAST {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
 
-    override def getName = name
+    override def getName = "Identifier: " + name
     def stringifyChildren(indentLevel: Int) = ""
   }
 
@@ -166,7 +166,7 @@ trait DecafAST {
     args.foreach{e => e.parent = this}
 
      def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
-      (acc, expr) => acc + expr.stringify(indentLevel + 1)
+      (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(args)"))
     }
   }
 
@@ -174,38 +174,38 @@ trait DecafAST {
   abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
   case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "Empty"
+    override def getName = "Empty: "
 
      def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
-    override def getName = "IntConstant"
+    override def getName = "IntConstant: "
      def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
-    override def getName = "DoubleConstant"
+    override def getName = "DoubleConstant: "
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-    override def getName = "BoolConstant"
+    override def getName = "BoolConstant: "
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
-    override def getName = "StringConstant"
+    override def getName = "StringConstant: "
     def stringifyChildren(indentLevel: Int): String = value
   }
 
   case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "NullConstant"
+    override def getName = "NullConstant: "
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ASTOperator(loc: Position, token: String) extends Expr(Some(loc)) {
-    override def getName = "Operator"
+    override def getName = "Operator: "
     def stringifyChildren(indentLevel: Int): String = token
   }
 
@@ -349,7 +349,7 @@ trait DecafAST {
       (acc, decl) => acc + decl.stringify(indentLevel + 1)
     }
 
-    override def getName: String = "InterfaceDecl"
+    override def getName: String = "InterfaceDecl: "
   }
 
   case class FnDecl(name: ASTIdentifier,
@@ -370,12 +370,12 @@ trait DecafAST {
         ""
       })
 
-    override def getName: String = "FnDecl"
+    override def getName: String = "FnDecl: "
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
   abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
-    override def getName = "Type"
+    override def getName = "Type: "
     protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
@@ -388,13 +388,13 @@ trait DecafAST {
   case class ErrorType() extends Type("error", None)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, name.loc) {
-    override def getName = "NamedType"
+    override def getName = "NamedType: "
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
   case class ArrayType(locat: Option[Position], elemType: Type) extends Type("", locat) {
-    override def getName = "ArrayType"
+    override def getName = "ArrayType: "
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }
