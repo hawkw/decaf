@@ -88,7 +88,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
 
   lazy val stmt: PackratParser[Stmt] =(
     expr.? ~ Delimiter(";") ^^{
-      case e ~ d => if (e.isDefined) {e.get.asInstanceOf[Stmt]} else {EmptyExpr(d.getPos)}
+      case e ~ d => if (e.isDefined) {e.get.asInstanceOf[Stmt]} else {EmptyExpr()}
     }
       | Keyword("Print") ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ~ Delimiter(";") ^^ { case _ ~ _ ~ e ~ _ ~ _ => PrintStmt(e)}
       | ifStmt
@@ -97,7 +97,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | breakStmt
       | stmtBlock
       | Keyword("return") ~ expr.? <~ Delimiter(";") ^^{
-      case k ~ None => ReturnStmt(k.getPos, Some(EmptyExpr(k.getPos)))
+      case k ~ None => ReturnStmt(k.getPos, Some(EmptyExpr()))
       case k ~ Some(thing) => ReturnStmt(k.getPos, Some(thing))
 
     }
@@ -112,10 +112,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   }
   lazy val forStmt: PackratParser[Stmt] =
     Keyword("for") ~ Delimiter("(") ~ opt(expr) ~ Delimiter(";") ~ expr ~ Delimiter(";") ~ opt(expr) ~ Delimiter(")") ~ stmt ^^{
-      case k ~ _ ~ None ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b => ForStmt(Some(EmptyExpr(k.getPos)),t,Some(step),b)
+      case k ~ _ ~ None ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b => ForStmt(Some(EmptyExpr()),t,Some(step),b)
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b =>ForStmt(Some(init),t,Some(step),b)
-      case k ~ _ ~ None ~ _ ~ t ~ _ ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr(k.getPos)),t,Some(EmptyExpr(k.getPos)),b)
-      case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr(k.getPos)),b)
+      case k ~ _ ~ None ~ _ ~ t ~ _ ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr()),t,Some(EmptyExpr()),b)
+      case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
   /*
     lazy val assign: PackratParser[Expr] = (

@@ -173,7 +173,7 @@ trait DecafAST {
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
-  case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
+  case class EmptyExpr() extends Expr(None) {
     override def getName = "Empty:"
 
      def stringifyChildren(indentLevel: Int): String = ""
