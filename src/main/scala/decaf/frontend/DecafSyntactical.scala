@@ -35,11 +35,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     /**
      * Some debuggery using Print.
      */
-    /*var dscan = scan;
+    var dscan = scan;
     while(!dscan.atEnd) {
       System.out.println(dscan.first)
       dscan = dscan.rest
-    }*/
+    }
 
 
     phrase(program)(scan) match {
@@ -110,13 +110,16 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
         ForStmt(i,t,s,b)
     }
 
+  lazy val assign: PackratParser[Expr] = (
+      lValue ~ Operator("=") ~ expr ^^ {case left ~ _ ~ right => AssignExpr(left.getPos, left, right)}
+    )
+
   lazy val expr: PackratParser[Expr] = (
       Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
       | const
+      | assign
       | lValue
       | call
-      | lValue ~ Operator ("=") ~ expr ^^ {case left ~ _ ~ right => AssignExpr(left.getPos, left, right)}
-      | lValue ~ Operator("=") ~ expr ^^{ case left ~ Operator("=") ~ right => AssignExpr(left.getPos, left, right)}
       | Keyword("this") ^^{ case k => This(k.getPos) }
       | expr ~ Operator("+") ~ expr ^^{
          case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
@@ -172,12 +175,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
         | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
         case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
       }
-      | ident ^^{ case i => FieldAccess(i.getPos, None, i)}
     )
 
   lazy val lValue: PackratParser[LValue] = (
-
-    expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{
+    ident ^^{ case i => FieldAccess(i.getPos, None, i)}
+    | expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{
       case first ~ Delimiter("[") ~ last ~ Delimiter("]") =>
         ArrayAccess(first.getPos, first, last)
     }

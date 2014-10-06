@@ -11,7 +11,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
-  "The parser" should "correctly parse a single statement" in {
+  /*"The parser" should "correctly parse a single statement" in {
     val source= "sigv[][] a;"
     val ast = target.parse(source).get
     //System.out.println(ast);
@@ -21,10 +21,10 @@ class ParserSpec extends FlatSpec with Matchers {
     val source = "void main() { }"
     val ast = target.parse(source).get
     //System.out.println(ast);
-  }
+  }*/
 
-  it should "correctly parse a complex statement" in {
-    val source = "void main() { a()[b]; }"
+  "A parser" should "correctly parse a complex statement" in {
+    val source = "void main() { lval = 'q'; }"
     val ast = target.parse(source).get
     System.out.println(ast);
   }
