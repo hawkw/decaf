@@ -63,6 +63,51 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(ast);
   }
 
+  it should "correctly parse an if statement with a bare else" in {
+    val ast = testOneLiner("void main() { if (a % 2 == 0) a = 2; else a = 500000000; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with a double-bar or" in {
+    val ast = testOneLiner("void main() { if (a || b) a = 2; else a = 500000000; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty for loop" in {
+    val ast = testOneLiner("void main() { for (; a < 0 ;); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the for statement from control.decaf" in {
+    val ast = testOneLiner("void main() { for (; a <= 10 || done; a = a + 1); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty return statement" in {
+    val ast = testOneLiner("void main() { return; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the bottom part of control.decaf" in {
+    val ast = testOneLiner("void main() {   for (; a <= 10 || done; a = a + 1) {\n     Print(a, \" \");\n     if (a == 10) a;\n  }\n  return; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the top part of control.decaf" in {
+    val ast = testOneLiner("void main() {\n  int a;\n  bool done;\n\n  a = 0;\n  while (a < 10) {\n\tPrint(a, \" \");\n\ta = a + 1;\n\tif (a == 5) break;\n  }\n}")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the while loop of control.decaf" in {
+    val ast = testOneLiner("void main() {  while (a < 10) {\n\tPrint(a, \" \");\n\ta = a + 1;\n\tif (a == 5) break;\n  }\n}")
+    System.out.println(ast);
+  }
+  it should "correctly parse a handful of variable declarations" in {
+    val ast = testOneLiner("void main() {\n  int a;\n  bool done;\n\n  a = 0;\n }")
+    System.out.println(ast);
+  }
+  it should "correctly "
+
     "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString

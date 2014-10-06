@@ -60,7 +60,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     //| interfaceDecl
     )
 
-  lazy val stmtBlock = Delimiter("{") ~ (variableDecl | stmt).* ~ Delimiter("}") ^^ {
+  lazy val stmtBlock = Delimiter("{") ~ ((variableDecl <~ Delimiter(";"))| stmt).* ~ Delimiter("}") ^^ {
     case Delimiter("{") ~ stuff ~ Delimiter("}") => StmtBlock(
       stuff.filter(_.isInstanceOf[VarDecl]).asInstanceOf[List[VarDecl]],
       stuff.filter(_.isInstanceOf[Stmt]).asInstanceOf[List[Stmt]])
@@ -88,14 +88,19 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   lazy val stmt: PackratParser[Stmt] =(
     expr.? ~ Delimiter(";") ^^{
       case e ~ d => if (e.isDefined) {e.get.asInstanceOf[Stmt]} else {EmptyExpr(d.getPos)}
-    }/*
+    }
       | Keyword("Print") ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ~ Delimiter(";") ^^ { case _ ~ _ ~ e ~ _ ~ _ => PrintStmt(e)}
       | ifStmt
       | whileStmt
       | forStmt
       | breakStmt
-      | Keyword("return") ~ expr.? ~ Delimiter(";") ^^{ case k ~ thing ~ _ => ReturnStmt(k.getPos, thing)}
-    */)
+      | stmtBlock
+      | Keyword("return") ~ expr.? <~ Delimiter(";") ^^{
+      case k ~ None => ReturnStmt(k.getPos, Some(EmptyExpr(k.getPos)))
+      case k ~ Some(thing) => ReturnStmt(k.getPos, Some(thing))
+
+    }
+   )
   lazy val breakStmt: PackratParser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.getPos)}
   lazy val ifStmt: PackratParser[Stmt] =
     Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ opt(Keyword("else") ~> stmt) ^^{
@@ -115,26 +120,26 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val expr: PackratParser[Expr] = (
-     // Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
-       const
-      | assign
-     // | lValue
-    /*| call
-    | Keyword("this") ^^{ case k => This(k.getPos) }
-    | expr ~ Operator("+") ~ expr ^^{
-       case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
-     }
-    | expr ~ Operator("-") ~ expr ^^{
-     case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right)
-    }
-      | expr ~ Operator("*") ~ expr ^^{
+    expr ~ Operator("*") ~ expr ^^{
       case left ~ Operator("*") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "*"), right)
     }
-      | expr ~ Operator("%") ~ expr ^^{
+    | expr ~ Operator("/") ~ expr ^^{
+      case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right)
+    }
+    | expr ~ Operator("%") ~ expr ^^{
       case left ~ Operator("%") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "%"), right)
     }
-      | expr ~ Operator("/") ~ expr ^^{
-      case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right)
+    | expr ~ Operator("+") ~ expr ^^{
+      case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
+    }
+    | expr ~ Operator("==") ~ expr ^^{
+      case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
+    }
+      | expr ~ Operator("<") ~ expr ^^{
+      case left ~ Operator("<") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
+    }
+      | expr ~ Operator("<=") ~ expr ^^{
+      case left ~ Operator("<=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
     }
       | expr ~ Operator(">") ~ expr ^^{
       case left ~ Operator(">") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
@@ -142,23 +147,24 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | expr ~ Operator(">=") ~ expr ^^{
       case left ~ Operator(">=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
     }
-      | expr ~ Operator("<=") ~ expr ^^{
-      case left ~ Operator("<=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
+      | expr ~ Operator("||") ~ expr ^^{
+      case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
     }
-      | expr ~ Operator("<") ~ expr ^^{
-      case left ~ Operator("<") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
-    }
-      | expr ~ Operator("==") ~ expr ^^{
-      case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
+    |  Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
+      | const
+      | assign
+      | lValue
+      | call
+    | Keyword("this") ^^{ case k => This(k.getPos) }
+
+    | expr ~ Operator("-") ~ expr ^^{
+     case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right)
     }
       | expr ~ Operator("!=") ~ expr ^^{
       case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
     }
       | expr ~ Operator("&&") ~ expr ^^{
       case left ~ Operator("&&") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
-    }
-      | expr ~ Operator("||") ~ expr ^^{
-      case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
     }
       | Operator("!") ~ expr ^^{
       case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right)
@@ -174,7 +180,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
       | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
       case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
-    }*/
+    }
     )
 
   lazy val lValue: PackratParser[LValue] = (
