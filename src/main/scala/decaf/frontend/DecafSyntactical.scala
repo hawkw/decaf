@@ -218,7 +218,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
     }
   )
-  def logical: Parser[Expr] = (
+  lazy val logical: P[Expr] = (
     expr ~ Operator("||") ~ expr ^^{
       case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
     }
@@ -233,18 +233,25 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
     )
   lazy val relational: P[Expr] = (
-    expr ~ Operator(">=") ~ expr ^^{
+    expr ~ Operator(">=") ~ relationalRhs ^^{
        case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
      }
-       | expr ~ Operator("<=") ~ expr ^^{
+       | expr ~ Operator("<=") ~ relationalRhs ^^{
        case left ~ Operator("<=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
      }
-       | expr ~ Operator(">") ~ expr ^^{
+       | expr ~ Operator(">") ~ relationalRhs ^^{
        case left ~ Operator(">") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
      }
-    | expr ~ Operator("<") ~ expr ^^{
+    | expr ~ Operator("<") ~ relationalRhs ^^{
       case left ~ Operator("<") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
     }
+    )
+  lazy val relationalRhs: P[Expr] =(
+    arithmatic
+    | unary
+    | func
+    | storage
+    | rexpr
     )
   lazy val arithmatic: P[Expr] = (
     expr ~ Operator("%") ~ arithRhs ^^{
