@@ -219,10 +219,10 @@ trait DecafAST {
     if (left.isDefined) left.get.parent = this
 
     def stringifyChildren(indentLevel: Int): String = {
-      right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+      (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
       else {
         ""
-      })
+      }) + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
     }
   }
 
