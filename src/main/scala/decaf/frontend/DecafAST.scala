@@ -147,7 +147,7 @@ trait DecafAST {
      def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
         testBody.stringify(indentLevel + 1, Some("(then)")) +
-        (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1) } else { "" })
+        (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1, Some("(else)")) } else { "" })
     }
   }
 

@@ -112,8 +112,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   }
   lazy val forStmt: PackratParser[Stmt] =
     Keyword("for") ~ Delimiter("(") ~ opt(expr) ~ Delimiter(";") ~ expr ~ Delimiter(";") ~ opt(expr) ~ Delimiter(")") ~ stmt ^^{
-      case Keyword("for") ~ Delimiter("(") ~ i ~ Delimiter(";") ~ t ~ Delimiter(";") ~ s ~ Delimiter(")") ~ b =>
-        ForStmt(i,t,s,b)
+      case k ~ _ ~ None ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b => ForStmt(Some(EmptyExpr(k.getPos)),t,Some(step),b)
+      case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b =>ForStmt(Some(init),t,Some(step),b)
+      case k ~ _ ~ None ~ _ ~ t ~ _ ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr(k.getPos)),t,Some(EmptyExpr(k.getPos)),b)
+      case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr(k.getPos)),b)
     }
   /*
     lazy val assign: PackratParser[Expr] = (
