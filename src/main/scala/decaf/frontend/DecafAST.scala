@@ -128,7 +128,7 @@ trait DecafAST {
     loopBody.parent = this
 
      def stringifyChildren(indentLevel: Int): String = {
-        if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} +
+        ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
         test.stringify(indentLevel + 1, Some("(test)")) +
         ( if (step.isDefined) { step.get.stringify(indentLevel + 1, Some("(step)")) } else {""} ) +
         loopBody.stringify(indentLevel + 1, Some("(body)"))
@@ -147,7 +147,7 @@ trait DecafAST {
      def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
         testBody.stringify(indentLevel + 1, Some("(body)")) +
-        (if (elseBody.isDefined) elseBody.get.stringify(indentLevel + 1) else "")
+        (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1) } else { "" })
     }
   }
 
@@ -159,7 +159,7 @@ trait DecafAST {
     if (expr.isDefined)
       expr.get.parent = this
 
-    def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
+    def stringifyChildren(indentLevel: Int): String = (if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""})
   }
 
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
@@ -219,10 +219,10 @@ trait DecafAST {
     if (left.isDefined) left.get.parent = this
 
     def stringifyChildren(indentLevel: Int): String = {
-      if (left.isDefined) left.get.stringify(indentLevel + 1)
+      (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
       else {
         ""
-      } + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
+      }) + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
     }
   }
 
@@ -266,10 +266,10 @@ trait DecafAST {
     if (base.isDefined) base.get.parent = this
 
      def stringifyChildren(indentLevel: Int): String = {
-      if (base.isDefined) base.get.stringify(indentLevel + 1)
+       (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
       else {
         ""
-      } +
+      }) +
         field.stringify(indentLevel + 1)
     }
   }
@@ -279,10 +279,10 @@ trait DecafAST {
 
     def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
-     def stringifyChildren(indentLevel: Int): String = if (base.isDefined) base.get.stringify(indentLevel + 1)
+     def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
     else {
       ""
-    } +
+    }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
   }
 
@@ -332,9 +332,9 @@ trait DecafAST {
     members.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int) = {
-      if (extnds.isDefined) {
+      (if (extnds.isDefined) {
         extnds.get.stringify(indentLevel+1, Some("(extends)"))
-      } else {""} + implements.foldLeft[String](""){
+      } else {""}) + implements.foldLeft[String](""){
         (acc, nt) => acc + nt.stringify(indentLevel + 1, Some("(implements)"))
       } + members.foldLeft[String](""){
         (acc, decl) => acc + decl.stringify(indentLevel + 1)
