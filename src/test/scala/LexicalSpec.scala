@@ -14,11 +14,13 @@ class LexicalSamplesSpec extends FlatSpec with Matchers {
 
   "A Lexical Parser" should "tokenize program2.decaf" in {
     val source = Source fromFile "build/resources/test/lab1-samples/program2.decaf" toArray
-    val expected = Source fromFile "build/resources/test/lab1-samples/program2.out" getLines
-    val tokens = target.program(new CharArrayReader(source, 0)).get.toIterator
+    val expected = Source fromFile "build/resources/test/lab1-samples/program2.out" getLines;
 
+    val tokens = target.program(new CharArrayReader(source, 0)).get
+    val ti = tokens.toIterator
+    System.out.println(tokens);
     for (line <- expected) {
-      line should include(tokens.next.toString)
+      line should include(ti.next.toString)
     }
   }
 
