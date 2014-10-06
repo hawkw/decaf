@@ -11,6 +11,18 @@ class ParserSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
+  "The parser" should "correctly parse a single statement" in {
+    val source= "sigv a;"
+    val ast = target.parse(source).get
+    System.out.println(ast);
+  }
+
+  it should "correctly parse a single function def" in {
+    val source = "void main() { }"
+    val ast = target.parse(source).get
+    System.out.println(ast);
+  }
+
   "The parser" should "correctly parse a simple program" in {
     val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
