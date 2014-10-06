@@ -21,16 +21,25 @@ import scala.util.parsing.input.Reader
  *         Created by hawk on 9/28/14.
  */
 class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
-  type Tokens <: DecafToken
+  type Tokens <: DecafLexical
   override type Elem = DecafToken
-
   val lexical = new DecafLexical
-  def parse(source: String): Option[Program] = phrase(program)(new lexical.Scanner(source).asInstanceOf[Input]) match {
-    case Success(result, _) => Some(result)
-    case _ => None
+
+  implicit def dkeyword (k: Keyword): Parser[Elem] = acceptIf(_.name == k.name)("`"+k+"' expected but " + _ + " found")
+  implicit def ddelimiter (d: Delimiter): Parser[Elem] = acceptIf(_.name == d.name)("`"+d+"' expected but " + _ + " found")
+
+  def parse(source: String): Option[Program] = {
+    val scan = new lexical.DecafScanner(source).asInstanceOf[Reader[DecafToken]]
+    phrase(program)(scan) match {
+      case Success(result, _) => Some(result)
+      case _ => None
+    }
   }
-  def program: Parser[Program] = rep(decl) ^^{case decls => new Program(decls.asInstanceOf[List[Decl]])}
-  def decl = (
+  def program: Parser[Program] = positioned(
+    decl.+ ^^{
+      case decls => new Program(decls)
+    })
+  def decl: Parser[Decl] = (
     variableDecl
     | functionDecl
     | classDecl
@@ -160,8 +169,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
   def variableDecl: Parser[VarDecl] = typ ~ ident <~ Delimiter(";") ^^{
     case t ~ e  => VarDecl(e, t)
   }
-  def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals ~ Delimiter(")") ~ stmtBlock ^^{
-      case rt ~ name ~ Delimiter("(") ~ fs ~ Delimiter(")") ~ body => FnDecl( name, rt, fs, body)
+  def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals.? ~ Delimiter(")") ~ stmtBlock ^^{
+      case rt ~ name ~ Delimiter("(") ~ fs ~ Delimiter(")") ~ body => FnDecl( name, rt, fs.getOrElse(Nil), body)
     }
   def classDecl: Parser[Decl] =
     Keyword("class") ~> ident ~ extendPart.? ~ implementsPart ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
@@ -170,7 +179,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens {
   def extendPart: Parser[NamedType] = Keyword("extends") ~> className
   def implementsPart: Parser[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
   def field: Parser[Decl] = (variableDecl | functionDecl)
-  def returnType: Parser[Type] = typ | Keyword("void") ^^^ VoidType()
+  def returnType: Parser[Type] = (
+    typ ^^{case t => t}
+    | Keyword("void") ^^^ VoidType()
+    )
   def className: Parser[NamedType] = ident ^^{ case i=> NamedType(i) }
   def ident: Parser[ASTIdentifier] = elem("ident", _.isInstanceOf[Identifier]) ^^{
     case i:Identifier => ASTIdentifier(Some(i.getPos), i.value)

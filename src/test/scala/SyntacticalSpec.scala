@@ -46,7 +46,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle functions" in {
     val source = Source fromFile "build/resources/test/lab2-samples/functions.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/functions.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
@@ -54,7 +54,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle inheritance" in {
     val source = Source fromFile "build/resources/test/lab2-samples/inheritance.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/inheritance.out" mkString
-    val ast = target.parse(source)
+    val ast = target.parse(source).get
 
     ast.toString should include (expected)
   }
