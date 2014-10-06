@@ -11,21 +11,55 @@ class ParserSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
-  /*"The parser" should "correctly parse a single statement" in {
-    val source= "sigv[][] a;"
-    val ast = target.parse(source).get
+  def testOneLiner(source: String) = target.parse(source).get
+
+  "The parser" should "correctly parse a single statement" in {
+    val ast = testOneLiner("sigv[][] a;")
     //System.out.println(ast);
   }
 
   it should "correctly parse a single function def" in {
-    val source = "void main() { }"
-    val ast = target.parse(source).get
+    val ast = testOneLiner("void main() { }")
     //System.out.println(ast);
-  }*/
+  }
 
-  "A parser" should "correctly parse a complex statement" in {
-    val source = "void main() { lval = 'q'; }"
-    val ast = target.parse(source).get
+  it should "correctly parse a complex statement" in {
+    val ast = testOneLiner("void main() { lval = 'q'; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse a compound assignment" in {
+    val ast = testOneLiner("void main() { int a; a = a + 1; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse a simple while loop" in {
+    val ast = testOneLiner("void main() { while (a > 10) { } }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty while loop" in {
+    val ast = testOneLiner("void main() { while (a > 10); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty if block" in {
+    val ast = testOneLiner("void main() { if (a > 10); }")
+    System.out.println(ast);
+  }
+
+    it should "correctly parse an if statement" in {
+      val ast = testOneLiner("void main() { if (1 == 1) { } }")
+      System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with break" in {
+    val ast = testOneLiner("void main() { if (a == 5) break; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with a modulo" in {
+    val ast = testOneLiner("void main() { if (a % 2 == 0) a = 1; }")
     System.out.println(ast);
   }
 
