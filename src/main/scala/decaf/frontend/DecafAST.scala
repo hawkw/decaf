@@ -146,7 +146,7 @@ trait DecafAST {
     if (elseBody.isDefined) {elseBody.get.parent = this}
      def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
-        testBody.stringify(indentLevel + 1, Some("(body)")) +
+        testBody.stringify(indentLevel + 1, Some("(then)")) +
         (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1) } else { "" })
     }
   }
@@ -209,7 +209,10 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = token
   }
 
-  abstract class CompoundExpr(loc: Position, left: Option[Expr], op: ASTOperator, right: Expr) extends Expr(Some(loc)) {
+  abstract class CompoundExpr(loc: Position,
+                              protected val left: Option[Expr],
+                              protected val op: ASTOperator,
+                              protected val right: Expr) extends Expr(Some(loc)) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
@@ -239,7 +242,14 @@ trait DecafAST {
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
   }
 
-  case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs)
+  case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
+    override def stringifyChildren(indentLevel: Int): String = {
+     right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+     else {
+       ""
+     })
+    }
+  }
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 

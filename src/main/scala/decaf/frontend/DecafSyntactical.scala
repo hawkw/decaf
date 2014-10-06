@@ -24,6 +24,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   type Tokens <: DecafLexical
   override type Elem = DecafToken
   val lexical = new DecafLexical
+  type P[+T] = PackratParser[T]
 
   implicit def dkeyword(k: Keyword): Parser[Elem] = acceptIf(_.name == k.name)("`" + k + "' expected but " + _ + " found")
   implicit def ddelimiter(d: Delimiter): Parser[Elem] = acceptIf(_.name == d.name)("`" + d + "' expected but " + _ + " found")
@@ -114,76 +115,74 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case Keyword("for") ~ Delimiter("(") ~ i ~ Delimiter(";") ~ t ~ Delimiter(";") ~ s ~ Delimiter(")") ~ b =>
         ForStmt(i,t,s,b)
     }
+  /*
+    lazy val assign: PackratParser[Expr] = (
+        lValue ~ Operator("=") ~ expr ^^ {case left ~ Operator("=") ~ right => AssignExpr(left.getPos, left, right)}
+      )
 
-  lazy val assign: PackratParser[Expr] = (
-      lValue ~ Operator("=") ~ expr ^^ {case left ~ Operator("=") ~ right => AssignExpr(left.getPos, left, right)}
-    )
+    lazy val expr: PackratParser[Expr] = (
+      expr ~ Operator("==") ~ expr ^^{
+        case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
+      }
+        | expr ~ Operator("<") ~ expr ^^{
+        case left ~ Operator("<") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
+      }
+        | expr ~ Operator("<=") ~ expr ^^{
+        case left ~ Operator("<=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
+      }
+        | expr ~ Operator(">") ~ expr ^^{
+        case left ~ Operator(">") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
+      }
+        | expr ~ Operator(">=") ~ expr ^^{
+        case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
+      }
+        | expr ~ Operator("*") ~ expr ^^{
+        case left ~ Operator("*") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "*"), right)
+      }
+        | expr ~ Operator("/") ~ expr ^^{
+        case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right)
+      }
+        | expr ~ Operator("%") ~ expr ^^{
+        case left ~ Operator("%") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "%"), right)
+      }
+        | expr ~ Operator("+") ~ expr ^^{
+        case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
+      }
 
-  lazy val expr: PackratParser[Expr] = (
-    expr ~ Operator("*") ~ expr ^^{
-      case left ~ Operator("*") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "*"), right)
-    }
-    | expr ~ Operator("/") ~ expr ^^{
-      case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right)
-    }
-    | expr ~ Operator("%") ~ expr ^^{
-      case left ~ Operator("%") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "%"), right)
-    }
-    | expr ~ Operator("+") ~ expr ^^{
-      case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
-    }
-    | expr ~ Operator("==") ~ expr ^^{
-      case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
-    }
-      | expr ~ Operator("<") ~ expr ^^{
-      case left ~ Operator("<") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
-    }
-      | expr ~ Operator("<=") ~ expr ^^{
-      case left ~ Operator("<=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
-    }
-      | expr ~ Operator(">") ~ expr ^^{
-      case left ~ Operator(">") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
-    }
-      | expr ~ Operator(">=") ~ expr ^^{
-      case left ~ Operator(">=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
-    }
-      | expr ~ Operator("||") ~ expr ^^{
-      case left ~ Operator("||") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
-    }
-    |  Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
-      | const
-      | assign
-      | lValue
-      | call
-    | Keyword("this") ^^{ case k => This(k.getPos) }
+      |  Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
+        | const
+        | assign
+        | lValue
+        | call
+      | Keyword("this") ^^{ case k => This(k.getPos) }
 
-    | expr ~ Operator("-") ~ expr ^^{
-     case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right)
-    }
-      | expr ~ Operator("!=") ~ expr ^^{
-      case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
-    }
-      | expr ~ Operator("&&") ~ expr ^^{
-      case left ~ Operator("&&") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
-    }
-      | Operator("!") ~ expr ^^{
-      case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right)
-    }
-      | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
-      case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
-    }
-      | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
-      case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
-    }
-      | Keyword("new") ~ ident ^^{
-      case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
-    }
-      | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
-      case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
-    }
-    )
-
-  lazy val lValue: PackratParser[LValue] = (
+      | expr ~ Operator("-") ~ expr ^^{
+       case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right)
+      }
+        | expr ~ Operator("!=") ~ expr ^^{
+        case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
+      }
+        | expr ~ Operator("&&") ~ expr ^^{
+        case left ~ Operator("&&") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
+      }
+        | Operator("!") ~ expr ^^{
+        case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right)
+      }
+        | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
+      }
+        | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
+      }
+        | Keyword("new") ~ ident ^^{
+        case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
+      }
+        | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
+        case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
+      }
+      )
+  */
+  lazy val lValue: P[LValue] = (
     expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{
       case first ~ Delimiter("[") ~ last ~ Delimiter("]") =>
         ArrayAccess(first.getPos, first, last)
@@ -192,7 +191,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     | ident ^^{ case i => FieldAccess(i.getPos, None, i)}
     )
 
-  lazy val call: PackratParser[Call] = (
+  lazy val call: P[Call] = (
     expr ~ Delimiter(".") ~ ident ~ fnargs ^^{
       case base ~ _ ~ field ~ args  =>
         new Call(base.getPos, base, field, args)
@@ -201,6 +200,90 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case field ~ args  => new Call(field.getPos, field, args)
     }
     )
+// Huge terrible expr thing
+  lazy val expr: P[Expr] = assign
+  lazy val assign: P[Expr] = (
+    lValue ~ Operator("=") ~ expr ^^{
+      case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
+    }
+    | logical
+  )
+  lazy val logical: P[Expr] = (
+    expr ~ Operator("||") ~ expr ^^{
+      case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
+    }
+    | expr ~ Operator("&&") ~ expr ^^{
+      case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
+    }
+    | expr ~ Operator("==") ~ expr ^^{
+      case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
+    }
+    | expr ~ Operator("!=") ~ expr ^^{
+      case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
+    }
+    | relational
+    )
+  lazy val relational: P[Expr] = (
+    expr ~ Operator("<") ~ expr ^^{
+      case left ~ Operator("<") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
+    }
+    | expr ~ Operator(">") ~ expr ^^{
+      case left ~ Operator(">") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
+    }
+    | expr ~ Operator("<=") ~ expr ^^{
+      case left ~ Operator("<=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
+    }
+    | expr ~ Operator(">=") ~ expr ^^{
+      case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
+    }
+    | arithmatic
+    )
+  lazy val arithmatic: P[Expr] = (
+    expr ~ Operator("%") ~ expr ^^{
+      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
+    }
+    | expr ~ Operator("/") ~ expr ^^{
+      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
+    }
+    | expr ~ Operator("*") ~ expr ^^{
+      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
+    }
+    | expr ~ Operator("-") ~ expr ^^{
+      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "-"), right)
+    }
+    | expr ~ Operator("+") ~ expr ^^{
+      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "+"), right)
+    }
+    | unary
+    )
+  lazy val unary: P[Expr] = (
+    Operator("!") ~ expr ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
+    | Operator("-") ~ expr ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "-"), e)} //TODO: make ArithmaticExpr support unary minus (later)
+    | func
+    )
+  lazy val func: P[Expr] = (
+    call
+    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
+      case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
+    }
+    | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
+      case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
+    }
+    | storage
+    )
+  lazy val storage: P[Expr] = (
+    const
+    | lValue
+    | Keyword("this") ^^{ case k => This(k.getPos) }
+    | Keyword("new") ~ ident ^^{
+      case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
+    }
+    | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
+      case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
+    }
+    | rexpr
+    )
+  lazy val rexpr: P[Expr] = Delimiter("(") ~> expr <~ Delimiter(")")
 
   lazy val const: PackratParser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
