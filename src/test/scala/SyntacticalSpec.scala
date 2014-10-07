@@ -107,6 +107,11 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(ast);
   }
 
+  it should "correctly parse a call" in {
+    val ast = testOneLiner("void main() { main(); }")
+    System.out.println(ast);
+  }
+
     "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString

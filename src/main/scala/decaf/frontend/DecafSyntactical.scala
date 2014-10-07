@@ -223,15 +223,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     | expr ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
     )
 
-  lazy val call: P[Call] = (
-    expr ~ Delimiter(".") ~ ident ~ fnargs ^^{
-      case base ~ _ ~ field ~ args  =>
-        new Call(base.getPos, base, field, args)
-    }
-    | ident ~ fnargs ^^{
-      case field ~ args  => new Call(field.getPos, field, args)
-    }
-    )
+
 // Huge terrible expr thing
   lazy val expr: P[Expr] = (
     assign
@@ -374,16 +366,22 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )*/
   lazy val arithRhs: P[Expr] = (
     unary
-    | storage
     | func
+    | storage
     | rexpr
     )
   lazy val unary: P[Expr] = (
-    Operator("!") ~ expr ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
-    | Operator("-") ~ expr ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "-"), e)} //TODO: make ArithmaticExpr support unary minus (later)
+    Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
+    | Operator("-") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "-"), e)} //TODO: make ArithmaticExpr support unary minus (later)
+    )
+
+  lazy val unaryRHS: P[Expr] = (
+      func
+      | storage
+      | rexpr
     )
   lazy val func: P[Expr] = (
-    call
+    plaincall
     | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
       case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
     }
@@ -391,6 +389,20 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
     }
     )
+
+  lazy val plaincall: P[Call] = (
+      ident ~ fnargs ^^ {
+        case field ~ args  => new Call(field.getPos, field, args)
+      }
+    )
+
+  lazy val recursecall: P[Call] = (
+      expr ~ Delimiter(".") ~ ident ~ fnargs ^^ {
+        case base ~ _ ~ field ~ args =>
+          new Call(base.getPos, base, field, args)
+      }
+    )
+
   lazy val storage: P[Expr] = (
     const
     | lValue
@@ -402,7 +414,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
     }
     )
-  lazy val rexpr: P[Expr] = Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case _ ~ e ~ _ => e }
+  lazy val rexpr: P[Expr] = (
+    Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case _ ~ e ~ _ => e }
+    | recursecall
+    )
 
   lazy val const: PackratParser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
