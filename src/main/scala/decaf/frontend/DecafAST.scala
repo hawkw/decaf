@@ -31,7 +31,7 @@ trait DecafAST {
      *
      * @return a String containing the name of this node type for printing
      */
-    protected[DecafAST] def getName: String = this.getClass.getSimpleName
+    protected[DecafAST] def getName: String = this.getClass.getSimpleName + ":"
 
     /**
      * Returns a String representation of the tree with this node as the root node.
@@ -59,7 +59,7 @@ trait DecafAST {
       if (location.isDefined)
         result ++= ("%" + spaces + "d").format(location.get.line)
       else result ++= " "* spaces
-      result ++= " " * (indentLevel*spaces) + label.getOrElse("") + getName
+      result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
       result.toString()
@@ -82,7 +82,7 @@ trait DecafAST {
     def this (name: String)  = this(None, name)
     def this (loc: Position, name:String) = this (Some(loc), name)
 
-    override def getName = name
+    override def getName = "Identifier: " + name
     def stringifyChildren(indentLevel: Int) = ""
   }
 
@@ -128,7 +128,7 @@ trait DecafAST {
     loopBody.parent = this
 
      def stringifyChildren(indentLevel: Int): String = {
-        if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} +
+        ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
         test.stringify(indentLevel + 1, Some("(test)")) +
         ( if (step.isDefined) { step.get.stringify(indentLevel + 1, Some("(step)")) } else {""} ) +
         loopBody.stringify(indentLevel + 1, Some("(body)"))
@@ -146,8 +146,8 @@ trait DecafAST {
     if (elseBody.isDefined) {elseBody.get.parent = this}
      def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
-        testBody.stringify(indentLevel + 1, Some("(body)")) +
-        (if (elseBody.isDefined) elseBody.get.stringify(indentLevel + 1) else "")
+        testBody.stringify(indentLevel + 1, Some("(then)")) +
+        (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1, Some("(else)")) } else { "" })
     }
   }
 
@@ -159,57 +159,60 @@ trait DecafAST {
     if (expr.isDefined)
       expr.get.parent = this
 
-    def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
+    def stringifyChildren(indentLevel: Int): String = (if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""})
   }
 
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
     args.foreach{e => e.parent = this}
 
      def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
-      (acc, expr) => acc + expr.stringify(indentLevel + 1)
+      (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(args)"))
     }
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
-  case class EmptyExpr(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "Empty"
+  case class EmptyExpr() extends Expr(None) {
+    override def getName = "Empty:"
 
      def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
-    override def getName = "IntConstant"
+    override def getName = "IntConstant: "
      def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
-    override def getName = "DoubleConstant"
+    override def getName = "DoubleConstant: "
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-    override def getName = "BoolConstant"
+    override def getName = "BoolConstant: "
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
-    override def getName = "StringConstant"
+    override def getName = "StringConstant: "
     def stringifyChildren(indentLevel: Int): String = value
   }
 
   case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "NullConstant"
+    override def getName = "NullConstant: "
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ASTOperator(loc: Position, token: String) extends Expr(Some(loc)) {
-    override def getName = "Operator"
+    override def getName = "Operator: "
     def stringifyChildren(indentLevel: Int): String = token
   }
 
-  abstract class CompoundExpr(loc: Position, left: Option[Expr], op: ASTOperator, right: Expr) extends Expr(Some(loc)) {
+  abstract class CompoundExpr(loc: Position,
+                              protected val left: Option[Expr],
+                              protected val op: ASTOperator,
+                              protected val right: Expr) extends Expr(Some(loc)) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
@@ -219,10 +222,10 @@ trait DecafAST {
     if (left.isDefined) left.get.parent = this
 
     def stringifyChildren(indentLevel: Int): String = {
-      if (left.isDefined) left.get.stringify(indentLevel + 1)
+      (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
       else {
         ""
-      } + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
+      }) + op.stringify(indentLevel + 1) + right.stringify(indentLevel + 1)
     }
   }
 
@@ -239,7 +242,14 @@ trait DecafAST {
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
   }
 
-  case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs)
+  case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
+    override def stringifyChildren(indentLevel: Int): String = {
+     right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+     else {
+       ""
+     })
+    }
+  }
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
@@ -266,10 +276,10 @@ trait DecafAST {
     if (base.isDefined) base.get.parent = this
 
      def stringifyChildren(indentLevel: Int): String = {
-      if (base.isDefined) base.get.stringify(indentLevel + 1)
+       (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
       else {
         ""
-      } +
+      }) +
         field.stringify(indentLevel + 1)
     }
   }
@@ -279,10 +289,10 @@ trait DecafAST {
 
     def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
-     def stringifyChildren(indentLevel: Int): String = if (base.isDefined) base.get.stringify(indentLevel + 1)
+     def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
     else {
       ""
-    } +
+    }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
   }
 
@@ -332,9 +342,9 @@ trait DecafAST {
     members.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int) = {
-      if (extnds.isDefined) {
+      (if (extnds.isDefined) {
         extnds.get.stringify(indentLevel+1, Some("(extends)"))
-      } else {""} + implements.foldLeft[String](""){
+      } else {""}) + implements.foldLeft[String](""){
         (acc, nt) => acc + nt.stringify(indentLevel + 1, Some("(implements)"))
       } + members.foldLeft[String](""){
         (acc, decl) => acc + decl.stringify(indentLevel + 1)
@@ -349,7 +359,7 @@ trait DecafAST {
       (acc, decl) => acc + decl.stringify(indentLevel + 1)
     }
 
-    override def getName: String = "InterfaceDecl"
+    override def getName: String = "InterfaceDecl:"
   }
 
   case class FnDecl(name: ASTIdentifier,
@@ -370,12 +380,12 @@ trait DecafAST {
         ""
       })
 
-    override def getName: String = "FnDecl"
+    override def getName: String = "FnDecl:"
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
   abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
-    override def getName = "Type"
+    override def getName = "Type: "
     protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
@@ -388,13 +398,13 @@ trait DecafAST {
   case class ErrorType() extends Type("error", None)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, name.loc) {
-    override def getName = "NamedType"
+    override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
   case class ArrayType(locat: Option[Position], elemType: Type) extends Type("", locat) {
-    override def getName = "ArrayType"
+    override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }

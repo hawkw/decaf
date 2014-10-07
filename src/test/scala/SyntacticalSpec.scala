@@ -11,77 +11,174 @@ class ParserSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
-  "The parser" should "correctly parse a simple program" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
-    val ast = target.parse(source).get
+  def testOneLiner(source: String) = target.parse(source).get
 
-    ast.toString should include (expected)
+  "The parser" should "correctly parse a single statement" in {
+    val ast = testOneLiner("sigv[][] a;")
+    //System.out.println(ast);
   }
 
-  it should "handle control flow" in {
-      val source = Source fromFile "build/resources/test/lab2-samples/control.decaf" mkString
-      val expected = Source fromFile "build/resources/test/lab2-samples/control.out" mkString
+  it should "correctly parse a single function def" in {
+    val ast = testOneLiner("void main() { }")
+    //System.out.println(ast);
+  }
+
+  it should "correctly parse a complex statement" in {
+    val ast = testOneLiner("void main() { lval = 'q'; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse a compound assignment" in {
+    val ast = testOneLiner("void main() { int a; a = a + 1; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse a simple while loop" in {
+    val ast = testOneLiner("void main() { while (a > 10) { } }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty while loop" in {
+    val ast = testOneLiner("void main() { while (a > 10); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty if block" in {
+    val ast = testOneLiner("void main() { if (a > 10); }")
+    System.out.println(ast);
+  }
+
+    it should "correctly parse an if statement" in {
+      val ast = testOneLiner("void main() { if (1 == 1) { } }")
+      System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with break" in {
+    val ast = testOneLiner("void main() { if (a == 5) break; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with a modulo" in {
+    val ast = testOneLiner("void main() { if (a % 2 == 0) a = 1; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with a bare else" in {
+    val ast = testOneLiner("void main() { if (a % 2 == 0) a = 2; else a = 500000000; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an if statement with a double-bar or" in {
+    val ast = testOneLiner("void main() { if (a || b) a = 2; else a = 500000000; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty for loop" in {
+    val ast = testOneLiner("void main() { for (; a < 0 ;); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the for statement from control.decaf" in {
+    val ast = testOneLiner("void main() { for (; a <= 10 || done; a = a + 1); }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse an empty return statement" in {
+    val ast = testOneLiner("void main() { return; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the bottom part of control.decaf" in {
+    val ast = testOneLiner("void main() {   for (; a <= 10 || done; a = a + 1) {\n     Print(a, \" \");\n     if (a == 10) a;\n  }\n  return; }")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the top part of control.decaf" in {
+    val ast = testOneLiner("void main() {\n  int a;\n  bool done;\n\n  a = 0;\n  while (a < 10) {\n\tPrint(a, \" \");\n\ta = a + 1;\n\tif (a == 5) break;\n  }\n}")
+    System.out.println(ast);
+  }
+
+  it should "correctly parse the while loop of control.decaf" in {
+    val ast = testOneLiner("void main() {  while (a < 10) {\n\tPrint(a, \" \");\n\ta = a + 1;\n\tif (a == 5) break;\n  }\n}")
+    System.out.println(ast);
+  }
+  it should "correctly parse a handful of variable declarations" in {
+    val ast = testOneLiner("void main() {\n  int a;\n  bool done;\n\n  a = 0;\n }")
+    System.out.println(ast);
+  }
+
+    "The parser" should "correctly parse a simple program" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
+      val ast = target.parse(source).get
+
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
+
+    it should "handle control flow" in {
+        val source = Source fromFile "build/resources/test/lab2-samples/control.decaf" mkString
+        val expected = Source fromFile "build/resources/test/lab2-samples/control.out" mkString
+        val ast = target.parse(source).get
+
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
+
+    it should "handle classes" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/class.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/class.out" mkString
       val ast = target.parse(source).get
 
       ast.toString should include (expected)
-  }
+    }
 
-  it should "handle classes" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/class.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/class.out" mkString
-    val ast = target.parse(source).get
+    it should "handle expressions" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/expressions.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/expressions.out" mkString
+      val ast = target.parse(source).get
 
-    ast.toString should include (expected)
-  }
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
 
-  it should "handle expressions" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/expressions.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/expressions.out" mkString
-    val ast = target.parse(source).get
+    it should "handle functions" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/functions.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/functions.out" mkString
+      val ast = target.parse(source).get
 
-    ast.toString should include (expected)
-  }
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
 
-  it should "handle functions" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/functions.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/functions.out" mkString
-    val ast = target.parse(source).get
+    it should "handle inheritance" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/inheritance.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/inheritance.out" mkString
+      val ast = target.parse(source).get
 
-    ast.toString should include (expected)
-  }
+      ast.toString should include (expected)
+    }
+/* // Commented out because it uses the  the in-place add one statement ("n++"), which isn't in the Decaf spec
+    it should "handle the increment and decrement operators" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/incrdecr.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/incrdecr.out" mkString
+      val ast = target.parse(source).get
 
-  it should "handle inheritance" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/inheritance.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/inheritance.out" mkString
-    val ast = target.parse(source).get
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
+*/
+/* // Commented out because it uses the "switch/case" statement and the in-place add one statement ("n++"),
+   // neither of which are in the Decaf spec
+    it should "correctly parse a complex program" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/switch.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/switch.out" mkString
+      val ast = target.parse(source).get
 
-    ast.toString should include (expected)
-  }
+      ast.toString.replaceAll( """(?m)\s+$""", "") should include(expected.replaceAll( """(?m)\s+$""", ""))
+    }
+*/
+    it should "correctly parse a the matrix math program" in {
+      val source = Source fromFile "build/resources/test/lab2-samples/matrix.decaf" mkString
+      val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
+      val ast = target.parse(source).get
 
-  it should "handle the increment and decrement operators" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/incrdecr.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/incrdecr.out" mkString
-    val ast = target.parse(source).get
-
-    ast.toString should include (expected)
-  }
-
-
-  it should "correctly parse a complex program" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/switch.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/switch.out" mkString
-    val ast = target.parse(source).get
-
-    ast.toString should include (expected)
-  }
-
-  it should "correctly parse a the matrix math program" in {
-    val source = Source fromFile "build/resources/test/lab2-samples/matrix.decaf" mkString
-    val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
-    val ast = target.parse(source).get
-
-    ast.toString should include (expected)
-  }
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+    }
 
 }
