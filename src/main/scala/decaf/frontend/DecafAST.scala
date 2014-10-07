@@ -5,6 +5,14 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
  *
+ * I have made a couple tweaks to the pretty-printing code ([[DecafAST#ASTNode.stringify stringify()]] here.
+ * Specifically, we've decided that floating-point  numbers ([[DecafAST#ASTDoubleConstant ASTDoubleConstant]])
+ * without fractional parts should print out with a trailing "aesthetic" zero, as this indicates the number's identity
+ * as a floating-point number.
+ *
+ * For example, the constant `1d` should pretty-print as `DoubleConstant: 1.0`, rather than `DoubleConstant: 1`.
+ * I've modified the corresponding sample output to make this behaviour correct.
+ *
  * @author Hawk Weisman
  *
  * Created by hawk on 9/30/14.
@@ -26,8 +34,8 @@ trait DecafAST {
     /**
      * Returns the name of this node type for printing.
      *
-     * By default, this is the class name of the node. For some nodes, such as [[ASTIdentifier]], this should be something
-     * else; those nodes can override this method.
+     * By default, this is the class name of the node. For some nodes, such as [[ASTIdentifier]], this should be
+     * something else; those nodes can override this method.
      *
      * @return a String containing the name of this node type for printing
      */
