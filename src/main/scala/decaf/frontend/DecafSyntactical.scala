@@ -225,13 +225,52 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     | expr ~ Operator("&&") ~ expr ^^{
       case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
     }
-    | expr ~ Operator("==") ~ expr ^^{
+    | equality
+    )
+
+  lazy val logicalRhs: P[Expr] = (
+    /*
+     * We have chosen to exclude one of C's
+     * most popular error-generating statements
+     * and decide that you are not permitted to
+     * put an assignment in the right hand side
+     * of a logical expression, as that is the sole
+     * domain of Bad Languages like YavaScript.
+     */
+    logical
+    | relational
+    | arithmatic
+    | unary
+    | func
+    | storage
+    | rexpr
+    )
+
+  lazy val equality: P[Expr] = (
+    expr ~ Operator("==") ~ equalityRhs ^^{
       case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
     }
-    | expr ~ Operator("!=") ~ expr ^^{
+    | expr ~ Operator("!=") ~ equalityRhs ^^{
       case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
     }
     )
+
+  lazy val equalityRhs: P[Expr] = (
+    equality
+    | relational  /*
+       * We as the language designers have made the
+       * completely arbitrary decision that you should
+       * be able to say "a == 3 >= 2", but if you ever
+       * actually do this, then
+       * wat.
+       */
+    | arithmatic
+    | unary
+    | func
+    | storage
+    | rexpr
+    )
+
   lazy val relational: P[Expr] = (
     expr ~ Operator(">=") ~ relationalRhs ^^{
        case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
