@@ -286,23 +286,23 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val equality: P[Expr] = (
-    expr ~ Operator("==") ~ equalityRhs ^^{
-      case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
-    }
-    | expr ~ Operator("!=") ~ equalityRhs ^^{
+    expr ~ Operator("!=") ~ equalityRhs ^^{
       case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
+    }
+   | expr ~ Operator("==") ~ equalityRhs ^^{
+      case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
     }
     )
 
   lazy val equalityRhs: P[Expr] = (
     equality
-    | relational  /*
-       * We as the language designers have made the
-       * completely arbitrary decision that you should
-       * be able to say "a == 3 >= 2", but if you ever
-       * actually do this, then
-       * wat.
-       */
+     | relational
+         /* We as the language designers have made the
+         * completely arbitrary decision that you should
+         * be able to say "a == 3 >= 2", but if you ever
+         * actually do this, then
+         * wat.
+         */
     | term
     | unary
     | func
@@ -326,7 +326,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
   lazy val relationalRhs: P[Expr] =(
     term
-    | factor
+    //| factor
     | unary
     | func
     | storage
@@ -392,8 +392,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
     )
   lazy val storage: P[Expr] = (
-    lValue
-    | const
+    const
+    | lValue
     | Keyword("this") ^^{ case k => This(k.getPos) }
     | Keyword("new") ~ ident ^^{
       case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))

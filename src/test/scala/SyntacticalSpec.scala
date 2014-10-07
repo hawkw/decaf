@@ -48,7 +48,7 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(ast);
   }
 
-    it should "correctly parse an if statement" in {
+  it should "correctly parse an if statement" in {
       val ast = testOneLiner("void main() { if (1 == 1) { } }")
       System.out.println(ast);
   }
