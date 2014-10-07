@@ -5,7 +5,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
  *
- * I have made a couple tweaks to the pretty-printing code ([[DecafAST#ASTNode.stringify stringify()]] here.
+ * I have made a couple tweaks to the pretty-printing code ([[DecafAST#ASTNode.stringify stringify()]]) here.
  * Specifically, we've decided that floating-point  numbers ([[DecafAST#ASTDoubleConstant ASTDoubleConstant]])
  * without fractional parts should print out with a trailing "aesthetic" zero, as this indicates the number's identity
  * as a floating-point number.
