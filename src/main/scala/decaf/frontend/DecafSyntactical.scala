@@ -89,7 +89,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     ( variableDecl <~ Delimiter(";") )
     | functionDecl
     | classDecl
-    //| interfaceDecl
+    | interfaceDecl
     )
 
   lazy val stmtBlock = Delimiter("{") ~ ((variableDecl <~ Delimiter(";"))| stmt).* ~ Delimiter("}") ^^ {
@@ -100,8 +100,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
 
   lazy val returnType: PackratParser[Type] = (
     Keyword("void") ^^^ VoidType()
-    | typ ^^{case t => t}
-
+    | typ
     )
 
   lazy val formals: PackratParser[List[VarDecl]] = (
@@ -114,7 +113,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   }
 
   lazy val functionDecl: PackratParser[Decl] = returnType ~ ident ~ formals ~ stmtBlock ^^{
-    case rt ~ name ~ fs ~ body => FnDecl( name, rt, fs, body)
+    case rt ~ name ~ fs ~ body => new FnDecl(name, rt, fs, body)
   }
 
   lazy val stmt: PackratParser[Stmt] =(
@@ -215,8 +214,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       }
       )
   */
-  lazy val lValue: P[LValue] = (
+  lazy val lValue: P[Expr] = (
     ident ^^{ case i => FieldAccess(i.getPos, None, i)}
+    | Keyword("this") ^^{case k => This(k.getPos)}
     )
 
   lazy val expr: P[Expr] = (
@@ -325,7 +325,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
   lazy val relationalRhs: P[Expr] =(
     term
-    //| factor
+    //| factor // this isn't meant to be here
     | unary
     | func
     | storage
@@ -406,7 +406,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   lazy val storage: P[Expr] = (
     const
     | lValue
-    | Keyword("this") ^^{ case k => This(k.getPos) }
+    | Keyword("this") ^^{
+      case k => This(k.getPos)
+    }
     | Keyword("new") ~ ident ^^{
       case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
     }
@@ -461,13 +463,21 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val classDecl: P[Decl] =
-    Keyword("class") ~ ident ~ opt(extendPart) ~ opt(implementsPart) ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
-      case k~ name ~ ext ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp.getOrElse(Nil), fields)
+    Keyword("class") ~> ident ~ opt(extendPart) ~ opt(implementsPart) ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
+      case name ~ ext ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp.getOrElse(Nil), fields)
     }
   lazy val extendPart: P[NamedType] = Keyword("extends") ~> className
   lazy val implementsPart: P[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
   lazy val field: P[Decl] = ( variableDecl <~ Delimiter(";") )| functionDecl
   lazy val className: P[NamedType] = ident ^^{ case i=> NamedType(i) }
+
+  lazy val interfaceDecl: P[Decl] =
+    Keyword("interface") ~> ident ~ Delimiter("{") ~ prototype.* ~ Delimiter("}") ^^{
+      case name ~ Delimiter("{") ~ members ~ Delimiter("}") => InterfaceDecl(name, members)
+    }
+  lazy val prototype: P[Decl] = returnType ~ ident ~ formals <~ Delimiter(";") ^^{
+      case rt ~ name ~ args => new FnDecl(name, rt, args)
+    }
 } /*
 
 
