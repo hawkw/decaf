@@ -148,52 +148,57 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
 
-
   lazy val expr: P[Expr] = (
-      indirectCall
-      | arrayAccess
-      | indirectFieldAccess
+      indirect
       | assign
       | logical
     )
 
-  lazy val indirectCall: P[Expr] = (
-      plainCall ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | exprThis ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | arrayAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | indirectFieldAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | fieldAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | exprNew ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | ident ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base.asInstanceOf[Expr], field, args) }
-      | rexpr ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+  /*lazy val indirect: P[Expr] = (
+      exprThis
+      | fieldAccess
+      | plainCall
+      | exprNew
+      | plainArrayAccess
+      | rexpr
+      | indirect ~ Delimiter("[") ~ (assign | logical | indirect) ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | indirect ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | indirect ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+    )*/
+
+  /* indirect stolen from http://www.vpri.org/pdf/tr2007002_packrat.pdf
+  *  see the Primary Java Ident block from the paper */
+  lazy val indirect: P[Expr] = (
+      exprNew
+      | CALL
+      | FIELDACCESS
+      | ARRAYACCESS
     )
 
-  lazy val arrayAccess: P[Expr] = (
-      indirectCall ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | plainCall ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | exprThis ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | indirectFieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | fieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | exprNew ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | ident ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first.asInstanceOf[Expr], last)}
-      | rexpr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | arrayAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+  lazy val CALL: P[Expr] = (
+      indirect ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | plainCall
     )
 
-  lazy val indirectFieldAccess: P[Expr] = (
-      exprThis ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | indirectCall ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | plainCall ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | arrayAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | fieldAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | exprNew ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | ident ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e.asInstanceOf[Expr]), i)}
-      | rexpr ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-      | indirectFieldAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+  lazy val FIELDACCESS: P[Expr] = (
+      indirect ~ Delimiter(".") ~ ident ^^ {case e ~ _ ~ i => FieldAccess(i.getPos, Some(e), i)}
+    )
+
+  lazy val ARRAYACCESS: P[Expr] = (
+      indirect ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | plainArrayAccess
+    )
+
+  //lazy val indirectCall: P[Expr] = (
+
+  //  )
+
+  lazy val plainArrayAccess: P[Expr] = (
+      fieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
     )
 
   lazy val assign: P[Expr] = (
-      (exprThis | arrayAccess | indirectFieldAccess | fieldAccess | ident) ~ Operator("=") ~ expr ^^{
+      (exprThis | plainArrayAccess | fieldAccess | indirect) ~ Operator("=") ~ expr ^^{
         case left ~ _ ~ right => AssignExpr(left.getPos, left.asInstanceOf[Expr], right)
       }
     )
