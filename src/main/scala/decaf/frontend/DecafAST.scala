@@ -271,7 +271,7 @@ trait DecafAST {
 
     def stringifyChildren(indentLevel: Int): String = {
       base.stringify(indentLevel + 1)
-      subscript.stringify(indentLevel + 1, Some("(subscript"))
+      subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
   }
 
