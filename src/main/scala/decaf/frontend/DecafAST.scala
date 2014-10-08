@@ -374,17 +374,19 @@ trait DecafAST {
   case class FnDecl(name: ASTIdentifier,
                     returnType: Type,
                     formals: List[VarDecl],
-                    body: StmtBlock) extends Decl(name) {
+                    body: Option[StmtBlock]) extends Decl(name) {
+    def this (nam: ASTIdentifier, rt: Type, fnargs: List[VarDecl]) = this(nam, rt, fnargs, None)
+    def this (nam: ASTIdentifier, rt: Type, fnargs: List[VarDecl], bod: StmtBlock) = this(nam, rt, fnargs, Some(bod))
     name.parent = this
     returnType.parent = this
-    body.parent = this
+    if (body.isDefined) body.get.parent = this
     formals.foreach { d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int) = returnType.stringify(indentLevel + 1, Some("(return type)")) +
       name.stringify(indentLevel + 1) +
       formals.foldLeft[String](""){ (acc, decl) => acc + decl.stringify(indentLevel + 1, Some("(formals)"))} +
-      (if (body != null) {
-        body.stringify(indentLevel + 1, Some("(body)"))
+      (if (body.isDefined) {
+        body.get.stringify(indentLevel + 1, Some("(body)"))
       } else {
         ""
       })
