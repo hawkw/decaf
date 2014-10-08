@@ -243,7 +243,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   | rexpr
   )
   lazy val assign: P[Expr] = (
-    lValue ~ Operator("=") ~ assignRhs ^^{
+    expr ~ Operator("=") ~ assignRhs ^^{
       case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
     }
   )
