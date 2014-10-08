@@ -216,7 +216,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   */
   lazy val lValue: P[Expr] = (
     ident ^^{ case i => FieldAccess(i.getPos, None, i)}
-    | Keyword("this") ^^{case k => This(k.getPos)}
+    //| Keyword("this") ^^{case k => This(k.getPos)}
     )
 
   lazy val expr: P[Expr] = (
