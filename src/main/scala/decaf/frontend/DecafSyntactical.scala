@@ -379,7 +379,15 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
   lazy val unary: P[Expr] = (
     Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
-    | Operator("-") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "-"), e)} //TODO: make ArithmaticExpr support unary minus (later)
+    | Operator("-") ~ unaryRHS ^^{
+      case op ~ e => ArithmeticExpr(op.getPos, ASTIntConstant(op.getPos, 0), ASTOperator(op.getPos, "-"), e)}
+    /*
+     * The correct handling for the unary minus operator is not documented in the reference implementation
+     * as there are no sample programs with correct output for the unary minus expression. Therefore, we've
+     * decided to handle it as an arithmetic expression, considering that a unary minus operation is basically the same
+     * as subtracting the number from zero. This will make semantic analysis easier as we don't need to special-case
+     * unary minus and we can just handle it as any other subtraction operation.
+     */
     )
 
   lazy val unaryRHS: P[Expr] = (
