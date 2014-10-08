@@ -119,6 +119,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   it should "parse a god awful PoS" in {
     val ast = testOneLiner("void main() { (a + b + thing()).q(astNode[3 * q()], dutyCalls, anotherCall()); }")
+    System.out.println(ast);
   }
 
   it should "handle array stuff" in {
