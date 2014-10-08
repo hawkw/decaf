@@ -140,6 +140,10 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle a this statement" in {
     System.out.println(testOneLiner("this.red = red;"));
   }
+
+  it should "handle an assignment to a field access" in {
+    System.out.println(testOneLiner("a.b = c;"));
+  }
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
