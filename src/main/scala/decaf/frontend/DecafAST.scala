@@ -393,7 +393,7 @@ trait DecafAST {
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
-  abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(None) {
+  abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(loc) {
     override def getName = "Type: "
     protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
   }
@@ -406,7 +406,7 @@ trait DecafAST {
   case class StringType() extends Type("string", None)
   case class ErrorType() extends Type("error", None)
 
-  case class NamedType(name: ASTIdentifier) extends Type(name.getName, None) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
