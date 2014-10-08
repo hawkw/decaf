@@ -148,6 +148,14 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "handle a stupid unary minus" in {
     System.out.println(testOneLiner("void main() { a = a - -b; }"));
   }
+
+  it should "handle an array access in an assignment" in {
+    System.out.println(testOneLiner("void main() { a = m[i]; }"));
+  }
+
+  it should "handle an assignment to an array access" in {
+    System.out.println(testOneLiner("void main() { m[i] = a; }"));
+  }
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
