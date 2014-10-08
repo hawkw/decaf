@@ -112,6 +112,19 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(ast);
   }
 
+  it should "correctly parse a chain of calls" in {
+    val ast = testOneLiner("void main() { ( thingOne() ).thingTwo(); }");
+    System.out.println(ast);
+  }
+
+  it should "parse a god awful PoS" in {
+    val ast = testOneLiner("void main() { (a + b + thing()).q(astNode[3 * q()], dutyCalls, anotherCall()); }")
+  }
+
+  it should "handle array stuff" in {
+    System.out.println(testOneLiner("void main() { a[3]; }"));
+  }
+
     "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString

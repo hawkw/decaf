@@ -217,15 +217,22 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   */
   lazy val lValue: P[LValue] = (
     ident ^^{ case i => FieldAccess(i.getPos, None, i)}
+    )
+
+  lazy val expr: P[Expr] = (
+    expr ~ Delimiter(".") ~ ident ~ fnargs ^^ {
+      case base ~ _ ~ field ~ args =>
+        new Call(base.getPos, base, field, args)
+    }
     | expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{
       case first ~ Delimiter("[") ~ last ~ Delimiter("]") => ArrayAccess(first.getPos, first, last)
     }
     | expr ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-    )
-
+    | mrexpr
+  )
 
 // Huge terrible expr thing
-  lazy val expr: P[Expr] = (
+  lazy val mrexpr: P[Expr] = (
     assign
   | logical
   | relational
@@ -396,13 +403,6 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       }
     )
 
-  lazy val recursecall: P[Call] = (
-      expr ~ Delimiter(".") ~ ident ~ fnargs ^^ {
-        case base ~ _ ~ field ~ args =>
-          new Call(base.getPos, base, field, args)
-      }
-    )
-
   lazy val storage: P[Expr] = (
     const
     | lValue
@@ -416,7 +416,6 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
   lazy val rexpr: P[Expr] = (
     Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case _ ~ e ~ _ => e }
-    | recursecall
     )
 
   lazy val const: PackratParser[Expr] = (
