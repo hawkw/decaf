@@ -126,7 +126,15 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(testOneLiner("void main() { a[3]; }"));
   }
 
-    "The parser" should "correctly parse a simple program" in {
+  it should "handle a simple class definition" in {
+    System.out.println(testOneLiner("class Thing { } void main() { a[3]; }"));
+  }
+  it should "handle a simple class definition and field access" in {
+    System.out.println(testOneLiner("class Thing { int a; } void main() { Thing q; }"));
+  }
+
+
+  "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
       val ast = target.parse(source).get
@@ -147,7 +155,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/class.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
     it should "handle expressions" in {
