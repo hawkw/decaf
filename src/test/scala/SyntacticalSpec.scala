@@ -208,4 +208,12 @@ class ParserSpec extends FlatSpec with Matchers {
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 
+  it should "correctly parse a program with interfaces" in {
+    val source = Source fromFile "build/resources/test/lab2-samples/interface.decaf" mkString
+    val expected = Source fromFile "build/resources/test/lab2-samples/interface.out" mkString
+    val ast = target.parse(source).get
+
+    ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
+  }
+
 }
