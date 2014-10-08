@@ -133,7 +133,13 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(testOneLiner("class Thing { int a; } void main() { Thing q; }"));
   }
 
+  it should "handle a simple interface definition" in {
+    System.out.println(testOneLiner("interface Colorable {\n   Color GetColor();\n   void SetColor(Color c);\n}"));
+  }
 
+  it should "handle a this statement" in {
+    System.out.println(testOneLiner("this.red = red;"));
+  }
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
