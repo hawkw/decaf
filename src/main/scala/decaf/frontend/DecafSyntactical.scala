@@ -147,236 +147,126 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ _ ~ None ~ _ ~ t ~ _ ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr()),t,Some(EmptyExpr()),b)
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
-  /*
-    lazy val assign: PackratParser[Expr] = (
-        lValue ~ Operator("=") ~ expr ^^ {case left ~ Operator("=") ~ right => AssignExpr(left.getPos, left, right)}
-      )
 
-    lazy val expr: PackratParser[Expr] = (
-      expr ~ Operator("==") ~ expr ^^{
-        case left ~ Operator("==") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
-      }
-        | expr ~ Operator("<") ~ expr ^^{
-        case left ~ Operator("<") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
-      }
-        | expr ~ Operator("<=") ~ expr ^^{
-        case left ~ Operator("<=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
-      }
-        | expr ~ Operator(">") ~ expr ^^{
-        case left ~ Operator(">") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
-      }
-        | expr ~ Operator(">=") ~ expr ^^{
-        case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
-      }
-        | expr ~ Operator("*") ~ expr ^^{
-        case left ~ Operator("*") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "*"), right)
-      }
-        | expr ~ Operator("/") ~ expr ^^{
-        case left ~ Operator("/") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "/"), right)
-      }
-        | expr ~ Operator("%") ~ expr ^^{
-        case left ~ Operator("%") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "%"), right)
-      }
-        | expr ~ Operator("+") ~ expr ^^{
-        case left ~ Operator("+") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "+"), right)
-      }
-
-      |  Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case Delimiter("(") ~ e ~ Delimiter(")") => e }
-        | const
-        | assign
-        | lValue
-        | call
-      | Keyword("this") ^^{ case k => This(k.getPos) }
-
-      | expr ~ Operator("-") ~ expr ^^{
-       case left ~ Operator("-") ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(left.getPos, "-"), right)
-      }
-        | expr ~ Operator("!=") ~ expr ^^{
-        case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
-      }
-        | expr ~ Operator("&&") ~ expr ^^{
-        case left ~ Operator("&&") ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
-      }
-        | Operator("!") ~ expr ^^{
-        case Operator("!") ~ right => new LogicalExpr(right.getPos, ASTOperator(right.getPos, "!"), right)
-      }
-        | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
-      }
-        | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
-      }
-        | Keyword("new") ~ ident ^^{
-        case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
-      }
-        | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
-        case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
-      }
-      )
-  */
-  lazy val lValue: P[Expr] = (
-    ident ^^{ case i => FieldAccess(i.getPos, None, i)}
-    //| Keyword("this") ^^{case k => This(k.getPos)}
-    )
 
   lazy val expr: P[Expr] = (
-    expr ~ Delimiter(".") ~ ident ~ fnargs ^^ {
-      case base ~ _ ~ field ~ args =>
-        new Call(base.getPos, base, field, args)
-    }
-    | expr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^{
-      case first ~ Delimiter("[") ~ last ~ Delimiter("]") => ArrayAccess(first.getPos, first, last)
-    }
-    | expr ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-    | mrexpr
-  )
+      indirectCall
+      | arrayAccess
+      | indirectFieldAccess
+      | assign
+      | logical
+    )
 
-// Huge terrible expr thing
-  lazy val mrexpr: P[Expr] = (
-    assign
-  | logical
-  | relational
-  | term
-  | unary
-  | func
-  | storage
-  | rexpr
-  )
+  lazy val indirectCall: P[Expr] = (
+      plainCall ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | exprThis ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | arrayAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | indirectFieldAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | fieldAccess ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | exprNew ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+      | ident ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base.asInstanceOf[Expr], field, args) }
+      | rexpr ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+    )
+
+  lazy val arrayAccess: P[Expr] = (
+      indirectCall ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | plainCall ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | exprThis ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | indirectFieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | fieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | exprNew ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | ident ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first.asInstanceOf[Expr], last)}
+      | rexpr ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+      | arrayAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+    )
+
+  lazy val indirectFieldAccess: P[Expr] = (
+      exprThis ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | indirectCall ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | plainCall ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | arrayAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | fieldAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | exprNew ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | ident ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e.asInstanceOf[Expr]), i)}
+      | rexpr ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+      | indirectFieldAccess ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
+    )
+
   lazy val assign: P[Expr] = (
-    expr ~ Operator("=") ~ assignRhs ^^{
-      case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
-    }
-  )
-  lazy val assignRhs: P[Expr] = (
-      logical
-      | relational
-      | term
-      | unary
-      | func
-      | storage
-      | rexpr
+      (exprThis | arrayAccess | indirectFieldAccess | fieldAccess | ident) ~ Operator("=") ~ expr ^^{
+        case left ~ _ ~ right => AssignExpr(left.getPos, left.asInstanceOf[Expr], right)
+      }
     )
+
+  lazy val fieldAccess: P[Expr] = ident ^^ { case i => FieldAccess(i.getPos, None, i)}
+
+  lazy val exprThis: P[Expr] = Keyword("this") ^^ {
+      case k => This(k.getPos)
+    }
+
+  lazy val plainCall: P[Expr] = (
+      ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
+      | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
+      }
+      | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
+      }
+    )
+
+  lazy val exprNew: P[Expr] = (
+      Keyword("new") ~ ident ^^
+          { case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i)) }
+      | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^
+          { case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t) }
+    )
+
+
   lazy val logical: P[Expr] = (
-    expr ~ Operator("||") ~ expr ^^{
-      case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right)
-    }
-    | expr ~ Operator("&&") ~ expr ^^{
-      case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right)
-    }
-    | equality
-    )
-
-  lazy val logicalRhs: P[Expr] = (
-    /*
-     * We have chosen to exclude one of C's
-     * most popular error-generating statements
-     * and decide that you are not permitted to
-     * put an assignment in the right hand side
-     * of a logical expression, as that is the sole
-     * domain of Bad Languages like YavaScript.
-     */
-    logical
+    logical ~ Operator("||") ~ relational ^^
+        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
+    | logical ~ Operator("&&") ~ relational ^^
+        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) }
     | relational
-    | term
-    | unary
-    | func
-    | storage
-    | rexpr
-    )
-
-  lazy val equality: P[Expr] = (
-    expr ~ Operator("!=") ~ equalityRhs ^^{
-      case left ~ Operator("!=") ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right)
-    }
-   | expr ~ Operator("==") ~ equalityRhs ^^{
-      case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right)
-    }
-    )
-
-  lazy val equalityRhs: P[Expr] = (
-    equality
-     | relational
-         /* We as the language designers have made the
-         * completely arbitrary decision that you should
-         * be able to say "a == 3 >= 2", but if you ever
-         * actually do this, then
-         * wat.
-         */
-    | term
-    | unary
-    | func
-    | storage
-    | rexpr
     )
 
   lazy val relational: P[Expr] = (
-    expr ~ Operator(">=") ~ relationalRhs ^^{
-       case left ~ Operator(">=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right)
-     }
-       | expr ~ Operator("<=") ~ relationalRhs ^^{
-       case left ~ Operator("<=") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right)
-     }
-       | expr ~ Operator(">") ~ relationalRhs ^^{
-       case left ~ Operator(">") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right)
-     }
-    | expr ~ Operator("<") ~ relationalRhs ^^{
-      case left ~ Operator("<") ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right)
-    }
-    )
-  lazy val relationalRhs: P[Expr] =(
-    term
-    //| factor // this isn't meant to be here
-    | unary
-    | func
-    | storage
-    | rexpr
+      relational ~ Operator("!=") ~ term ^^
+          { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right) }
+      | relational ~ Operator("==") ~ term ^^
+          { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right) }
+      | relational ~ Operator(">=") ~ term ^^
+          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right) }
+      | relational ~ Operator("<=") ~ term ^^
+          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right) }
+      | relational ~ Operator(">") ~ term ^^
+          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right) }
+      | relational ~ Operator("<") ~ term ^^
+          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right) }
+      | term
     )
 
   lazy val term: P[Expr] = (
-    term ~ Operator("+") ~ factor ^^{
+      term ~ Operator("+") ~ factor ^^
+          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "+"), right) }
+      | term ~ Operator("-") ~ factor ^^
+          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "-"), right) }
+      | factor
+    )
 
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "+"), right)
-    }
-    | term ~ Operator("-") ~ factor ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "-"), right)
-    }
-    | factor
-    )
   lazy val factor: P[Expr] =(
-    factor ~ Operator("%") ~ arithRhs ^^{
+    factor ~ Operator("%") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
     }
-    | factor ~ Operator("*") ~ arithRhs ^^{
+    | factor ~ Operator("*") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
     }
-    | factor ~ Operator("/") ~ arithRhs ^^{
+    | factor ~ Operator("/") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
     }
-    | arithRhs
-    )/*
-  lazy val arithmatic: P[Expr] = (
-    expr ~ Operator("%") ~ arithRhs ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
-    }
-      | expr ~ Operator("/") ~ arithRhs ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
-    }
-      | expr ~ Operator("*") ~ arithRhs ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
-    }
-      | expr ~ Operator("-") ~ arithRhs ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "-"), right)
-    }
-   | expr ~ Operator("+") ~ arithRhs ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "+"), right)
-    }
-    )*/
-  lazy val arithRhs: P[Expr] = (
-    unary
-    | func
-    | storage
-    | rexpr
+    | unary
     )
+
   lazy val unary: P[Expr] = (
     Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
     | Operator("-") ~ unaryRHS ^^{
@@ -388,42 +278,18 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
      * as subtracting the number from zero. This will make semantic analysis easier as we don't need to special-case
      * unary minus and we can just handle it as any other subtraction operation.
      */
+     | unaryRHS
     )
 
   lazy val unaryRHS: P[Expr] = (
-      func
-      | storage
+      plainCall
+      | const
+      | fieldAccess
+      | exprThis
+      | exprNew
       | rexpr
     )
-  lazy val func: P[Expr] = (
-    plaincall
-    | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
-      case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
-    }
-    | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
-      case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
-    }
-    )
 
-  lazy val plaincall: P[Call] = (
-      ident ~ fnargs ^^ {
-        case field ~ args  => new Call(field.getPos, field, args)
-      }
-    )
-
-  lazy val storage: P[Expr] = (
-    const
-    | lValue
-    | Keyword("this") ^^{
-      case k => This(k.getPos)
-    }
-    | Keyword("new") ~ ident ^^{
-      case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i))
-    }
-    | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^{
-      case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t)
-    }
-    )
   lazy val rexpr: P[Expr] = (
     Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case _ ~ e ~ _ => e }
     )
