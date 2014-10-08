@@ -350,6 +350,7 @@ trait DecafAST {
     members.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int) = {
+      name.stringify(indentLevel +1) +
       (if (extnds.isDefined) {
         extnds.get.stringify(indentLevel+1, Some("(extends)"))
       } else {""}) + implements.foldLeft[String](""){
@@ -405,7 +406,7 @@ trait DecafAST {
   case class StringType() extends Type("string", None)
   case class ErrorType() extends Type("error", None)
 
-  case class NamedType(name: ASTIdentifier) extends Type(name.getName, name.loc) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.getName, None) {
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
