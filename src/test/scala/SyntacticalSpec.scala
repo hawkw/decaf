@@ -193,7 +193,7 @@ class ParserSpec extends FlatSpec with Matchers {
       val expected = Source fromFile "build/resources/test/lab2-samples/inheritance.out" mkString
       val ast = target.parse(source).get
 
-      ast.toString should include (expected)
+      ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
 /* // Commented out because it uses the  the in-place add one statement ("n++"), which isn't in the Decaf spec
     it should "handle the increment and decrement operators" in {
