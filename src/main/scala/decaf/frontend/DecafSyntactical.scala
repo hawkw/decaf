@@ -88,7 +88,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   lazy val decl: PackratParser[Decl] = (
     ( variableDecl <~ Delimiter(";") )
     | functionDecl
-    //| classDecl
+    | classDecl
     //| interfaceDecl
     )
 
@@ -459,6 +459,15 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       atyp ~ Delimiter("[]") ^^ { case t ~ dims => ArrayType(Some(dims.getPos), t)}
       | atyp
     )
+
+  lazy val classDecl: P[Decl] =
+    Keyword("class") ~ ident ~ opt(extendPart) ~ opt(implementsPart) ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
+      case k~ name ~ ext ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp.getOrElse(Nil), fields)
+    }
+  lazy val extendPart: P[NamedType] = Keyword("extends") ~> className
+  lazy val implementsPart: P[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
+  lazy val field: P[Decl] = ( variableDecl <~ Delimiter(";") )| functionDecl
+  lazy val className: P[NamedType] = ident ^^{ case i=> NamedType(i) }
 } /*
 
 
