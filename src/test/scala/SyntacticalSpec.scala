@@ -221,6 +221,14 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "recurse with one rexpr on right-hand-side in equality" in {
     ol("a == (b);")
   }
+
+  it should "make a complicated call" in { ol("  foo(a + 2, d/2, a == b && d >= 1.0);")}
+
+  it should "handle a complex logical expression" in { ol("a == b && d >= 1.0;")}
+  it should "handle an easy logical expression" in { ol("a == b;")}
+  it should "handle another easy logical expression" in { ol("d >= 1.0;")}
+  it should "handle a gross math thing" in { ol("a*b+c*(a+b);")}
+
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString

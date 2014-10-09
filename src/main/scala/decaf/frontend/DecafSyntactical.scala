@@ -160,15 +160,15 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val call: P[Expr] = (
-    (fieldAccess ||| indirect ||| rexpr) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+    (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
     ||| ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
 
-      /*||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
+      ||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
         case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
       }
       ||| Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
         case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
-      }*/
+      }
     )
 
   lazy val arrayAccess: P[Expr] = (
@@ -206,44 +206,38 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 */
   lazy val logical: P[Expr] = (
-    ( (rexpr ||| logical) ~ Operator("||") ~ relational ^^
-        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
-    | (rexpr ||| logical) ~ Operator("&&") ~ relational ^^
-        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) } )
+    (relational ||| logical ||| rexpr) ~ ( Operator("||") | Operator("&&"))  ~ (logical ||| relational) ^^
+        { case left ~ op ~ right => new LogicalExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
     ||| relational
     )
 
+
   lazy val relational: P[Expr] = (
-    ( (rexpr ||| relational) ~ Operator("!=") ~ term ^^
-          { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right) }
-      | (rexpr ||| relational) ~ Operator("==") ~ term ^^
-          { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right) }
-      | (rexpr ||| relational) ~ Operator(">=") ~ term ^^
-          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right) }
-      | (rexpr ||| relational) ~ Operator("<=") ~ term ^^
-          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right) }
-      | (rexpr ||| relational) ~ Operator(">") ~ term ^^
-          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right) }
-      | (rexpr ||| relational) ~ Operator("<") ~ term ^^
-          { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right) }
-    )
+    (term ||| relational ||| rexpr) ~ ((
+      Operator(">=") | Operator("==") | Operator("!=") | Operator("<=") | Operator(">") | Operator("<")
+      ) ^^ {case o => ASTOperator(o.getPos, o.chars)}) ~ (relational | term) ^^{
+      case left ~ op ~ right => op match {
+        case ASTOperator(_,"==") | ASTOperator(_,"!=") => EqualityExpr(left.getPos, left, op, right)
+        case _ => RelationalExpr(left.getPos, left, op, right)
+      }
+    }
     ||| term
     )
 
   lazy val term: P[Expr] = (
-    (rexpr ||| term) ~ (Operator("+") | Operator("-")) ~ factor ^^
+    (factor ||| term ||| rexpr) ~ (Operator("+") | Operator("-")) ~ (term ||| factor) ^^
           { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
     ||| factor
     )
 
   lazy val factor: P[Expr] =(
-    ( (rexpr ||| factor) ~ Operator("%") ~ unary ^^{
+    ( (unary ||| factor ||| rexpr) ~ Operator("%") ~ (factor ||| unary) ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
     }
-    | (rexpr ||| factor) ~ Operator("*") ~ unary ^^{
+    | (unary ||| factor ||| rexpr) ~ Operator("*") ~ (factor ||| unary) ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
     }
-    | (rexpr ||| factor) ~ Operator("/") ~ unary ^^{
+    | (unary ||| factor ||| rexpr) ~ Operator("/") ~ (factor ||| unary) ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
     } )
     ||| unary
@@ -265,15 +259,13 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val unaryRHS: P[Expr] = (
-    (const
+    rexpr ||| (const
       |  exprThis
       | exprNew
       | indirect)
-      ||| rexpr
     )
 
   lazy val rexpr: P[Expr] = ( Delimiter("(") ~> expr <~ Delimiter(")") )
-
   lazy val const: PackratParser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
       | elem("doubleConst", _.isInstanceOf[DoubleConstant])
