@@ -206,7 +206,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 */
   lazy val logical: P[Expr] = (
-    (relational ||| logical ||| rexpr) ~ ( Operator("||") | Operator("&&"))  ~ (logical ||| relational) ^^
+    (relational ||| logical ||| rexpr) ~ ( Operator("||") | Operator("&&"))  ~ relational ^^
         { case left ~ op ~ right => new LogicalExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
     ||| relational
     )
@@ -215,7 +215,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   lazy val relational: P[Expr] = (
     (term ||| relational ||| rexpr) ~ ((
       Operator(">=") | Operator("==") | Operator("!=") | Operator("<=") | Operator(">") | Operator("<")
-      ) ^^ {case o => ASTOperator(o.getPos, o.chars)}) ~ (relational | term) ^^{
+      ) ^^ {case o => ASTOperator(o.getPos, o.chars)}) ~ term ^^{
       case left ~ op ~ right => op match {
         case ASTOperator(_,"==") | ASTOperator(_,"!=") => EqualityExpr(left.getPos, left, op, right)
         case _ => RelationalExpr(left.getPos, left, op, right)
@@ -225,19 +225,19 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val term: P[Expr] = (
-    (factor ||| term ||| rexpr) ~ (Operator("+") | Operator("-")) ~ (term ||| factor) ^^
+    (factor ||| term ||| rexpr) ~ (Operator("-") | Operator("+") ) ~  factor ^^
           { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
     ||| factor
     )
 
   lazy val factor: P[Expr] =(
-    ( (unary ||| factor ||| rexpr) ~ Operator("%") ~ (factor ||| unary) ^^{
+    ( (unary ||| factor ||| rexpr) ~ Operator("%") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
     }
-    | (unary ||| factor ||| rexpr) ~ Operator("*") ~ (factor ||| unary) ^^{
+    | (unary ||| factor ||| rexpr) ~ Operator("*") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
     }
-    | (unary ||| factor ||| rexpr) ~ Operator("/") ~ (factor ||| unary) ^^{
+    | (unary ||| factor ||| rexpr) ~ Operator("/") ~  unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
     } )
     ||| unary
