@@ -199,27 +199,27 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "recurse with peren-wrapped rexprs correctly" in {
-    ol("(a) + (b)")
+    ol("(a) + (b);")
   }
 
   it should "recurse with one rexpr on left-hand-side" in {
-    ol("(a) + b")
+    ol("(a) + b;")
   }
 
   it should "recurse with one rexpr on right-hand-side" in {
-    ol("a + (b)")
+    ol("a + (b);")
   }
 
   it should "recurse with peren-wrapped rexprs correctly in equality" in {
-    ol("(a) == (b)")
+    ol("(a) == (b);")
   }
 
   it should "recurse with one rexpr on left-hand-side in equality" in {
-    ol("(a) == b")
+    ol("(a) == b;")
   }
 
   it should "recurse with one rexpr on right-hand-side in equality" in {
-    ol("a == (b)")
+    ol("a == (b);")
   }
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
