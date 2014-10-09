@@ -14,7 +14,10 @@ class ParserSpec extends FlatSpec with Matchers {
   def testOneLiner(source: String) = target.parse(source)
 
   def ol(source:String) = oluw("void main() { " + source + " }")
-  def oluw(source:String) = System.out.println(testOneLiner(source))
+  def oluw(source:String) = { //System.out.println(
+    testOneLiner(source)
+  //)
+  }
 
   "The parser" should "correctly parse a single statement" in {
     val ast = testOneLiner("sigv[][] a;")
