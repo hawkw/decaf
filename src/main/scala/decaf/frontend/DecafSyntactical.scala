@@ -76,7 +76,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
 
     phrase(program)(scan) match {
       case Success(result, _) => Some(result)
-      case _ => None
+      case _ => {
+        System.out.println()
+        None
+      }
     }
   }
 
@@ -267,9 +270,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       const
       | exprThis
       | exprNew
-      | call
-      | (fieldAccess ||| arrayAccess)
-      | rexpr
+      | (rexpr ||| indirect)
     )
 
   lazy val rexpr: P[Expr] = (

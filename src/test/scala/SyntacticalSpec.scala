@@ -171,7 +171,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "Trivially use the stdlib" in {
-    System.out.println(testOneLiner("void main() { readInteger(); readLine(); }"))
+    oluw("void main() { readInteger(); readLine(); }")
   }
 
   it should "Assign from the stdlib" in {
@@ -182,8 +182,12 @@ class ParserSpec extends FlatSpec with Matchers {
     ol("ll[3] = readInteger();")
   }
 
+  it should "handle this thing" in {
+    ol("(b[d]);")
+  }
+
   it should "handle adding some things together" in {
-    ol("b[d] + d;")
+    ol("(b[d]) + d;")
   }
 
   it should "handle a complex return statement" in {
