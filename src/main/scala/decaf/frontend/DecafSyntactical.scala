@@ -268,8 +268,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | exprThis
       | exprNew
       | call
-      | fieldAccess
-      | arrayAccess
+      | (fieldAccess ||| arrayAccess)
       | rexpr
     )
 
