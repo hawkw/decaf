@@ -150,6 +150,11 @@ class ParserSpec extends FlatSpec with Matchers {
     System.out.println(testOneLiner("void main() { a.b = c; }"));
   }
 
+  it should "handle an assignment to the result of a field access" in {
+    System.out.println(testOneLiner("void main() { c = a.b; }"));
+  }
+
+
   it should "handle a stupid unary minus" in {
     System.out.println(testOneLiner("void main() { a = a - -b; }"));
   }
