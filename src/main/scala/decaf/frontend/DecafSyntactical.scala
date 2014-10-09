@@ -200,57 +200,60 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^
           { case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t) }
     )
-
-
+/*
+  lazy val tlmath: P[Expr] = (
+      logical ||| relational ||| term ||| factor ||| unary ||| unaryRHS
+    )
+*/
   lazy val logical: P[Expr] = (
-    logical ~ Operator("||") ~ relational ^^
+    ( (rexpr ||| logical) ~ Operator("||") ~ relational ^^
         { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "||"), right) }
-    | logical ~ Operator("&&") ~ relational ^^
-        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) }
-    | relational
+    | (rexpr ||| logical) ~ Operator("&&") ~ relational ^^
+        { case left ~ _ ~ right => new LogicalExpr(left.getPos, left, ASTOperator(left.getPos, "&&"), right) } )
+    ||| relational
     )
 
   lazy val relational: P[Expr] = (
-      relational ~ Operator("!=") ~ term ^^
+    ( (rexpr ||| relational) ~ Operator("!=") ~ term ^^
           { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "!="), right) }
-      | relational ~ Operator("==") ~ term ^^
+      | (rexpr ||| relational) ~ Operator("==") ~ term ^^
           { case left ~ _ ~ right => EqualityExpr(left.getPos, left, ASTOperator(left.getPos, "=="), right) }
-      | relational ~ Operator(">=") ~ term ^^
+      | (rexpr ||| relational) ~ Operator(">=") ~ term ^^
           { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">="), right) }
-      | relational ~ Operator("<=") ~ term ^^
+      | (rexpr ||| relational) ~ Operator("<=") ~ term ^^
           { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<="), right) }
-      | relational ~ Operator(">") ~ term ^^
+      | (rexpr ||| relational) ~ Operator(">") ~ term ^^
           { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, ">"), right) }
-      | relational ~ Operator("<") ~ term ^^
+      | (rexpr ||| relational) ~ Operator("<") ~ term ^^
           { case left ~ _ ~ right => RelationalExpr(left.getPos, left, ASTOperator(left.getPos, "<"), right) }
-      | term
+    )
+    ||| term
     )
 
   lazy val term: P[Expr] = (
-      term ~ Operator("+") ~ factor ^^
-          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "+"), right) }
-      | term ~ Operator("-") ~ factor ^^
-          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "-"), right) }
-      | factor
+    (rexpr ||| term) ~ (Operator("+") | Operator("-")) ~ factor ^^
+          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
+    ||| factor
     )
 
   lazy val factor: P[Expr] =(
-    factor ~ Operator("%") ~ unary ^^{
+    ( (rexpr ||| factor) ~ Operator("%") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
     }
-    | factor ~ Operator("*") ~ unary ^^{
+    | (rexpr ||| factor) ~ Operator("*") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
     }
-    | factor ~ Operator("/") ~ unary ^^{
+    | (rexpr ||| factor) ~ Operator("/") ~ unary ^^{
       case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
-    }
-    | unary
+    } )
+    ||| unary
     )
 
+
   lazy val unary: P[Expr] = (
-    Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
+    ( Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
     | Operator("-") ~ unaryRHS ^^{
-      case op ~ e => ArithmeticExpr(op.getPos, ASTIntConstant(op.getPos, 0), ASTOperator(op.getPos, "-"), e)}
+      case op ~ e => ArithmeticExpr(op.getPos, ASTIntConstant(op.getPos, 0), ASTOperator(op.getPos, "-"), e)} )
     /*
      * The correct handling for the unary minus operator is not documented in the reference implementation
      * as there are no sample programs with correct output for the unary minus expression. Therefore, we've
@@ -258,15 +261,15 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
      * as subtracting the number from zero. This will make semantic analysis easier as we don't need to special-case
      * unary minus and we can just handle it as any other subtraction operation.
      */
-     | unaryRHS
+    ||| unaryRHS
     )
 
   lazy val unaryRHS: P[Expr] = (
-      const
-      | exprThis
+    (const
+      |  exprThis
       | exprNew
-      | indirect
-      | rexpr
+      | indirect)
+      ||| rexpr
     )
 
   lazy val rexpr: P[Expr] = ( Delimiter("(") ~> expr <~ Delimiter(")") )
