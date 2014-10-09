@@ -255,7 +255,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
      * as subtracting the number from zero. This will make semantic analysis easier as we don't need to special-case
      * unary minus and we can just handle it as any other subtraction operation.
      */
-      | ( fieldAccess | arrayAccess ) ~ (Operator("++") | Operator("--")) ^^{
+      | ( unaryRHS ||| arrayAccess ||| fieldAccess ) ~ (Operator("++") | Operator("--")) ^^{
       case thing ~ op => PostfixExpr(thing.getPos, ASTOperator(op.getPos, op.chars), thing) }
       )
     ||| unaryRHS
