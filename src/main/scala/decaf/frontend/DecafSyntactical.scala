@@ -80,7 +80,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
   }
 
-  lazy val program: PackratParser[Program] = positioned(
+  lazy val program: PackratParser[Program] = (
     decl.+ ^^ {
       case decls => new Program(decls)
     })
@@ -156,8 +156,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
 
   lazy val indirect: P[Expr] = (
       arrayAccess
-      ||| call
       ||| fieldAccess
+      ||| call
       ||| assign
     )
 
@@ -178,15 +178,18 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val assign: P[Expr] = (
-      (fieldAccess ||| arrayAccess) ~ Operator("=") ~ expr ^^{
+      assignable ~ Operator("=") ~ expr ^^{
         case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
       }
     )
+  lazy val assignable: P[Expr] =  arrayAccess ||| fieldAccess
 
   lazy val fieldAccess: P[Expr] = (
-      ident ^^ { case i => FieldAccess(i.getPos, None, i)}
-      ||| exprThis ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ ident => FieldAccess(base.getPos, Some(base), ident) }
-      ||| indirect ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ ident => FieldAccess(base.getPos, Some(base), ident) }
+    ident ^^ { case i => FieldAccess(i.getPos, None, i)}
+    ||| ( arrayAccess
+      ||| fieldAccess
+      ||| call) ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.getPos, Some(base), i) }
+    ||| exprThis ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.getPos, Some(base), i) }
     )
 
   lazy val exprThis: P[Expr] = Keyword("this") ^^ {
@@ -322,7 +325,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
   lazy val extendPart: P[NamedType] = Keyword("extends") ~> className
   lazy val implementsPart: P[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
-  lazy val field: P[Decl] = ( variableDecl <~ Delimiter(";") )| functionDecl
+  lazy val field: P[Decl] = ( variableDecl <~ Delimiter(";") ) | functionDecl
   lazy val className: P[NamedType] = ident ^^{ case i=> NamedType(i) }
 
   lazy val interfaceDecl: P[Decl] =
