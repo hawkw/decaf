@@ -14,7 +14,7 @@ import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.token._
 import scala.util.parsing.input.CharArrayReader.EofCh
-import scala.util.parsing.input.Positional
+import scala.util.parsing.input.{CharArrayReader, Reader, Positional}
 
 /**
  * Tokens for the Decaf programming language.
@@ -25,7 +25,7 @@ import scala.util.parsing.input.Positional
  * Created by hawk on 9/27/14.
  */
 
-sealed trait DecafTokens extends Tokens {
+trait DecafTokens extends Tokens {
 
   val MaxIdentLen = 31
 
@@ -42,7 +42,13 @@ sealed trait DecafTokens extends Tokens {
 
     def last_col = pos.column + (chars.length - 1)
 
+    def getPos = this.pos
+
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name"
+    override def equals(obj: Any) = obj match {
+      case that: DecafToken => (this.name == that.name)
+      case _ => false
+    }
   }
 
   case class IntConstant(ch: String) extends DecafToken(ch) {
@@ -88,7 +94,10 @@ sealed trait DecafTokens extends Tokens {
   }
 
   case class Delimiter(ch: String) extends DecafToken(ch) {
-    override def name = s"\'$chars\'"
+    override def name = chars match{
+      case "[]" => "T_Dims"
+      case _ => s"\'$chars\'"
+    }
   }
 
   case class Ignore() extends DecafToken("")
@@ -102,7 +111,7 @@ sealed trait DecafTokens extends Tokens {
  * Created by hawk on 9/27/14.
  */
 
-class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafTokens {
+class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafTokens with Scanners {
 
   type Token = DecafToken
 
@@ -113,14 +122,12 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
 
   def chrIn(cs: Char*) = elem("", ch => cs contains ch)
 
-  protected def exponent = chrIn('e', 'E') ~ chrIn('+', '-').? ~ digit.+ ^^ { case first ~ sign ~ rest => first :: sign.getOrElse("") :: rest mkString ("")}
+  protected def exponent = chrIn('e', 'E') ~ chrIn('+', '-').? ~ digit.+ ^^ { case first ~ sign ~ rest => first :: sign.getOrElse("") :: rest mkString ""}
   protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
   def program: Parser[List[Any]] = rep(token) ^^ { case tokens => tokens.filter(!_.isInstanceOf[Ignore])}
 
-  def token: Parser[Token] = if (trackPos) positioned(_token) else _token
-
-  private def _token: Parser[Token] = (
+  def token: Parser[Token] = positioned(
     /*------------------- Identifiers, Keywords, Boolean Literals --------------------------------------------------*/
     letter ~ rep(letter | digit | elem('_')) ^^ { case first ~ rest => processIdent(first :: rest mkString "")}
       /*------------------- Integer literals -------------------------------------------------------------------------*/
@@ -142,9 +149,10 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       // operator types for logical, mathematical, bitwise, and equality operators (we're already separating them here)
       | chrIn('>', '<', '!', '=') ~ '=' ^^ { case first ~ last => Operator(first :: last :: Nil mkString "")}
       | (repN(2, '|') | repN(2, '&')) ^^ { case chars => Operator(chars mkString "")}
-      | chrIn('+', '-', '!', '/', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
+      | chrIn('+', '-', '!', '/', '%', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       /*------------------ Delimiters --------------------------------------------------------------------------------*/
-      | chrIn(',', '.', ';', '{', '}', '(', ')') ^^ { case char => Delimiter(char.toString)}
+      | '[' ~ ']' ^^ { case _ => Delimiter("[]") }
+      | chrIn(',', '.', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
       /*------------------ Misc --------------------------------------------------------------------------------------*/
     | failure("Error: Unrecognized character")
    )
@@ -153,9 +161,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
   protected def processIdent(chars: String) = if (keywords contains chars)
                                               Keyword(chars)
                                             else if (boolLit contains chars)
-    BoolConstant(chars)
+                                              BoolConstant(chars)
                                             else Identifier(chars)
-
 
   def whitespace: Parser[Any] = rep[Any](
     whitespaceChar
@@ -169,4 +176,24 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | chrExcept(EofCh) ~ comment
     )
 
+  class DecafScanner(in: Reader[Char]) extends Reader[DecafToken] {
+    /** Convenience constructor (makes a character reader out of the given string) */
+    def this(in: String) = this(new CharArrayReader(in.toCharArray()))
+    private val (tok, rest1, rest2) = whitespace(in) match {
+      case Success(_, in1) =>
+        token(in1) match {
+          case Success(tok, in2) => (tok, in1, in2)
+          case ns: NoSuccess => (errorToken(ns.msg), ns.next, skip(ns.next))
+        }
+      case ns: NoSuccess => (errorToken(ns.msg), ns.next, skip(ns.next))
+    }
+    private def skip(in: Reader[Char]) = if (in.atEnd) in else in.rest
+
+    override def source: java.lang.CharSequence = in.source
+    override def offset: Int = in.offset
+    def first = tok.asInstanceOf[Token]
+    def rest = new Scanner(rest2)
+    def pos = rest1.pos
+    def atEnd = in.atEnd || (whitespace(in) match { case Success(_, in1) => in1.atEnd case _ => false })
+  }
 }
