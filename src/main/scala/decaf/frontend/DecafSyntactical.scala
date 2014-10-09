@@ -155,10 +155,10 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val indirect: P[Expr] = (
-      arrayAccess
+      assign
+      ||| arrayAccess
       ||| fieldAccess
       ||| call
-      ||| assign
     )
 
   lazy val call: P[Expr] = (
