@@ -11,7 +11,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
-  def testOneLiner(source: String) = target.parse(source).get
+  def testOneLiner(source: String) = target.parse(source)
 
   def ol(source:String) = oluw("void main() { " + source + " }")
   def oluw(source:String) = System.out.println(testOneLiner(source))
@@ -224,7 +224,7 @@ class ParserSpec extends FlatSpec with Matchers {
   "The parser" should "correctly parse a simple program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/simple.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/simple.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -232,7 +232,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "handle control flow" in {
         val source = Source fromFile "build/resources/test/lab2-samples/control.decaf" mkString
         val expected = Source fromFile "build/resources/test/lab2-samples/control.out" mkString
-        val ast = target.parse(source).get
+        val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -240,7 +240,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "handle classes" in {
       val source = Source fromFile "build/resources/test/lab2-samples/class.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/class.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -248,7 +248,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "handle expressions" in {
       val source = Source fromFile "build/resources/test/lab2-samples/expressions.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/expressions.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -256,7 +256,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "handle functions" in {
       val source = Source fromFile "build/resources/test/lab2-samples/functions.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/functions.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -264,7 +264,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "handle inheritance" in {
       val source = Source fromFile "build/resources/test/lab2-samples/inheritance.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/inheritance.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -290,7 +290,7 @@ class ParserSpec extends FlatSpec with Matchers {
     it should "correctly parse a the matrix math program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/matrix.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
@@ -298,7 +298,7 @@ class ParserSpec extends FlatSpec with Matchers {
   it should "correctly parse a program with interfaces" in {
     val source = Source fromFile "build/resources/test/lab2-samples/interface.decaf" mkString
     val expected = Source fromFile "build/resources/test/lab2-samples/interface.out" mkString
-    val ast = target.parse(source).get
+    val ast = target.parse(source)
 
     ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
   }

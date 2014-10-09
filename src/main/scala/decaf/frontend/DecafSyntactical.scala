@@ -61,7 +61,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   implicit def ddelimiter(d: Delimiter): Parser[Elem] = acceptIf(_.name == d.name)("`" + d.name + "' expected but " + _.name + " found")
   implicit def doperator(o: Operator): Parser[Elem] = acceptIf(_.name == o.name)("`" + o.name + "' expected but " + _.name + " found")
 
-  def parse(source: String): Option[Program] = {
+  def parse(source: String): Program = {
     val scan = new lexical.DecafScanner(source).asInstanceOf[Reader[DecafToken]]
 
     /**
@@ -75,11 +75,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
 
 
     phrase(program)(scan) match {
-      case Success(result, _) => Some(result)
-      case _ => {
-        System.out.println()
-        None
-      }
+      case Success(result, _) => result
+      case x: Failure => throw new RuntimeException(x.toString())
+      case x: Error => throw new RuntimeException(x.toString())
     }
   }
 
@@ -152,10 +150,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
 
 
-  lazy val expr: P[Expr] = (
-      indirect
-      ||| logical
-    )
+  lazy val expr: P[Expr] = ( indirect ||| logical )
 
   lazy val indirect: P[Expr] = (
       assign
@@ -165,8 +160,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val call: P[Expr] = (
-      ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
-      ||| (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+    (fieldAccess ||| indirect ||| rexpr) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+    ||| ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
 
       /*||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
         case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
@@ -270,12 +265,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       const
       | exprThis
       | exprNew
-      | (rexpr ||| indirect)
+      | indirect
+      | rexpr
     )
 
-  lazy val rexpr: P[Expr] = (
-    Delimiter("(") ~ expr ~ Delimiter(")") ^^{ case _ ~ e ~ _ => e }
-    )
+  lazy val rexpr: P[Expr] = ( Delimiter("(") ~> expr <~ Delimiter(")") )
 
   lazy val const: PackratParser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
