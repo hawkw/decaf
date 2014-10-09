@@ -134,7 +134,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
    )
   lazy val breakStmt: PackratParser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.getPos)}
   lazy val ifStmt: PackratParser[Stmt] =
-    Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ opt(Keyword("else") ~> stmt) ^^{
+    Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ (opt(Keyword("else") ~> stmt)) ^^{
       case Keyword("if") ~ Delimiter("(") ~ test ~ Delimiter(")") ~ testbody ~ elsebody => IfStmt(test,testbody,elsebody)
     }
   lazy val whileStmt: PackratParser[Stmt] = Keyword("while") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ^^{
@@ -148,76 +148,50 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
 
+
   lazy val expr: P[Expr] = (
       indirect
-      | assign
-      | logical
+      ||| logical
     )
 
-  /*lazy val indirect: P[Expr] = (
-      exprThis
-      | fieldAccess
-      | plainCall
-      | exprNew
-      | plainArrayAccess
-      | rexpr
-      | indirect ~ Delimiter("[") ~ (assign | logical | indirect) ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | indirect ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | indirect ~ Delimiter(".") ~ ident ^^{case e ~ Delimiter(".") ~ i => FieldAccess(i.getPos, Some(e), i)}
-    )*/
-
-  /* indirect stolen from http://www.vpri.org/pdf/tr2007002_packrat.pdf
-  *  see the Primary Java Ident block from the paper */
   lazy val indirect: P[Expr] = (
-      exprNew
-      | CALL
-      | FIELDACCESS
-      | ARRAYACCESS
+      arrayAccess
+      ||| call
+      ||| fieldAccess
+      ||| assign
     )
 
-  lazy val CALL: P[Expr] = (
-      indirect ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
-      | plainCall
+  lazy val call: P[Expr] = (
+      ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
+      ||| (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+
+      /*||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
+      }
+      ||| Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
+      }*/
     )
 
-  lazy val FIELDACCESS: P[Expr] = (
-      indirect ~ Delimiter(".") ~ ident ^^ {case e ~ _ ~ i => FieldAccess(i.getPos, Some(e), i)}
-    )
-
-  lazy val ARRAYACCESS: P[Expr] = (
-      indirect ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-      | plainArrayAccess
-    )
-
-  //lazy val indirectCall: P[Expr] = (
-
-  //  )
-
-  lazy val plainArrayAccess: P[Expr] = (
-      fieldAccess ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
+  lazy val arrayAccess: P[Expr] = (
+      (fieldAccess ||| indirect) ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
     )
 
   lazy val assign: P[Expr] = (
-      (exprThis | plainArrayAccess | fieldAccess | indirect) ~ Operator("=") ~ expr ^^{
-        case left ~ _ ~ right => AssignExpr(left.getPos, left.asInstanceOf[Expr], right)
+      (fieldAccess ||| arrayAccess) ~ Operator("=") ~ expr ^^{
+        case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
       }
     )
 
-  lazy val fieldAccess: P[Expr] = ident ^^ { case i => FieldAccess(i.getPos, None, i)}
+  lazy val fieldAccess: P[Expr] = (
+      ident ^^ { case i => FieldAccess(i.getPos, None, i)}
+      ||| exprThis ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ ident => FieldAccess(base.getPos, Some(base), ident) }
+      ||| indirect ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ ident => FieldAccess(base.getPos, Some(base), ident) }
+    )
 
   lazy val exprThis: P[Expr] = Keyword("this") ^^ {
       case k => This(k.getPos)
     }
-
-  lazy val plainCall: P[Expr] = (
-      ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
-      | Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
-      }
-      | Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
-      }
-    )
 
   lazy val exprNew: P[Expr] = (
       Keyword("new") ~ ident ^^
@@ -287,11 +261,12 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val unaryRHS: P[Expr] = (
-      plainCall
-      | const
-      | fieldAccess
+      const
       | exprThis
       | exprNew
+      | call
+      | fieldAccess
+      | arrayAccess
       | rexpr
     )
 
@@ -317,9 +292,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     case t ~ e => VarDecl(e, t)
   }
 
-  lazy val ident: PackratParser[ASTIdentifier] = _ident ^^{
-    case i: Identifier => ASTIdentifier(Some(i.getPos), i.value)
-  }
+  lazy val ident: PackratParser[ASTIdentifier] = (
+      _ident ^^{ case i: Identifier => ASTIdentifier(Some(i.getPos), i.value)}
+    )
 
   lazy val _ident: PackratParser[Elem] = acceptIf(_.isInstanceOf[Identifier])("Identifier token expected but " + _ + " found")
 

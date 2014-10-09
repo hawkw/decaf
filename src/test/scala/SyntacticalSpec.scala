@@ -49,12 +49,17 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "correctly parse an if statement" in {
-      val ast = testOneLiner("void main() { if (1 == 1) { } }")
+      val ast = testOneLiner("void main() { if (1 == 1) break; }")
       System.out.println(ast);
   }
 
   it should "correctly parse an if statement with break" in {
-    val ast = testOneLiner("void main() { if (a == 5) break; }")
+    val ast = testOneLiner("void main() { if (3 == 5) break; }")
+    System.out.println(ast);
+  }
+
+  it should "is equality broken?" in {
+    val ast = testOneLiner("void main() { a == 5;}")
     System.out.println(ast);
   }
 
@@ -113,7 +118,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "correctly parse a chain of calls" in {
-    val ast = testOneLiner("void main() { ( thingOne() ).thingTwo(); }");
+    val ast = testOneLiner("void main() { (thingOne()).thingTwo(); }");
     System.out.println(ast);
   }
 
@@ -123,7 +128,7 @@ class ParserSpec extends FlatSpec with Matchers {
   }
 
   it should "handle array stuff" in {
-    System.out.println(testOneLiner("void main() { a[3]; }"));
+    System.out.println(testOneLiner("void main() { a[3].thing.spammy.sammi()[4]; }"));
   }
 
   it should "handle a simple class definition" in {
