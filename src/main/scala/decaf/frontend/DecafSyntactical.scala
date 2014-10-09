@@ -67,11 +67,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     /**
      * Some debuggery using Print.
      */
-    var dscan = scan;
+    /*var dscan = scan;
     while(!dscan.atEnd) {
       System.out.println(dscan.first)
       dscan = dscan.rest
-    }
+    }*/
 
 
     phrase(program)(scan) match {
