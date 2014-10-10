@@ -178,6 +178,30 @@ trait DecafAST {
     }
   }
 
+  case class SwitchStmt(variable: Expr, cases: List[CaseStmt]) extends Stmt(None) {
+    variable.parent = this
+    cases.foreach{c => c.parent = this}
+    def stringifyChildren(indentLevel: Int): String = {
+      variable.stringify(indentLevel + 1) +
+      cases.foldLeft[String](""){
+        (acc, c) => acc + c.stringify(indentLevel + 1)
+      }
+    }
+  }
+  case class CaseStmt(value: Expr, body: Option[Stmt]) extends Stmt(None) {
+    def this(value: Expr) = this(value, None)
+    def this(value: Expr, body: Stmt) = this(value, Some(body))
+
+    value.parent = this
+    if(body.isDefined) body.get.parent = this
+
+    override def getName = "Case:"
+
+    def stringifyChildren(indentLevel: Int): String = {
+      value.stringify(indentLevel + 1) + (if (body.isDefined) {body.get.stringify(indentLevel + 1)} else {""})
+    }
+  }
+
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
   abstract class Expr(where: Option[Position]) extends Stmt(where) {}
 
