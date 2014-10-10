@@ -153,7 +153,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | chrIn('+', '-', '!', '/', '%', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       /*------------------ Delimiters --------------------------------------------------------------------------------*/
       | '[' ~ ']' ^^ { case _ => Delimiter("[]") }
-      | chrIn(',', '.', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
+      | chrIn(',', '.', ':', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
       /*------------------ Misc --------------------------------------------------------------------------------------*/
     | failure("Error: Unrecognized character")
    )
