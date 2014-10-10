@@ -116,7 +116,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
   type Token = DecafToken
 
   val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
-  "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
+  "implements", "while", "for", "if", "switch", "case", "default", "else", "return", "break", "new", "NewArray",
+  "Print", "ReadInteger", "ReadLine")
 
   val boolLit = HashSet("true", "false")
 
@@ -152,7 +153,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | chrIn('+', '-', '!', '/', '%', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       /*------------------ Delimiters --------------------------------------------------------------------------------*/
       | '[' ~ ']' ^^ { case _ => Delimiter("[]") }
-      | chrIn(',', '.', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
+      | chrIn(',', '.', ':', ';', '{', '}', '(', ')', '[', ']') ^^ { case char => Delimiter(char.toString)}
       /*------------------ Misc --------------------------------------------------------------------------------------*/
     | failure("Error: Unrecognized character")
    )

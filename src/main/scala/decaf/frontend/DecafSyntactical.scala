@@ -67,11 +67,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     /**
      * Some debuggery using Print.
      */
-    /*var dscan = scan;
+    var dscan = scan;
     while(!dscan.atEnd) {
       System.out.println(dscan.first)
       dscan = dscan.rest
-    }*/
+    }
 
 
     phrase(program)(scan) match {
@@ -125,6 +125,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | ifStmt
       | whileStmt
       | forStmt
+      | switchStmt
       | breakStmt
       | stmtBlock
       | Keyword("return") ~ expr.? <~ Delimiter(";") ^^{
@@ -149,9 +150,18 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
 
+  lazy val switchStmt: P[Stmt] =
+    Keyword("switch") ~> Delimiter("(") ~> expr ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) ~ defaultCase <~ Delimiter("}") ^^{
+      case value ~ Delimiter(")") ~ Delimiter("{") ~ cases ~ default => SwitchStmt(value, cases, default)
+    }
+  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.* ^^{
+    case value ~ Delimiter(":") ~ body => CaseStmt(value, body)
+  }
+  lazy val defaultCase: P[DefaultCase] = (Keyword("default") ~ Delimiter(":")) ~> stmt.* ^^{
+    case body => DefaultCase(body)
+  }
 
   lazy val expr: P[Expr] = ( indirect ||| logical )
-
   lazy val indirect: P[Expr] = (
       assign
       ||| arrayAccess
