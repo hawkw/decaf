@@ -279,25 +279,25 @@ class ParserSpec extends FlatSpec with Matchers {
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
-/* // Commented out because it uses the  the in-place add one statement ("n++"), which isn't in the Decaf spec
+
     it should "handle the increment and decrement operators" in {
       val source = Source fromFile "build/resources/test/lab2-samples/incrdecr.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/incrdecr.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll("""(?m)\s+$""", "") should include (expected.replaceAll("""(?m)\s+$""", ""))
     }
-*/
-/* // Commented out because it uses the "switch/case" statement and the in-place add one statement ("n++"),
-   // neither of which are in the Decaf spec
+
+ // Commented out because it uses the "switch/case" statement which is not in the Decaf spec
+  /*
     it should "correctly parse a complex program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/switch.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/switch.out" mkString
-      val ast = target.parse(source).get
+      val ast = target.parse(source)
 
       ast.toString.replaceAll( """(?m)\s+$""", "") should include(expected.replaceAll( """(?m)\s+$""", ""))
     }
-*/
+  */
     it should "correctly parse a the matrix math program" in {
       val source = Source fromFile "build/resources/test/lab2-samples/matrix.decaf" mkString
       val expected = Source fromFile "build/resources/test/lab2-samples/matrix.out" mkString
