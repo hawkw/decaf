@@ -116,7 +116,8 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
   type Token = DecafToken
 
   val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
-  "implements", "while", "for", "if", "else", "return", "break", "new", "NewArray", "Print", "ReadInteger", "ReadLine")
+  "implements", "while", "for", "if", "switch", "case", "else", "return", "break", "new", "NewArray", "Print",
+  "ReadInteger", "ReadLine")
 
   val boolLit = HashSet("true", "false")
 
