@@ -54,3 +54,12 @@ task lexstdout(dependsOn: classes, type: JavaExec) {
     }
     classpath = sourceSets.main.runtimeClasspath
 }
+
+task dcc(dependsOn: classes, type: JavaExec) {
+    description "Run the Decaf compiler. Use `-Psrc=<source>` to set the source file."
+    main = 'decaf.Compiler'
+    if (project.hasProperty('src')) {
+        args src, ""
+    }
+    classpath = sourceSets.main.runtimeClasspath
+}
