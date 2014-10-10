@@ -1,6 +1,16 @@
 apply plugin: "java"
 apply plugin: "scala"
 apply plugin: "idea"
+apply plugin: 'gradle-one-jar'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.4'
+    }
+}
 
 repositories {
     mavenLocal();
@@ -44,6 +54,24 @@ test << {
         reporter(type: 'stderr')
     }
 }
+
+jar {
+    manifest {
+        attributes( 'Main-Class': 'decaf.Compiler',
+                    'Created-By': 'Hawk Weisman & Matthew Clive',
+                    'Class-Path': configurations.runtime
+        )
+    }
+}
+
+task dccJar(type: OneJar) {
+    description "Create runnable dcc jarfile"
+    mainClass = 'decaf.Compiler'
+    archiveName = 'dcc.jar'
+    mergeManifestFromJar = true
+}
+
+
 
 
 task lexstdout(dependsOn: classes, type: JavaExec) {
