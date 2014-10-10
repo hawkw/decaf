@@ -157,7 +157,12 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       ||| arrayAccess
       ||| fieldAccess
       ||| call
+      ||| postfixOps
     )
+
+  lazy val postfixOps: P[Expr] = ( unaryRHS ||| arrayAccess ||| fieldAccess ) ~ (Operator("++") | Operator("--")) ^^{
+    case thing ~ op => PostfixExpr(thing.getPos, ASTOperator(op.getPos, op.chars), thing)
+  }
 
   lazy val call: P[Expr] = (
     (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
@@ -255,10 +260,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
      * as subtracting the number from zero. This will make semantic analysis easier as we don't need to special-case
      * unary minus and we can just handle it as any other subtraction operation.
      */
-      | ( unaryRHS ||| arrayAccess ||| fieldAccess ) ~ (Operator("++") | Operator("--")) ^^{
-      case thing ~ op => PostfixExpr(thing.getPos, ASTOperator(op.getPos, op.chars), thing) }
-      )
-    ||| unaryRHS
+      )||| unaryRHS
     )
 
   lazy val unaryRHS: P[Expr] = (
