@@ -151,15 +151,17 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
 
   lazy val switchStmt: P[Stmt] =
-    Keyword("switch") ~> Delimiter("(") ~> expr ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) <~ Delimiter("}") ^^{
-      case value ~ Delimiter(")") ~ Delimiter("{") ~ cases => SwitchStmt(value, cases)
+    Keyword("switch") ~> Delimiter("(") ~> expr ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) ~ defaultCase <~ Delimiter("}") ^^{
+      case value ~ Delimiter(")") ~ Delimiter("{") ~ cases ~ default => SwitchStmt(value, cases, default)
     }
   lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.* ^^{
     case value ~ Delimiter(":") ~ body => CaseStmt(value, body)
   }
+  lazy val defaultCase: P[DefaultCase] = (Keyword("default") ~ Delimiter(":")) ~> stmt.* ^^{
+    case body => DefaultCase(body)
+  }
 
   lazy val expr: P[Expr] = ( indirect ||| logical )
-
   lazy val indirect: P[Expr] = (
       assign
       ||| arrayAccess

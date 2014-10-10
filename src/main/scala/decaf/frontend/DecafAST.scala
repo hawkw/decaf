@@ -178,18 +178,19 @@ trait DecafAST {
     }
   }
 
-  case class SwitchStmt(variable: Expr, cases: List[CaseStmt]) extends Stmt(None) {
+  case class SwitchStmt(variable: Expr, cases: List[CaseStmt], default: DefaultCase) extends Stmt(None) {
     variable.parent = this
     cases.foreach{c => c.parent = this}
+    default.parent = this
     def stringifyChildren(indentLevel: Int): String = {
       variable.stringify(indentLevel + 1) +
       cases.foldLeft[String](""){
         (acc, c) => acc + c.stringify(indentLevel + 1)
-      }
+      } +
+      default.stringify(indentLevel + 1)
     }
   }
   case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
-
 
     value.parent = this
     body.foreach{_.parent = this}
@@ -198,6 +199,19 @@ trait DecafAST {
 
     def stringifyChildren(indentLevel: Int): String = {
       value.stringify(indentLevel + 1) + body.foldLeft[String](""){
+        (acc, s) => acc + s.stringify(indentLevel + 1)
+      }
+    }
+  }
+
+  case class DefaultCase(body: List[Stmt]) extends Stmt(None) {
+
+    body.foreach{_.parent = this}
+
+    override def getName = "Default:"
+
+    def stringifyChildren(indentLevel: Int): String = {
+      body.foldLeft[String](""){
         (acc, s) => acc + s.stringify(indentLevel + 1)
       }
     }
