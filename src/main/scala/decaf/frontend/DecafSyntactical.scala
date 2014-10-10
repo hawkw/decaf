@@ -125,6 +125,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       | ifStmt
       | whileStmt
       | forStmt
+      | switchStmt
       | breakStmt
       | stmtBlock
       | Keyword("return") ~ expr.? <~ Delimiter(";") ^^{
@@ -149,6 +150,13 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
     }
 
+  lazy val switchStmt: P[Stmt] =
+    Keyword("switch") ~> Delimiter("(") ~> expr ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) <~ Delimiter("}") ^^{
+      case value ~ Delimiter(")") ~ Delimiter("{") ~ cases => SwitchStmt(value, cases)
+    }
+  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.? ^^{
+    case value ~ Delimiter(":") ~ body => CaseStmt(value, body)
+  }
 
   lazy val expr: P[Expr] = ( indirect ||| logical )
 
