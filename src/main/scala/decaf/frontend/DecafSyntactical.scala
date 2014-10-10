@@ -67,11 +67,11 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     /**
      * Some debuggery using Print.
      */
-    /*var dscan = scan;
+    var dscan = scan;
     while(!dscan.atEnd) {
       System.out.println(dscan.first)
       dscan = dscan.rest
-    }*/
+    }
 
 
     phrase(program)(scan) match {
@@ -154,7 +154,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     Keyword("switch") ~> Delimiter("(") ~> expr ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) <~ Delimiter("}") ^^{
       case value ~ Delimiter(")") ~ Delimiter("{") ~ cases => SwitchStmt(value, cases)
     }
-  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.? ^^{
+  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.* ^^{
     case value ~ Delimiter(":") ~ body => CaseStmt(value, body)
   }
 

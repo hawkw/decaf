@@ -188,17 +188,18 @@ trait DecafAST {
       }
     }
   }
-  case class CaseStmt(value: Expr, body: Option[Stmt]) extends Stmt(None) {
-    def this(value: Expr) = this(value, None)
-    def this(value: Expr, body: Stmt) = this(value, Some(body))
+  case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
+
 
     value.parent = this
-    if(body.isDefined) body.get.parent = this
+    body.foreach{_.parent = this}
 
     override def getName = "Case:"
 
     def stringifyChildren(indentLevel: Int): String = {
-      value.stringify(indentLevel + 1) + (if (body.isDefined) {body.get.stringify(indentLevel + 1)} else {""})
+      value.stringify(indentLevel + 1) + body.foldLeft[String](""){
+        (acc, s) => acc + s.stringify(indentLevel + 1)
+      }
     }
   }
 
