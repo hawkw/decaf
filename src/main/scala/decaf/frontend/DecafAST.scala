@@ -178,16 +178,16 @@ trait DecafAST {
     }
   }
 
-  case class SwitchStmt(variable: Expr, cases: List[CaseStmt], default: DefaultCase) extends Stmt(None) {
-    variable.parent = this
+  case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase]) extends Stmt(None) {
+    if (variable.isDefined) { variable.get.parent = this }
     cases.foreach{c => c.parent = this}
-    default.parent = this
+    if (default.isDefined) { default.get.parent = this }
     def stringifyChildren(indentLevel: Int): String = {
-      variable.stringify(indentLevel + 1) +
+      (if (variable.isDefined) { variable.get.stringify(indentLevel + 1) } else {""}) +
       cases.foldLeft[String](""){
         (acc, c) => acc + c.stringify(indentLevel + 1)
       } +
-      default.stringify(indentLevel + 1)
+      (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
     }
   }
   case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
