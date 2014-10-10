@@ -81,10 +81,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     }
   }
 
-  lazy val program: PackratParser[Program] = (
-    decl.+ ^^ {
+  lazy val program: PackratParser[Program] = decl.+ ^^ {
       case decls => new Program(decls)
-    })
+    }
 
   lazy val decl: PackratParser[Decl] = (
     ( variableDecl <~ Delimiter(";") )
@@ -161,7 +160,7 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     case body => DefaultCase(body)
   }
 
-  lazy val expr: P[Expr] = ( indirect ||| logical )
+  lazy val expr: P[Expr] = indirect ||| logical
   lazy val indirect: P[Expr] = (
       assign
       ||| arrayAccess
@@ -175,7 +174,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   }
 
   lazy val call: P[Expr] = (
-    (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ { case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args) }
+    (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ {
+      case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args)
+    }
     ||| ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
 
       ||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
@@ -186,15 +187,13 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
       }
     )
 
-  lazy val arrayAccess: P[Expr] = (
-      (fieldAccess ||| indirect) ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)}
-    )
+  lazy val arrayAccess: P[Expr] = (fieldAccess ||| indirect) ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {
+    case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)
+  }
 
-  lazy val assign: P[Expr] = (
-      assignable ~ Operator("=") ~ expr ^^{
+  lazy val assign: P[Expr] = assignable ~ Operator("=") ~ expr ^^{
         case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
       }
-    )
   lazy val assignable: P[Expr] =  arrayAccess ||| fieldAccess
 
   lazy val fieldAccess: P[Expr] = (
@@ -212,8 +211,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
   lazy val exprNew: P[Expr] = (
       Keyword("new") ~ ident ^^
           { case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i)) }
-      | Keyword("NewArray") ~ Delimiter("(") ~ expr ~ Delimiter(",") ~ typ ~ Delimiter(")") ^^
-          { case Keyword("NewArray") ~ Delimiter("(") ~ e ~ Delimiter(",") ~ t ~ Delimiter(")") => NewArrayExpr(e.getPos,e,t) }
+      | ( Keyword("NewArray") ~ Delimiter("(") ) ~> expr ~ Delimiter(",") ~ typ <~ Delimiter(")") ^^
+          { case e ~ Delimiter(",") ~ t  => NewArrayExpr(e.getPos,e,t) }
     )
 /*
   lazy val tlmath: P[Expr] = (
@@ -259,8 +258,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
 
-  lazy val unary: P[Expr] = (
-    ( Operator("!") ~ unaryRHS ^^{ case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)}
+  lazy val unary: P[Expr] = ( Operator("!") ~ unaryRHS ^^{
+    case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)
+  }
     | Operator("-") ~ unaryRHS ^^{
       case op ~ e => ArithmeticExpr(op.getPos, ASTIntConstant(op.getPos, 0), ASTOperator(op.getPos, "-"), e)}
     /*
@@ -271,16 +271,14 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
      * unary minus and we can just handle it as any other subtraction operation.
      */
       )||| unaryRHS
-    )
 
-  lazy val unaryRHS: P[Expr] = (
-    rexpr ||| (const
+  lazy val unaryRHS: P[Expr] = rexpr ||| (const
       |  exprThis
       | exprNew
-      | indirect)
+      | indirect
     )
 
-  lazy val rexpr: P[Expr] = ( Delimiter("(") ~> expr <~ Delimiter(")") )
+  lazy val rexpr: P[Expr] = Delimiter("(") ~> expr <~ Delimiter(")")
   lazy val const: PackratParser[Expr] = (
     elem("intConst", _.isInstanceOf[IntConstant])
       | elem("doubleConst", _.isInstanceOf[DoubleConstant])
@@ -299,9 +297,9 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     case t ~ e => VarDecl(e, t)
   }
 
-  lazy val ident: PackratParser[ASTIdentifier] = (
-      _ident ^^{ case i: Identifier => ASTIdentifier(Some(i.getPos), i.value)}
-    )
+  lazy val ident: PackratParser[ASTIdentifier] = _ident ^^{
+    case i: Identifier => ASTIdentifier(Some(i.getPos), i.value)
+  }
 
   lazy val _ident: PackratParser[Elem] = acceptIf(_.isInstanceOf[Identifier])("Identifier token expected but " + _ + " found")
 
@@ -324,8 +322,8 @@ class DecafSyntactical extends Parsers with DecafAST with DecafTokens with Packr
     )
 
   lazy val classDecl: P[Decl] =
-    Keyword("class") ~> ident ~ opt(extendPart) ~ opt(implementsPart) ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
-      case name ~ ext ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp.getOrElse(Nil), fields)
+    Keyword("class") ~> ident ~ opt(extendPart) ~ opt(implementsPart) ~ Delimiter("{") ~ rep(field) <~ Delimiter("}") ^^{
+      case name ~ ext ~ imp ~ Delimiter("{") ~ fields => ClassDecl(name, ext, imp.getOrElse(Nil), fields)
     }
   lazy val extendPart: P[NamedType] = Keyword("extends") ~> className
   lazy val implementsPart: P[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
