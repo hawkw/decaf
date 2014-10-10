@@ -244,6 +244,12 @@ trait DecafAST {
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
+  case class PostfixExpr(l: Position, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, None, o, rhs) {
+    override def stringifyChildren(indentLevel: Int): String = {
+      rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
+    }
+  }
+
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 

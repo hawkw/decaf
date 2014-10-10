@@ -148,7 +148,7 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       // Note: we could probably actually be doing a higher level of semantic analysis here - we could have separate
       // operator types for logical, mathematical, bitwise, and equality operators (we're already separating them here)
       | chrIn('>', '<', '!', '=') ~ '=' ^^ { case first ~ last => Operator(first :: last :: Nil mkString "")}
-      | (repN(2, '|') | repN(2, '&')) ^^ { case chars => Operator(chars mkString "")}
+      | (repN(2, '|') | repN(2, '&') | repN(2, '+') | repN(2, '-')) ^^ { case chars => Operator(chars mkString "")}
       | chrIn('+', '-', '!', '/', '%', '=', '*', '>', '<', '&') ^^ { case char => Operator(char.toString)}
       /*------------------ Delimiters --------------------------------------------------------------------------------*/
       | '[' ~ ']' ^^ { case _ => Delimiter("[]") }
