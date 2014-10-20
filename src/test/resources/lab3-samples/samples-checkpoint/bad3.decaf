@@ -1,0 +1,8 @@
+void Mystery(Unknown a) {}
+
+class Trouble extends Missing implements Gone
+{
+
+}
+
+void main() {}

@@ -1,0 +1,6 @@
+
+*** Error line 6.
+    if (function() == function()) {
+                   ^^
+*** Incompatible operands: void == void
+

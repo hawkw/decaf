@@ -1,0 +1,30 @@
+
+*** Error line 18.
+  red.wheels = 2;
+      ^^^^^^
+*** Honda field 'wheels' only accessible within class scope
+
+
+*** Error line 20.
+      red.horn = 1.0;
+          ^^^^
+*** Honda has no such field 'horn'
+
+
+*** Error line 21.
+  red.Honk();
+      ^^^^
+*** Honda has no such field 'Honk'
+
+
+*** Error line 22.
+  red = (blue < red && blue == null);
+              ^
+*** Incompatible operands: Boat < Honda
+
+
+*** Error line 22.
+  red = (blue < red && blue == null);
+      ^
+*** Incompatible operands: Honda = bool
+

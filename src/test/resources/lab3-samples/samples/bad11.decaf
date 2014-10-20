@@ -1,0 +1,15 @@
+interface Printable {
+   string ToString();
+   int NumChars();
+}
+
+class Number implements Printable {
+    void ToString(string s) {}
+ }
+
+void main()
+{
+     Number n;
+     Printable p;
+     n = p;
+}

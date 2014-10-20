@@ -1,0 +1,18 @@
+
+*** Error line 1.
+void Mystery(Unknown a) {}
+             ^^^^^^^
+*** No declaration found for type 'Unknown'
+
+
+*** Error line 3.
+class Trouble extends Missing implements Gone
+                      ^^^^^^^
+*** No declaration found for class 'Missing'
+
+
+*** Error line 3.
+class Trouble extends Missing implements Gone
+                                         ^^^^
+*** No declaration found for interface 'Gone'
+

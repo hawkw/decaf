@@ -1,0 +1,18 @@
+
+*** Error line 9.
+class Block {
+      ^^^^^
+*** Declaration of 'Block' here conflicts with declaration on line 5
+
+
+*** Error line 17.
+int Shape;
+    ^^^^^
+*** Declaration of 'Shape' here conflicts with declaration on line 1
+
+
+*** Error line 14.
+  ABlock[] test;
+  ^^^^^^
+*** No declaration found for type 'ABlock'
+

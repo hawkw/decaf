@@ -1,0 +1,30 @@
+
+*** Error line 6.
+   a = "hello";
+     ^
+*** Incompatible operands: int = string
+
+
+*** Error line 7.
+   Print(3.5, a, Pi(10));
+         ^^^
+*** Incompatible argument 1: double given, int/bool/string expected
+
+
+*** Error line 7.
+   Print(3.5, a, Pi(10));
+                 ^^^^^^
+*** Incompatible argument 3: double given, int/bool/string expected
+
+
+*** Error line 8.
+   a = 10 + main;
+            ^^^^
+*** No declaration found for variable 'main'
+
+
+*** Error line 11.
+     Print(arr[a], a.length());
+                     ^^^^^^
+*** int has no such field 'length'
+

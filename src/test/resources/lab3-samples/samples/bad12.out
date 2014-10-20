@@ -1,0 +1,48 @@
+
+*** Error line 2.
+class Cow extends Animal {}
+                  ^^^^^^
+*** No declaration found for class 'Animal'
+
+
+*** Error line 4.
+class Wacky implements Trick, Treat, Halloween {
+                       ^^^^^
+*** No declaration found for interface 'Trick'
+
+
+*** Error line 4.
+class Wacky implements Trick, Treat, Halloween {
+                                     ^^^^^^^^^
+*** No declaration found for interface 'Halloween'
+
+
+*** Error line 12.
+  B b;
+  ^
+*** No declaration found for type 'B'
+
+
+*** Error line 13.
+  Trick c;
+  ^^^^^
+*** No declaration found for type 'Trick'
+
+
+*** Error line 15.
+  new A;
+      ^
+*** No declaration found for class 'A'
+
+
+*** Error line 16.
+  new Treat;
+      ^^^^^
+*** No declaration found for class 'Treat'
+
+
+*** Error line 17.
+  NewArray(10, Trick);
+               ^^^^^
+*** No declaration found for type 'Trick'
+
