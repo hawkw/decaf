@@ -120,7 +120,7 @@ trait DecafAST {
     }
   }
 
-  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
+  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None){
     testExpr.parent = this
     body.parent = this
   }

@@ -1,13 +1,17 @@
 package decaf.frontend
+
 import scala.collection.mutable.{HashMap, Set}
-import scala.collection.AbstractMap
+import scala.collection.{DefaultMap, AbstractMap}
+import scala.util.Try
 
 /**
  * Created by hawk on 10/20/14.
  */
 object ScopeAnalyzer extends DecafAST {
 
-  def scope(ast: ASTNode):
+  def scope(ast: ASTNode,
+            symbolTable: ForkTable[ASTIdentifier,ASTNode] = new ForkTable[ASTIdentifier,ASTNode]): ForkTable[ASTIdentifier,ASTNode] = {
+  }
 
 }
 
@@ -15,7 +19,7 @@ object ScopeAnalyzer extends DecafAST {
  * Scala re-implementation of Max's ClobberTable
  * Created by hawk on 10/15/14.
  */
-class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K, V] {
+class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K, V] with DefaultMap[K, V] {
   val whiteouts = Set[K]()
   val back = HashMap[K, V]()
 
@@ -40,14 +44,6 @@ class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K,
       if (parent contains key) whiteouts += key
       None
     }
-  }
-
-  override def + (kv: (K, V)): ForkTable[K, V] = {
-    put(kv._1, kv._2); this
-  }
-
-  override def - (key: K): ForkTable[K, V] = {
-    remove(key); this
   }
 
   override def iterator = back.iterator
