@@ -47,8 +47,10 @@ class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K,
   }
 
   override def iterator = back.iterator
+  
+  def chainContains(key: K): Boolean = (back contains key) || ((!(whiteouts contains key)) && parent != null && (parent chainContains key))
 
-  override def contains(key: K): Boolean = (back contains key) || (parent != null && (parent contains key))
+  override def contains(key: K): Boolean = (back contains key)
 
   override def apply(key: K) = back(key)
 
