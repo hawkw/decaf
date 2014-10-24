@@ -1,5 +1,7 @@
 package decaf.frontend
 
+import decaf.frontend.ForkTable.SymbolTable
+
 import scala.util.parsing.input.{NoPosition, Positional, Position}
 
 /**
@@ -84,6 +86,8 @@ trait DecafAST {
      * @return pretty-printable String representations of this node's children
      */
     protected[DecafAST] def stringifyChildren (indentLevel: Int): String
+
+    def scope(s: SymbolTable): SymbolTable
   }
 
   case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
