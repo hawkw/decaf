@@ -9,14 +9,15 @@ import scala.util.Try
  */
 object ScopeAnalyzer extends DecafAST {
 
-  def scope(ast: ASTNode,
-            symbolTable: ForkTable[ASTIdentifier,ASTNode] = new ForkTable[ASTIdentifier,ASTNode]): ForkTable[ASTIdentifier,ASTNode] = {
+  type SymbolTable = ForkTable[ASTIdentifier,ASTNode]
+
+  def scope(n: ASTNode, s: SymbolTable = new SymbolTable): SymbolTable = {
   }
 
 }
 
 /**
- * Scala re-implementation of Max's ClobberTable
+ * Scala re-implementation of Max's ClobberTable˚
  * Created by hawk on 10/15/14.
  */
 class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K, V] with DefaultMap[K, V] {
