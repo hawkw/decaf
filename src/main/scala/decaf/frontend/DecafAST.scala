@@ -19,13 +19,37 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  */
 trait DecafAST {
 
-  class SemanticException(message: String) extends Exception(message)
+  case class SemanticException(message: String, pos: Position) extends Exception(message) {
+    lazy val lineOfCode = "" // TODO : go get the actual line of code from the parser
+    // def toString() // TODO: Issue
+  }
   type ScopeTable = ForkTable[ASTIdentifier, TypeAnnotation]
+
   type Pending = (State, SemanticException)
-  case class TypeAnnotation(val node: ASTNode, val typ: Type)
+
+  case class TypeAnnotation(node: ASTNode, typ: Type)
+
+  /**
+   * Represents the semantic analysis state at a point during graph traversal.
+   * @param location
+   * @param scopeTable
+   */
   case class State(var location: List[ASTNode], val scopeTable: ScopeTable) {
-    def push(where: ASTNode): Unit = { location = location :+ where }
-    def addScope (name: ASTIdentifier, typ: TypeAnnotation): Unit = {scopeTable.put(name, typ)}
+    def push (where: ASTNode): Unit = { location = location :+ where }
+
+    /**
+     * Add a scope to the scope table associated with this state.
+     *
+     * This validates identifier uniqueness.
+     * @param name
+     * @param typ
+     */
+    @throws[SemanticException]("if you are attempting to bind an identifier that clashes with an existing identifier")
+    def addScope (name: ASTIdentifier, typ: TypeAnnotation): Unit = if (scopeTable contains name) {
+      throw new SemanticException(("Declaration of `" + name + "` conflicts with definition on line" + scopeTable.get(name).get.node.getPos.line), name.getPos)
+    } else {
+      scopeTable.put(name, typ)
+    }
     def checkpoint(where: ASTNode): State = State(location :+ where, scopeTable)
   }
   /**
@@ -396,6 +420,7 @@ trait DecafAST {
     }
     t.parent = this
     def stringifyChildren(indentLevel: Int) = {t.stringify(indentLevel +1) + n.stringify(indentLevel+1)}
+
     def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
       t match {
         case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
@@ -403,7 +428,7 @@ trait DecafAST {
             state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
           } else {
             val s = state.checkpoint(this)
-            pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found")) )
+            pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)) )
           }
         case ArrayType(_,elem) => {
           val s = state.checkpoint(this)
@@ -413,7 +438,7 @@ trait DecafAST {
             case NamedType(name) => if (state.scopeTable chainContains name) {
               state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
             } else {
-              pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found")) )
+              pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)) )
             }
           }
         }
@@ -482,6 +507,15 @@ trait DecafAST {
       })
 
     override def getName: String = "FnDecl:"
+
+    def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
+      returnType match {
+        case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode],returnType))
+        case
+
+      }
+      (pending, topLevel)
+    }
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
