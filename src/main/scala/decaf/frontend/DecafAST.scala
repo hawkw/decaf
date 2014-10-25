@@ -1,7 +1,5 @@
 package decaf.frontend
-
-import decaf.DecafException
-import scala.collection.immutable.Stack
+import scala.collection.mutable.ListBuffer
 import scala.util.parsing.input.{NoPosition, Positional, Position}
 
 /**
@@ -21,6 +19,15 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  */
 trait DecafAST {
 
+  class SemanticException(message: String) extends Exception(message)
+  type ScopeTable = ForkTable[ASTIdentifier, TypeAnnotation]
+  type Pending = (State, SemanticException)
+  case class TypeAnnotation(val node: ASTNode, val typ: Type)
+  case class State(var location: List[ASTNode], val scopeTable: ScopeTable) {
+    def push(where: ASTNode): Unit = { location = location :+ where }
+    def addScope (name: ASTIdentifier, typ: TypeAnnotation): Unit = {scopeTable.put(name, typ)}
+    def checkpoint(where: ASTNode): State = State(location :+ where, scopeTable)
+  }
   /**
    * Abstract class for nodes in the Decaf abstract syntax tree.
    * @param location an [[scala.Option Option]] on a [[scala.util.parsing.input.Position Position]] containing the line
@@ -28,7 +35,7 @@ trait DecafAST {
    *                 (i.e. [[StmtBlock]]) represent multiple lines and have no position, they will pass
    *                 [[scala.None None]] to the [[ASTNode]] constructor automagically.
    */
-  abstract sealed class ASTNode(val location: Option[Position]) extends Positional with DecafSemantic {
+  abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
     protected[DecafAST] var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
     def getPos = this.location.getOrElse(null)
@@ -87,7 +94,7 @@ trait DecafAST {
      */
     protected[DecafAST] def stringifyChildren (indentLevel: Int): String
 
-    def walk (state: State, pending: List[Pending], topLevel: ScopeTable): (List[Pending], ScopeTable)
+    def walk (state: State, pending: ListBuffer[Pending], topLevel: ScopeTable): (ListBuffer[Pending], ScopeTable)
   }
 
   case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
@@ -104,6 +111,12 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = decls.foldLeft[String](""){
       (acc, decl) => acc + decl.stringify(indentLevel +1)
     } + "\n"
+
+    def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
+      state.push(this.asInstanceOf[ASTNode])
+      decls.foreach(d => d.walk(state,pending,topLevel))
+      (pending, topLevel)
+    }
   }
 
   /*----------------------- Statements ----------------------------------------------------------------------------*/
@@ -377,8 +390,36 @@ trait DecafAST {
   }
 
   case class VarDecl(n: ASTIdentifier, t: Type) extends Decl(n) {
+    private def baseType(t: Type): Type = t match {
+      case ArrayType(_, elem) => baseType(elem)
+      case _ => _
+    }
     t.parent = this
     def stringifyChildren(indentLevel: Int) = {t.stringify(indentLevel +1) + n.stringify(indentLevel+1)}
+    def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
+      t match {
+        case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
+        case NamedType(name) => if (state.scopeTable chainContains name) {
+            state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
+          } else {
+            val s = state.checkpoint(this)
+            pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found")) )
+          }
+        case ArrayType(_,elem) => {
+          val s = state.checkpoint(this)
+          val typ = baseType(elem)
+          typ match {
+            case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
+            case NamedType(name) => if (state.scopeTable chainContains name) {
+              state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
+            } else {
+              pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found")) )
+            }
+          }
+        }
+      }
+    (pending, topLevel)
+    }
   }
 
   case class ClassDecl(name: ASTIdentifier,
