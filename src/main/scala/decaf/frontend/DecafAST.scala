@@ -30,6 +30,16 @@ trait DecafAST {
   case class TypeAnnotation(node: ASTNode, typ: Type)
 
   /**
+   * Gets the base type of an array type
+   * @param t
+   * @return
+   */
+  def baseType(t: Type): Type = t match {
+    case ArrayType(_, elem) => baseType(elem)
+    case _ => _
+  }
+
+  /**
    * Represents the semantic analysis state at a point during graph traversal.
    * @param location
    * @param scopeTable
@@ -414,10 +424,6 @@ trait DecafAST {
   }
 
   case class VarDecl(n: ASTIdentifier, t: Type) extends Decl(n) {
-    private def baseType(t: Type): Type = t match {
-      case ArrayType(_, elem) => baseType(elem)
-      case _ => _
-    }
     t.parent = this
     def stringifyChildren(indentLevel: Int) = {t.stringify(indentLevel +1) + n.stringify(indentLevel+1)}
 
@@ -510,10 +516,27 @@ trait DecafAST {
 
     def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
       returnType match {
-        case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode],returnType))
-        case
-
+        case IntType() | DoubleType() | BoolType() | StringType() | VoidType() => state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
+        case NamedType(n) => if (state.scopeTable chainContains n) {
+          state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
+        } else {
+          val s = state.checkpoint(this)
+          pending += ((s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)))
+        }
+        case ArrayType(_, elem) => {
+          val s = state.checkpoint(this)
+          val typ = baseType(elem)
+          typ match {
+            case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
+            case NamedType(n) => if (state.scopeTable chainContains n) {
+              state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
+            } else {
+              pending += ((s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)))
+            }
+          }
+        }
       }
+      if (body.isDefined) body.get.walk(state, pending, topLevel)
       (pending, topLevel)
     }
   }
