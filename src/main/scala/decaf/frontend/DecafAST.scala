@@ -1,7 +1,7 @@
 package decaf.frontend
 
-import decaf.frontend.ForkTable.SymbolTable
-
+import decaf.DecafException
+import scala.collection.immutable.Stack
 import scala.util.parsing.input.{NoPosition, Positional, Position}
 
 /**
@@ -28,7 +28,7 @@ trait DecafAST {
    *                 (i.e. [[StmtBlock]]) represent multiple lines and have no position, they will pass
    *                 [[scala.None None]] to the [[ASTNode]] constructor automagically.
    */
-  abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
+  abstract sealed class ASTNode(val location: Option[Position]) extends Positional with DecafSemantic {
     protected[DecafAST] var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
     def getPos = this.location.getOrElse(null)
@@ -87,7 +87,7 @@ trait DecafAST {
      */
     protected[DecafAST] def stringifyChildren (indentLevel: Int): String
 
-    def scope(s: SymbolTable): SymbolTable
+    def walk (state: State, pending: List[Pending], topLevel: ScopeTable): (List[Pending], ScopeTable)
   }
 
   case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
