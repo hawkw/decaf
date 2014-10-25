@@ -2,16 +2,12 @@ package decaf.frontend
 
 import scala.collection.{mutable, DefaultMap, AbstractMap}
 
-/**
- * Created by hawk on 10/24/14.
- */
-class ForkTable {
   /**
    * Scala re-implementation of Max's ClobberTable˚
    * Created by hawk on 10/15/14.
    */
   class ForkTable[K, V](val parent: ForkTable[K, V] = null) extends AbstractMap[K, V] with DefaultMap[K, V] {
-    val whiteouts = Set[K]()
+    val whiteouts = mutable.Set[K]()
     val back = mutable.HashMap[K, V]()
 
     def put(key: K, value: V): Option[V] = {
@@ -47,9 +43,3 @@ class ForkTable {
 
     def fork(): ForkTable[K, V] = new ForkTable[K, V](parent = this)
   }
-}
-
-object ForkTable {
-  type SymbolTable = ForkTable[ASTIdentifier,ASTNode]
-
-}
