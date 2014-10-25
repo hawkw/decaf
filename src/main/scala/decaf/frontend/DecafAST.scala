@@ -46,6 +46,7 @@ trait DecafAST {
    */
   case class State(var location: List[ASTNode], val scopeTable: ScopeTable) {
     def push (where: ASTNode): Unit = { location = location :+ where }
+    def fork: State = State(location, scopeTable.fork())
 
     /**
      * Add a scope to the scope table associated with this state.
@@ -129,6 +130,8 @@ trait DecafAST {
     protected[DecafAST] def stringifyChildren (indentLevel: Int): String
 
     def walk (state: State, pending: ListBuffer[Pending], topLevel: ScopeTable): (ListBuffer[Pending], ScopeTable)
+
+    protected def pend (s: State, e: SemanticException): Pending = (s.checkpoint(this), e)
   }
 
   case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
@@ -433,18 +436,16 @@ trait DecafAST {
         case NamedType(name) => if (state.scopeTable chainContains name) {
             state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
           } else {
-            val s = state.checkpoint(this)
-            pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)) )
+            pending += pend(state, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos))
           }
         case ArrayType(_,elem) => {
-          val s = state.checkpoint(this)
           val typ = baseType(elem)
           typ match {
             case IntType() | DoubleType() | BoolType() | StringType() => state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
             case NamedType(name) => if (state.scopeTable chainContains name) {
               state.addScope(n, TypeAnnotation(this.asInstanceOf[ASTNode],t))
             } else {
-              pending += ( (s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)) )
+              pending += pend(state, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos))
             }
           }
         }
@@ -517,12 +518,11 @@ trait DecafAST {
     def walk(state: State, pending: ListBuffer[Pending], topLevel: ScopeTable) = {
       returnType match {
         case IntType() | DoubleType() | BoolType() | StringType() | VoidType() => state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
-        case NamedType(n) => if (state.scopeTable chainContains n) {
-          state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
-        } else {
-          val s = state.checkpoint(this)
-          pending += ((s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)))
-        }
+        case NamedType(n) => if (state.scopeTable chainContains n)
+            state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
+          else
+            pending += pend(state, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos))
+
         case ArrayType(_, elem) => {
           val s = state.checkpoint(this)
           val typ = baseType(elem)
@@ -531,12 +531,15 @@ trait DecafAST {
             case NamedType(n) => if (state.scopeTable chainContains n) {
               state.addScope(name, TypeAnnotation(this.asInstanceOf[ASTNode], returnType))
             } else {
-              pending += ((s, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos)))
+              pending += pend(state, new SemanticException("*** No declaration for class ‘" + name + "’ found", this.getPos))
             }
           }
         }
       }
-      if (body.isDefined) body.get.walk(state, pending, topLevel)
+      val s = state.fork
+      formals.foreach{_.walk(s,pending,topLevel)} // walk the formals
+      if (body.isDefined)
+        body.get.walk(s.fork, pending, topLevel) // walk the function body (if there is one)
       (pending, topLevel)
     }
   }
