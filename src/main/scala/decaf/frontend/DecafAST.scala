@@ -365,27 +365,47 @@ trait DecafAST {
   }
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
-    override def typeof(scope: ScopeNode): Type = o match {
-      case _ => NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType() // butts are null
     }
   }
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType()
+    }
   }
 
   case class PostfixExpr(l: Position, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, None, o, rhs) {
     override def stringifyChildren(indentLevel: Int): String = {
       rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
     }
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = rhs.typeof(scope) match {
+      case e: ErrorType => e //TODO: Stub
+      case _ => NullType()
+    }
   }
 
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = lhs match {
+      case Some(l) => (l.typeof(scope), rhs.typeof(scope)) match {
+        case (e: ErrorType, _) => e //TODO: Stub
+        case (_, e: ErrorType) => e
+        case (_, _) => NullType()
+      }
+      case None => rhs.typeof match {
+        case e: ErrorType => e
+        case _: NullType()
+      }
+    }
+
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
@@ -395,7 +415,11 @@ trait DecafAST {
        ""
      })
     }
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType()
+    }
   }
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
