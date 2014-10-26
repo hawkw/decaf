@@ -366,22 +366,26 @@ trait DecafAST {
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = o match {
-      case (_,_,_) =>
+      case _ => NullType() //TODO: NYI
     }
   }
 
-  case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+  }
 
   case class PostfixExpr(l: Position, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, None, o, rhs) {
     override def stringifyChildren(indentLevel: Int): String = {
       rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
     }
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
@@ -391,12 +395,14 @@ trait DecafAST {
        ""
      })
     }
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
   case class This(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
+     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends LValue(loc) {
@@ -407,6 +413,7 @@ trait DecafAST {
       base.stringify(indentLevel + 1) +
       subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
@@ -424,6 +431,7 @@ trait DecafAST {
       }) +
         field.stringify(indentLevel + 1)
     }
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(Some(loc)) {
@@ -436,25 +444,30 @@ trait DecafAST {
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
     cType.parent = this
      def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
     size.parent = this
     elemType.parent = this
      def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
