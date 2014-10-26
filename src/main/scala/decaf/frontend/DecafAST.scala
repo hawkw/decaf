@@ -318,7 +318,7 @@ trait DecafAST {
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTOperator(loc: Position, token: String) extends ASTNode(Some(loc)) {
+  case class ASTOperator(loc: Position, val token: String) extends ASTNode(Some(loc)) {
     override def getName = "Operator: "
 
     //TODO: Is this even correct?
@@ -349,14 +349,26 @@ trait DecafAST {
 
 
   case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
-    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (IntType(), IntType()) => IntType()
-      case (DoubleType(), DoubleType()) => DoubleType()
-      case (_, _) => ErrorType()
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
+      case (String, ASTOperator(_, "+"), _) => StringType()
+      case (_, ASTOperator(_, "+"), String) => StringType()
+      case (IntType(), _, IntType()) => IntType()
+      case (DoubleType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
+        // type lifting int -> double
+      case (IntType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
+      case (DoubleType(), ASTOperator(_, op), IntType()) if op != "%" => DoubleType()
+      case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
+        ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName)
+      case (e: ErrorType,_,_) => e // Most specific error bubbles through
+      case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
   }
 
-  case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = o match {
+      case (_,_,_) =>
+    }
+  }
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
@@ -517,7 +529,7 @@ trait DecafAST {
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
-  abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(loc) {
+  abstract class Type(val typeName: String, loc: Option[Position]) extends ASTNode(loc) {
     override def getName = "Type: "
     protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
   }
@@ -528,7 +540,7 @@ trait DecafAST {
   case class VoidType() extends Type("void", None)
   case class NullType() extends Type("null", None)
   case class StringType() extends Type("string", None)
-  case class ErrorType() extends Type("error", None)
+  case class ErrorType(message: String) extends Type("error", None)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
     override def getName = "NamedType:"
