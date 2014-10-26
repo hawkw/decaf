@@ -478,11 +478,11 @@ trait DecafAST {
                 case MethodAnnotation(_, _) => ErrorType("*** Attempt to field access a method", loc)
                 case ClassAnnotation(_, _, _, _, _) => ErrorType("*** Attempt to field access a class", loc)
               }
-              case None => ErrorType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
             }
           }
         } else {
-          ErrorType("*** No declaration for class ‘" + name.name + "’ found", loc)
+          UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
         }
           // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
           // something that should be impossible for it to generate.
@@ -496,7 +496,7 @@ trait DecafAST {
           case ClassAnnotation(_,_,_,_,_) => ErrorType("*** Attempt to field access a class", loc)
         }
       } else {
-        ErrorType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+        UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
       }
     }
   }
@@ -621,6 +621,7 @@ trait DecafAST {
   case class NullType() extends Type("null", None)
   case class StringType() extends Type("string", None)
   case class ErrorType(message: String, where: Position) extends Type("error", None)
+  case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
     override def getName = "NamedType:"
