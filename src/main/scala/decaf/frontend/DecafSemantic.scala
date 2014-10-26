@@ -35,8 +35,31 @@ object DecafSemantic extends DecafAST {
       case n: ASTNode => n.state = Some(scope)
     }
 
-  }
-
+ /**
+  * Performs the semantic analysis
+  *
+  * ===Max's initial description of the algorithm===
+  * I think I've come up with the complete coloring algorithm on my walk back home, and it can be simplified in the
+  * "algorithm" sense fairly easily if we can have 4 colors: Black, Green, Yellow, and Red.
+  *
+  * Here's how it goes:
+  *   + Start at the top, which is black.
+  *     - If the top is a valid expression AND its leaves are all green, it gets green
+  *     - If the top is NOT valid and its children are all green, it gets red.
+  *     - If the top is valid and its children are all a mix of green and red, it gets yellow
+  *     - If the top is valid and any of its children are yellow, it gets yellow.
+  *     -  Otherwise, recurse to any black children
+  *   + Yellow = redux
+  *   + At the top level, we redo the walk for any non-green children IF we have colored anything green during
+  *     the previous pass.
+  *   + If the top level is ever colored red, then the program is Wrong.
+  *   + If the top level is ever colored yellow and we cannot make a pass that colors something new as green, then the
+  *     program is Wrong
+  *   + If the top level is ever green, we can stop and the program is Right
+  *   + When we redo the walk, all the reds and yellows are painted Black again before we try it over.
+  * @param top
+  * @return
+  */
   def analyze(top: Program) = {
     var continue = true
     var tree: ScopeNode = new ScopeNode(new ScopeTable)
