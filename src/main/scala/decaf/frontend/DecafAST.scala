@@ -17,8 +17,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  * Created by hawk on 9/30/14.
  */
 trait DecafAST {
-  type ScopeTable = ForkTable[ASTIdentifier, TypeAnnotation]
 
+  type ScopeTable = ForkTable[ASTIdentifier, TypeAnnotation]
 
   abstract class TypeAnnotation {
     def matches(that: TypeAnnotation): Boolean
@@ -33,7 +33,7 @@ trait DecafAST {
                              implements: List[ScopeTable],
                              members: ScopeTable) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
-        // matches if the that is a subclass of this
+      // matches if the that is a subclass of this
       case ClassAnnotation(e,i,m) => this == that || (if (e.isDefined) {e.get.matches(this)} else { false } )
       case _ => false
     }
@@ -46,7 +46,7 @@ trait DecafAST {
     }
   }
 
-  case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode]) {
+  case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode] = None) {
     var children = List[ScopeNode]()
     def child: ScopeNode = new ScopeNode(table.fork(), Some(this))
   }
