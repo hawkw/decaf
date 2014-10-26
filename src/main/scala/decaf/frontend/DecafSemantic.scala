@@ -40,10 +40,27 @@ object DecafSemantic extends DecafAST {
   def analyze(top: Program) = {
     var continue = true
     var tree: ScopeNode = new ScopeNode(new ScopeTable)
+    decorateScope(top, tree)
     do {
       var currentNode = top
+      var thingy = false
+      do {
+
+      } while(thingy)
 
     } while (continue)
+  }
+
+  def descent(node: ASTNode): List[ASTNode] = {
+    node match {
+      case Program(decls) => decls
+      case ClassDecl(_, _, _, members) => members
+      case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
+      case StmtBlock(decls, stmts) => {
+        decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
+      }
+      case _ => List[ASTNode]()
+    }
   }
 
 }

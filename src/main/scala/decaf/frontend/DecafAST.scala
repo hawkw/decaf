@@ -266,41 +266,64 @@ trait DecafAST {
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
-  abstract class Expr(where: Option[Position]) extends Stmt(where) {}
+  abstract class Expr(where: Option[Position]) extends Stmt(where) {
+    def typeof(scope: ScopeNode): Type
+  }
 
   case class EmptyExpr() extends Expr(None) {
     override def getName = "Empty:"
 
-     def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = VoidType()
+
+    def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
     override def getName = "IntConstant: "
+
+    override def typeof(scope: ScopeNode): Type = IntType()
+
      def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
     override def getName = "DoubleConstant: "
+
+    override def typeof(scope: ScopeNode): Type = DoubleType()
+
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
     override def getName = "BoolConstant: "
+
+    override def typeof(scope: ScopeNode): Type = BoolType()
+
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
     override def getName = "StringConstant: "
+
+    override def typeof(scope: ScopeNode): Type = StringType()
+
     def stringifyChildren(indentLevel: Int): String = value
   }
 
   case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
     override def getName = "NullConstant: "
+
+    override def typeof(scope: ScopeNode): Type = NullType()
+
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTOperator(loc: Position, token: String) extends Expr(Some(loc)) {
+  case class ASTOperator(loc: Position, token: String) extends ASTNode(Some(loc)) {
     override def getName = "Operator: "
+
+    //TODO: Is this even correct?
+    //override def typeof(scope: ScopeNode): Type = ???
+
     def stringifyChildren(indentLevel: Int): String = token
   }
 
@@ -325,7 +348,13 @@ trait DecafAST {
   }
 
 
-  case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (IntType(), IntType()) => IntType()
+      case (DoubleType(), DoubleType()) => DoubleType()
+      case (_, _) => ErrorType()
+    }
+  }
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
 
