@@ -400,7 +400,7 @@ trait DecafAST {
         case (_, e: ErrorType) => e
         case (_, _) => NullType()
       }
-      case None => rhs.typeof match {
+      case None => rhs.typeof(scope) match {
         case e: ErrorType => e
         case _: NullType()
       }
