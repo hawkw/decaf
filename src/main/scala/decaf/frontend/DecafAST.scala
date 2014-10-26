@@ -464,7 +464,41 @@ trait DecafAST {
       }) +
         field.stringify(indentLevel + 1)
     }
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = base match {
+      case Some(b) => b.typeof(scope) match {
+        case NamedType(name) => if (scope.table chainContains name.name) {
+          scope.table get name.name get match {
+            case VariableAnnotation(_) => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", loc)
+            case MethodAnnotation(_, _) => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", loc)
+            case ClassAnnotation(_, _, _, members) => members get field.name match {
+              case Some(thing) => thing match {
+                case VariableAnnotation(t) => t
+                case MethodAnnotation(_, _) => ErrorType("*** Attempt to field access a method", loc)
+                case ClassAnnotation(_, _, _, _, _) => ErrorType("*** Attempt to field access a class", loc)
+              }
+              case None => ErrorType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+            }
+          }
+        } else {
+          ErrorType("*** No declaration for class ‘" + name.name + "’ found", loc)
+        }
+          // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
+          // something that should be impossible for it to generate.
+        case _ => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+          "\n*** please contact the decaf implementors and I am sorry", loc)
+      }
+      case None => if (scope.table chainContains field.name) {
+        scope.table get field.name match {
+          case VariableAnnotation(t) => t
+          case MethodAnnotation(_,_) => ErrorType("*** Attempt to field access a method", loc)
+          case ClassAnnotation(_,_,_,_,_) => ErrorType("*** Attempt to field access a class", loc)
+        }
+      } else {
+        ErrorType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+      }
+    }
   }
 
   case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(Some(loc)) {

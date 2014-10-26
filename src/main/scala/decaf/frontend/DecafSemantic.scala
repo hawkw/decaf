@@ -45,7 +45,9 @@ object DecafSemantic extends DecafAST {
       var currentNode = top
       var thingy = false
       do {
-
+        // todo: on entering a class scope, bind "this" in it's own symbol table to itself
+        // todo: on enterign a class scope that extends another class, bind all fields of parent into child's scopetable
+        // todo: also do this for method signatures in implements and extends
       } while(thingy)
 
     } while (continue)
