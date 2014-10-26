@@ -18,7 +18,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  */
 trait DecafAST {
 
-  type ScopeTable = ForkTable[ASTIdentifier, TypeAnnotation]
+  type ScopeTable = ForkTable[String, TypeAnnotation]
 
   abstract class TypeAnnotation {
     def matches(that: TypeAnnotation): Boolean
@@ -29,12 +29,13 @@ trait DecafAST {
       case _ => false
     }
   }
-  case class ClassAnnotation(ext: Option[ClassAnnotation],
+  case class ClassAnnotation(name: NamedType,
+                             ext: Option[ClassAnnotation],
                              implements: List[ScopeTable],
                              members: ScopeTable) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
       // matches if the that is a subclass of this
-      case ClassAnnotation(e,i,m) => this == that || (if (e.isDefined) {e.get.matches(this)} else { false } )
+      case ClassAnnotation(_, e,i,m) => this == that || (if (e.isDefined) {e.get.matches(this)} else { false } )
       case _ => false
     }
   }
@@ -358,7 +359,7 @@ trait DecafAST {
       case (IntType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
       case (DoubleType(), ASTOperator(_, op), IntType()) if op != "%" => DoubleType()
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
-        ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName)
+        ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
       case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
@@ -402,7 +403,7 @@ trait DecafAST {
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
-        case _: NullType()
+        case _ => NullType()
       }
     }
 
@@ -426,7 +427,15 @@ trait DecafAST {
 
   case class This(loc: Position) extends Expr(Some(loc)) {
      def stringifyChildren(indentLevel: Int): String = ""
-     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
+       val t = scope.table.get("this")
+       if (t.isInstanceOf[ClassAnnotation])
+         t.asInstanceOf[ClassAnnotation].name
+       else
+         ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+     } else {
+       ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
+     }
   }
 
   case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends LValue(loc) {
@@ -577,7 +586,7 @@ trait DecafAST {
   case class VoidType() extends Type("void", None)
   case class NullType() extends Type("null", None)
   case class StringType() extends Type("string", None)
-  case class ErrorType(message: String) extends Type("error", None)
+  case class ErrorType(message: String, where: Position) extends Type("error", None)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
     override def getName = "NamedType:"
