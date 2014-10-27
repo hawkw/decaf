@@ -72,7 +72,7 @@ trait DecafAST {
    */
   def baseType(t: Type): Type = t match {
     case ArrayType(_, elem) => baseType(elem)
-    case _ => _
+    case _ => t
   }
 
   /**
@@ -193,8 +193,8 @@ trait DecafAST {
     if (step.isDefined) step.get.parent = this
     loopBody.parent = this
 
-     def stringifyChildren(indentLevel: Int): String = {
-        ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
+    def stringifyChildren(indentLevel: Int): String = {
+      ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
         test.stringify(indentLevel + 1, Some("(test)")) +
         ( if (step.isDefined) { step.get.stringify(indentLevel + 1, Some("(step)")) } else {""} ) +
         loopBody.stringify(indentLevel + 1, Some("(body)"))
@@ -202,7 +202,7 @@ trait DecafAST {
   }
 
   case class WhileStmt(test: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
-     def stringifyChildren(indentLevel: Int): String = test.stringify(indentLevel + 1, Some("(test)")) +
+    def stringifyChildren(indentLevel: Int): String = test.stringify(indentLevel + 1, Some("(test)")) +
       loopBody.stringify(indentLevel + 1, Some("(body)"))
   }
 
@@ -210,7 +210,7 @@ trait DecafAST {
     def this(test: Expr, testBody: Stmt, elseBody: Stmt)  = this(test, testBody, Some(elseBody))
     def this(test: Expr, testBody: Stmt) = this(test, testBody, None)
     if (elseBody.isDefined) {elseBody.get.parent = this}
-     def stringifyChildren(indentLevel: Int): String = {
+    def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
         testBody.stringify(indentLevel + 1, Some("(then)")) +
         (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1, Some("(else)")) } else { "" })
@@ -218,7 +218,7 @@ trait DecafAST {
   }
 
   case class BreakStmt(loc: Position) extends Stmt(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+    def stringifyChildren(indentLevel: Int): String = ""
   }
 
   case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(Some(loc)) {
@@ -231,7 +231,7 @@ trait DecafAST {
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
     args.foreach{e => e.parent = this}
 
-     def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
+    def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
       (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(args)"))
     }
   }
@@ -242,10 +242,10 @@ trait DecafAST {
     if (default.isDefined) { default.get.parent = this }
     def stringifyChildren(indentLevel: Int): String = {
       (if (variable.isDefined) { variable.get.stringify(indentLevel + 1) } else {""}) +
-      cases.foldLeft[String](""){
-        (acc, c) => acc + c.stringify(indentLevel + 1)
-      } +
-      (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
+        cases.foldLeft[String](""){
+          (acc, c) => acc + c.stringify(indentLevel + 1)
+        } +
+        (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
     }
   }
   case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
@@ -293,7 +293,7 @@ trait DecafAST {
 
     override def typeof(scope: ScopeNode): Type = IntType()
 
-     def stringifyChildren(indentLevel: Int): String = value.toString
+    def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
   case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
@@ -360,15 +360,15 @@ trait DecafAST {
 
   case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
-      case (String, ASTOperator(_, "+"), _) => StringType()
-      case (_, ASTOperator(_, "+"), String) => StringType()
+      case (StringType(), ASTOperator(_, "+"), _) => StringType()
+      case (_, ASTOperator(_, "+"), StringType()) => StringType()
       case (IntType(), _, IntType()) => IntType()
       case (DoubleType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
-        // type lifting int -> double
+      // type lifting int -> double
       case (IntType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
       case (DoubleType(), ASTOperator(_, op), IntType()) if op != "%" => DoubleType()
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
-        ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
+        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
       case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
@@ -420,10 +420,10 @@ trait DecafAST {
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
     override def stringifyChildren(indentLevel: Int): String = {
-     right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
-     else {
-       ""
-     })
+      right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+      else {
+        ""
+      })
     }
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
@@ -435,16 +435,16 @@ trait DecafAST {
   abstract class LValue(loc: Position) extends Expr(Some(loc))
 
   case class This(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
-     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
-       val t = scope.table.get("this")
-       if (t.isInstanceOf[ClassAnnotation])
-         t.asInstanceOf[ClassAnnotation].name
-       else
-         ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
-     } else {
-       ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
-     }
+    def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
+      val t = scope.table.get("this").get
+      if (t.isInstanceOf[ClassAnnotation])
+        t.asInstanceOf[ClassAnnotation].name
+      else
+        new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+    } else {
+      new ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
+    }
   }
 
   case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends LValue(loc) {
@@ -453,7 +453,7 @@ trait DecafAST {
 
     override def stringifyChildren(indentLevel: Int): String = {
       base.stringify(indentLevel + 1) +
-      subscript.stringify(indentLevel + 1, Some("(subscript)"))
+        subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
@@ -466,8 +466,8 @@ trait DecafAST {
     field.parent = this
     if (base.isDefined) base.get.parent = this
 
-     def stringifyChildren(indentLevel: Int): String = {
-       (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
+    def stringifyChildren(indentLevel: Int): String = {
+      (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
       else {
         ""
       }) +
@@ -477,15 +477,15 @@ trait DecafAST {
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table get name.name get match {
-            case VariableAnnotation(_) => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+            case VariableAnnotation(_) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
               "\n*** please contact the decaf implementors and I am sorry", loc)
-            case MethodAnnotation(_, _) => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+            case MethodAnnotation(_, _) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
               "\n*** please contact the decaf implementors and I am sorry", loc)
             case ClassAnnotation(_, _, _, members) => members get field.name match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t) => t
-                case MethodAnnotation(_, _) => ErrorType("*** Attempt to field access a method", loc)
-                case ClassAnnotation(_, _, _, _, _) => ErrorType("*** Attempt to field access a class", loc)
+                case MethodAnnotation(_, _) => new ErrorType("*** Attempt to field access a method", loc)
+                case ClassAnnotation(_, _, _, _) => new ErrorType("*** Attempt to field access a class", loc)
               }
               case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
             }
@@ -493,17 +493,17 @@ trait DecafAST {
         } else {
           UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
         }
-          // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
-          // something that should be impossible for it to generate.
-        case _ => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+        // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
+        // something that should be impossible for it to generate.
+        case _ => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
           "\n*** please contact the decaf implementors and I am sorry", loc)
       }
 
       case None => if (scope.table chainContains field.name) {
-        scope.table get field.name match {
+        scope.table.get(field.name).get match {
           case VariableAnnotation(t) => t
-          case MethodAnnotation(_,_) => ErrorType("*** Attempt to field access a method", loc)
-          case ClassAnnotation(_,_,_,_,_) => ErrorType("*** Attempt to field access a class", loc)
+          case MethodAnnotation(_,_) => new ErrorType("*** Attempt to field access a method", loc)
+          case ClassAnnotation(_,_,_,_) => new ErrorType("*** Attempt to field access a class", loc)
         }
       } else {
         UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
@@ -516,7 +516,7 @@ trait DecafAST {
 
     def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
-     def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
+    def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
     else {
       ""
     }) +
@@ -526,24 +526,24 @@ trait DecafAST {
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
     cType.parent = this
-     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
+    def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
     size.parent = this
     elemType.parent = this
-     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
+    def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+    def stringifyChildren(indentLevel: Int): String = ""
     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
 
   case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+    def stringifyChildren(indentLevel: Int): String = ""
     override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
@@ -575,9 +575,9 @@ trait DecafAST {
 
     def stringifyChildren(indentLevel: Int) = {
       name.stringify(indentLevel +1) +
-      (if (extnds.isDefined) {
-        extnds.get.stringify(indentLevel+1, Some("(extends)"))
-      } else {""}) + implements.foldLeft[String](""){
+        (if (extnds.isDefined) {
+          extnds.get.stringify(indentLevel+1, Some("(extends)"))
+        } else {""}) + implements.foldLeft[String](""){
         (acc, nt) => acc + nt.stringify(indentLevel + 1, Some("(implements)"))
       } + members.foldLeft[String](""){
         (acc, decl) => acc + decl.stringify(indentLevel + 1)
@@ -630,7 +630,7 @@ trait DecafAST {
   case class VoidType() extends Type("void", None)
   case class NullType() extends Type("null", None)
   case class StringType() extends Type("string", None)
-  case class ErrorType(message: String, where: Position) extends Type("error", None)
+  class ErrorType(message: String, where: Position) extends Type("error", None)
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
