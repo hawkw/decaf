@@ -10,6 +10,8 @@ case class SemanticException(message: String, pos: Position) extends Exception(m
 }
 case class ConflictingDeclException(name: String, where: Position)
   extends SemanticException(s"*** Declaration of ‘$name’ here conflicts with declaration on line ${where.line}}", where)
+case class TypeSignatureException(name: String, where: Position)
+  extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
 object DecafSemantic extends DecafAST {
 
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
