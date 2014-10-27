@@ -48,10 +48,18 @@ object DecafSemantic extends DecafAST {
     }
 
   def pullDeclsToScope (tree: ASTNode): Unit = {
-    tree match {
-      case Program(decls) => for(var decl <- decls) {
-
+    if (tree.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     }
+    var state = tree.state.get
+    tree match {
+      case Program(decls) => for(decl <- decls) {
+        decl match {
+          case VarDecl(ident, typ) => {
+            state.table.contains(ident.name)
+          }
+        }
+      }
     }
   }
 
