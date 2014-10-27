@@ -154,7 +154,7 @@ trait DecafAST {
   /*----------------------- Statements ----------------------------------------------------------------------------*/
   abstract class Stmt(locat: Option[Position]) extends ASTNode(locat)
 
-  case class StmtBlock(decls: List[Decl],
+  case class StmtBlock(decls: List[VarDecl],
                        stmts: List[Stmt]) extends Stmt(None) {
 
     decls.foreach(d => d.parent = this)
