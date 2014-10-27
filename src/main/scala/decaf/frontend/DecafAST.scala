@@ -28,15 +28,23 @@ trait DecafAST {
       case MethodAnnotation(rt, f) => rt == returnType && f == formals
       case _ => false
     }
-    override def toString = s"Method: ${returnType.typeName} -> ${formals.map(_.typeName)}"
+    override def toString = s"Method: ${returnType.typeName} -> (" +
+      formals.map(_.typeName).mkString(",") + ")"
   }
   case class ClassAnnotation(name: NamedType,
-                             ext: Option[ClassAnnotation],
-                             implements: List[ScopeTable],
-                             members: ScopeTable) extends TypeAnnotation {
+                             ext: Option[NamedType],
+                             implements: List[NamedType],
+                             classScope: ScopeTable) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
-      // matches if the that is a subclass of this
-      case ClassAnnotation(_, e,i,m) => this == that || (if (e.isDefined) {e.get.matches(this)} else { false } )
+      // matches if the that is equal to this
+        // WARNING WARNING WARNING
+        // Had to remove superclass checking from
+        // this function for Type reasons.
+        // Will have to implement the superclass
+        // check somewhere else, based on ScopeNode
+        // rather than by chaining ClassAnnotations.
+        // WARNING WARNING WARNING
+      case ClassAnnotation(_, e,i,m) => this == that
       case _ => false
     }
     override def toString = s"Class: ${name.name.name}"
@@ -47,7 +55,7 @@ trait DecafAST {
       case VariableAnnotation(typ) => typ == t
       case _ => false
     }
-    override def toString = s"Variable: ${t.typeName}"
+    override def toString = s"Variable of ${t.typeName}"
   }
 
   case class ScopeNode(table: ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
@@ -62,9 +70,11 @@ trait DecafAST {
       val s = new StringBuilder
       s ++= (" "*indentLevel) + boundName + ":"
       s ++= table.prettyprint(indentLevel + 2)
-      s ++= s"\n${" " * indentLevel}\\\\"
-      s ++= children.foldLeft[String](""){(acc, child) => acc + "\n" + child.stringify(indentLevel + 2)}
-      s ++= s"\n${" " * indentLevel}//"
+      if(children.length > 0) {
+        s ++= s"\n${" " * indentLevel}\\\\"
+        s ++= children.foldLeft[String]("") { (acc, child) => acc + "\n" + child.stringify(indentLevel + 2)}
+        s ++= s"\n${" " * indentLevel}//"
+      }
       s.toString()
     }
 
@@ -486,7 +496,7 @@ trait DecafAST {
               "\n*** please contact the decaf implementors and I am sorry", loc)
             case MethodAnnotation(_, _) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
               "\n*** please contact the decaf implementors and I am sorry", loc)
-            case ClassAnnotation(_, _, _, members) => members get field.name match {
+            case ClassAnnotation(_, _, _, classScope) => classScope get field.name match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t) => t
                 case MethodAnnotation(_, _) => new ErrorType("*** Attempt to field access a method", loc)
@@ -638,7 +648,7 @@ trait DecafAST {
   class ErrorType(message: String, where: Position) extends Type("error", None)
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
-  case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.name, Some(name.getPos)) {
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)

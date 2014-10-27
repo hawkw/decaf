@@ -17,30 +17,35 @@ object DecafSemantic extends DecafAST {
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope);
     tree match {
-      case Program(decls) => decls.foreach { d =>
-        decorateScope(d, scope)
+      case Program(decls) => decls.foreach {
+        _ match {
+          case f: FnDecl => decorateScope(f, scope)
+          case v: VarDecl => decorateScope(v, scope)
+          case c: ClassDecl => decorateScope(c, scope.child(s"Class Declaration of ${c.name.name}", c))
+          case i: InterfaceDecl => decorateScope(i, scope.child(s"Interface Declaration of ${i.name.name}", i))
+        }
       }
       case c: ClassDecl => {
         c.members.foreach {
           _ match {
-            case f: FnDecl => decorateScope(f, scope.child(s"FnDecl: ${f.name.name}", f))
+            case f: FnDecl => decorateScope(f, scope.child(s"FnDecl ${f.name.name}", f))
             case _ => //I don't think we fork scope for variable decls in a class? And class decls can't be embedded.
           }
         }
       }
       case i: InterfaceDecl => i.members.foreach {
         _ match {
-          case f: FnDecl => decorateScope(f, scope.child(s"FnDecl: ${f.name.name}", f))
+          case f: FnDecl => decorateScope(f, scope)
           case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
         }
       }
       case f: FnDecl => {
-        var s = scope.child(s"FnDecl (formals): ${f.name.name}", f)
+        var s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
         f.formals.foreach {
           decorateScope(_, s)
         }
         if(f.body.isDefined) {
-          decorateScope(f.body.get, s.child(s"FnDecl (body): ${f.name.name}", f))
+          decorateScope(f.body.get, s.child(s"FnDecl (body) ${f.name.name}", f))
         }
       }
       case StmtBlock(decls, stmts) => {
@@ -114,6 +119,18 @@ object DecafSemantic extends DecafAST {
     } else {
       cscope.put("this", new VariableAnnotation(NamedType(c.name)))
     }
+
+    var pscope = c.state.get.parent
+    if(pscope.isEmpty) {
+      throw new IllegalArgumentException("Tree doesn't have a parent scope to enclose class type declaration in class " + c.toString)
+    } else {
+      var ptable = pscope.get.table
+      if(ptable.contains(c.name.name)) {
+        throw new ConflictingDeclException(c.name.name, c.name.loc.get)
+      } else {
+        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope))
+      }
+    }
     //TODO: Finish me
   }
 
@@ -127,7 +144,9 @@ object DecafSemantic extends DecafAST {
         decl match {
           case v: VarDecl => annotateVariable(state, v)
           case f: FnDecl => annotateFunction(state, f)
-          case c: ClassDecl => annotateClass(state, c)
+          case c: ClassDecl => {
+            annotateClass(state, c)
+          }
         }
       }
     }
