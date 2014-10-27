@@ -45,16 +45,20 @@ object DecafSemantic extends DecafAST {
           decorateScope(_, s)
         }
         if(f.body.isDefined) {
-          decorateScope(f.body.get, s.child(s"FnDecl (body) ${f.name.name}", f))
+          val decls = f.body.get.decls
+          val stmts = f.body.get.stmts
+          val fs = s.child(s"FnDecl (body) ${f.name.name}", f.body.get)
+          f.body.get.state = Some(fs)
+          decls.foreach { decorateScope(_, scope) }
+          stmts.foreach { s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) }
         }
       }
       case StmtBlock(decls, stmts) => {
-        var s = scope.child("StmtBlock",tree)
         decls.foreach {
-          decorateScope(_, s)
+          decorateScope(_, scope)
         }
-        stmts.foreach {
-          decorateScope(_, s)
+        stmts.foreach { s =>
+          if(s.isInstanceOf[StmtBlock]) decorateScope(s, scope.child("Subblock", s))
         }
       }
       case n: ASTNode => n.state = Some(scope)
@@ -97,13 +101,23 @@ object DecafSemantic extends DecafAST {
       annotateVariable(formal.state.get, formal)
     }
     if(fn.body.isDefined) {
-      var body = fn.body.get
-      if (body.state.isEmpty) {
-        throw new IllegalArgumentException("Tree didn't contain a scope for\n" + body.toString + "\nin " + fn.toString)
-      } else {
-        var bstate = body.state.get
-        for (decl <- body.decls) {
-          annotateVariable(bstate, decl)
+      annotateStmtBlock(fn.body.get)
+    }
+  }
+
+  def annotateStmtBlock(b: StmtBlock): Unit = {
+    if(b.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
+    } else {
+      val state = b.state.get
+      for (decl <- b.decls) {
+        annotateVariable(state, decl)
+      }
+
+      for(stmt <- b.stmts) {
+        stmt match {
+          case s if s.isInstanceOf[StmtBlock] => annotateStmtBlock(stmt.asInstanceOf[StmtBlock])
+          case _ =>
         }
       }
     }
@@ -195,10 +209,12 @@ object DecafSemantic extends DecafAST {
   }
 
   def compileToSemantic(progn: String): ScopeNode = {
-    analyze(new DecafSyntactical().parse(progn).asInstanceOf[Program])
+    val r = new DecafSyntactical().parse(progn).asInstanceOf[Program]
+    System.out.println(r)
+    analyze(r)
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { } } interface farts {} \nvoid main(String[] args) { cow a; a = b; int b; }").toString);
+    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { ; } } interface farts {} \nvoid main(String[][] args) { cow a; {a = b; int b;} }").toString);
   }
 }
