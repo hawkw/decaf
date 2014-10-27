@@ -54,6 +54,14 @@ trait DecafAST {
       children = children :+ c
       c
     }
+    override def toString = stringify(0)
+    def stringify(indentLevel: Int): String = {
+      val s = new StringBuilder
+      s ++= (" "*indentLevel) + statement.getName
+      s ++= table.prettyprint(indentLevel)
+      s ++= children.foldLeft[String](""){(acc, child) => acc + child.stringify(indentLevel + 1)}
+      s.toString()
+    }
 
   }
 
