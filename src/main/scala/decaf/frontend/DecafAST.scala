@@ -28,6 +28,7 @@ trait DecafAST {
       case MethodAnnotation(rt, f) => rt == returnType && f == formals
       case _ => false
     }
+    override def toString = s"Method: ${returnType.typeName} -> ${formals.map(_.typeName)}"
   }
   case class ClassAnnotation(name: NamedType,
                              ext: Option[ClassAnnotation],
@@ -38,6 +39,7 @@ trait DecafAST {
       case ClassAnnotation(_, e,i,m) => this == that || (if (e.isDefined) {e.get.matches(this)} else { false } )
       case _ => false
     }
+    override def toString = s"Class: ${name.name.name}"
   }
 
   case class VariableAnnotation(t: Type) extends TypeAnnotation {
@@ -45,6 +47,7 @@ trait DecafAST {
       case VariableAnnotation(typ) => typ == t
       case _ => false
     }
+    override def toString = s"Variable: ${t.typeName}"
   }
 
   case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode] = None, statement: ASTNode) {
@@ -57,9 +60,10 @@ trait DecafAST {
     override def toString = stringify(0)
     def stringify(indentLevel: Int): String = {
       val s = new StringBuilder
-      s ++= (" "*indentLevel) + statement.getName
+      s ++= (" "*indentLevel) + statement.getName + "\n"
       s ++= table.prettyprint(indentLevel)
       s ++= children.foldLeft[String](""){(acc, child) => acc + child.stringify(indentLevel + 1)}
+      s ++= "\n"
       s.toString()
     }
 
