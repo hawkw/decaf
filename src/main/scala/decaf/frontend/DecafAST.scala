@@ -489,6 +489,7 @@ trait DecafAST {
         case _ => ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
           "\n*** please contact the decaf implementors and I am sorry", loc)
       }
+
       case None => if (scope.table chainContains field.name) {
         scope.table get field.name match {
           case VariableAnnotation(t) => t

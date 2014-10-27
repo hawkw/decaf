@@ -8,6 +8,8 @@ case class SemanticException(message: String, pos: Position) extends Exception(m
   lazy val lineOfCode = "" // TODO : go get the actual line of code from the parser
   // def toString() // TODO: Issue
 }
+case class ConflictingDeclException(name: String, where: Position)
+  extends SemanticException(s"*** Declaration of ‘$name’ here conflicts with declaration on line ${where.line}}", where)
 object DecafSemantic extends DecafAST {
 
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
