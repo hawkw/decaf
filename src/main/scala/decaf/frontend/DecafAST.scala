@@ -654,7 +654,7 @@ trait DecafAST {
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Option[Position], elemType: Type) extends Type("", locat) {
+  case class ArrayType(locat: Option[Position], elemType: Type) extends Type((elemType.typeName + " Array"), locat) {
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
