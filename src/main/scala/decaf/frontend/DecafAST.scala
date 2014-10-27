@@ -47,13 +47,14 @@ trait DecafAST {
     }
   }
 
-  case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode] = None) {
+  case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode] = None, statement: ASTNode) {
     var children = List[ScopeNode]()
-    def child: ScopeNode = {
-      val c = new ScopeNode(table.fork(), Some(this))
+    def child(stmt: ASTNode): ScopeNode = {
+      val c = new ScopeNode(table.fork(), Some(this), statement)
       children = children :+ c
       c
     }
+
   }
 
   /**

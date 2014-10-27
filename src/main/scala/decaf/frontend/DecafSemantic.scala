@@ -17,30 +17,30 @@ object DecafSemantic extends DecafAST {
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope);
     tree match {
-      case Program(decls) => decls.foreach {
-        decorateScope(_, scope.child)
+      case Program(decls) => decls.foreach { d =>
+        decorateScope(d, scope.child(d))
       }
-      case ClassDecl(_, _, _, members) => members.foreach {
-        decorateScope(_, scope.child)
+      case ClassDecl(_, _, _, members) => members.foreach { m =>
+        decorateScope(m, scope.child(m))
       }
-      case InterfaceDecl(_, members) => members.foreach {
-        decorateScope(_, scope.child)
+      case InterfaceDecl(_, members) => members.foreach { i =>
+        decorateScope(i, scope.child(i))
       }
       case FnDecl(_, _, formals, Some(body)) => {
-        var s = scope.child
+        var s = scope.child(tree)
         formals.foreach {
           decorateScope(_, s)
         }
-        decorateScope(body, s.child)
+        decorateScope(body, s.child(tree))
       }
       case FnDecl(_, _, formals, None) => {
-        var s = scope.child
+        var s = scope.child(tree)
         formals.foreach {
           decorateScope(_, s)
         }
       }
       case StmtBlock(decls, stmts) => {
-        var s = scope.child
+        var s = scope.child(tree)
         decls.foreach {
           decorateScope(_, s)
         }
@@ -156,7 +156,7 @@ object DecafSemantic extends DecafAST {
   */
   def analyze(top: Program) = {
    var continue = true
-   var tree: ScopeNode = new ScopeNode(new ScopeTable)
+   var tree: ScopeNode = new ScopeNode(new ScopeTable, None, top)
    decorateScope(top, tree)
    do {
      var currentNode = top
