@@ -17,15 +17,23 @@ object DecafSemantic extends DecafAST {
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope);
     tree match {
-      case Program(decls) => decls.foreach { decorateScope(_, scope.child) }
-      case ClassDecl(_, _, _, members) => members.foreach {decorateScope(_, scope.child)}
-      case InterfaceDecl(_, members) => members.foreach {decorateScope(_, scope.child)}
-      case FnDecl(_,_,formals,Some(body)) => {
-        var s = scope.child
-        formals.foreach {decorateScope(_, s)}
-        decorateScope(body, s)
+      case Program(decls) => decls.foreach {
+        decorateScope(_, scope.child)
       }
-      case FnDecl(_,_,formals,None) => {
+      case ClassDecl(_, _, _, members) => members.foreach {
+        decorateScope(_, scope.child)
+      }
+      case InterfaceDecl(_, members) => members.foreach {
+        decorateScope(_, scope.child)
+      }
+      case FnDecl(_, _, formals, Some(body)) => {
+        var s = scope.child
+        formals.foreach {
+          decorateScope(_, s)
+        }
+        decorateScope(body, s.child)
+      }
+      case FnDecl(_, _, formals, None) => {
         var s = scope.child
         formals.foreach {
           decorateScope(_, s)
@@ -33,23 +41,77 @@ object DecafSemantic extends DecafAST {
       }
       case StmtBlock(decls, stmts) => {
         var s = scope.child
-        decls.foreach { decorateScope(_, s) }
-        stmts.foreach { decorateScope(_, s) }
+        decls.foreach {
+          decorateScope(_, s)
+        }
+        stmts.foreach {
+          decorateScope(_, s)
+        }
       }
       case n: ASTNode => n.state = Some(scope)
     }
+  }
 
     def descent(node: ASTNode): List[ASTNode] = {
       node match {
         case Program(decls) => decls
         case ClassDecl(_, _, _, members) => members
         case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
-        case StmtBlock(decls, stmts) => {
-          decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
-        }
+        case StmtBlock(decls, stmts) => decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
         case _ => List[ASTNode]()
       }
     }
+
+  def annotateVariable(state: ScopeNode, v: VarDecl) = {
+    var ident = v.n
+    var typ = v.t
+    if (state.table.contains(ident.name)) {
+      throw new ConflictingDeclException(ident.name, ident.pos)
+    } else {
+      state.table.put(ident.name, new VariableAnnotation(typ))
+    }
+  }
+
+  def annotateFunction(state: ScopeNode, fn: FnDecl) = {
+      var ident = fn.name
+      var rettype = fn.returnType
+      var formals = fn.formals
+      if(state.table.contains(ident.name)) {
+        throw new ConflictingDeclException(ident.name, ident.pos)
+      } else {
+        state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t)))
+      }
+      for (formal <- formals) {
+        if(formal.state.isEmpty) {
+          throw new IllegalArgumentException("Tree didn't contain a scope for\n" + formal.toString + "\nin " + fn.toString)
+        }
+        annotateVariable(formal.state.get, formal)
+      }
+      if(fn.body.isDefined) {
+        var body = fn.body.get
+        if (body.state.isEmpty) {
+          throw new IllegalArgumentException("Tree didn't contain a scope for\n" + body.toString + "\nin " + fn.toString)
+        } else {
+          var bstate = body.state.get
+          for (decl <- body.decls) {
+            annotateVariable(bstate, decl)
+          }
+        }
+      }
+    }
+
+  def annotateClass(state: ScopeNode, c: ClassDecl) = {
+    if (c.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
+    }
+    var cscope = c.state.get.table
+    if(cscope.contains("this")) {
+      throw new IllegalArgumentException("keyword \'this\' already (accidentally?) bound for class scope in " + c.toString)
+    } else {
+      cscope.put("this", new VariableAnnotation(NamedType(c.name)))
+    }
+    //TODO: Finish me
+  }
 
   def pullDeclsToScope (tree: ASTNode): Unit = {
     if (tree.state.isEmpty) {
@@ -59,9 +121,9 @@ object DecafSemantic extends DecafAST {
     tree match {
       case Program(decls) => for(decl <- decls) {
         decl match {
-          case VarDecl(ident, typ) => {
-            state.table.contains(ident.name)
-          }
+          case v: VarDecl => annotateVariable(state, v)
+          case f: FnDecl => annotateFunction(state, f)
+          case c: ClassDecl => annotateClass(state, c)
         }
       }
     }
