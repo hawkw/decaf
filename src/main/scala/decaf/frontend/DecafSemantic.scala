@@ -35,6 +35,26 @@ object DecafSemantic extends DecafAST {
       case n: ASTNode => n.state = Some(scope)
     }
 
+    def descent(node: ASTNode): List[ASTNode] = {
+      node match {
+        case Program(decls) => decls
+        case ClassDecl(_, _, _, members) => members
+        case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
+        case StmtBlock(decls, stmts) => {
+          decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
+        }
+        case _ => List[ASTNode]()
+      }
+    }
+
+  def pullDeclsToScope (tree: ASTNode): Unit = {
+    tree match {
+      case Program(decls) => for(var decl <- decls) {
+
+    }
+    }
+  }
+
  /**
   * Performs the semantic analysis
   *
@@ -61,32 +81,20 @@ object DecafSemantic extends DecafAST {
   * @return
   */
   def analyze(top: Program) = {
-    var continue = true
-    var tree: ScopeNode = new ScopeNode(new ScopeTable)
-    decorateScope(top, tree)
-    do {
-      var currentNode = top
-      var thingy = false
-      do {
-        // todo: on entering a class scope, bind "this" in it's own symbol table to itself
-        // todo: on enterign a class scope that extends another class, bind all fields of parent into child's scopetable
-        // todo: also do this for method signatures in implements and extends
-        // todo: when we get a variable declaration, make sure that the type exists
-      } while(thingy)
+   var continue = true
+   var tree: ScopeNode = new ScopeNode(new ScopeTable)
+   decorateScope(top, tree)
+   do {
+     var currentNode = top
+     var thingy = false
+     do {
+       // todo: on entering a class scope, bind "this" in it's own symbol table to itself
+       // todo: on enterign a class scope that extends another class, bind all fields of parent into child's scopetable
+       // todo: also do this for method signatures in implements and extends
+       // todo: when we get a variable declaration, make sure that the type exists
+     } while (thingy)
 
-    } while (continue)
-  }
-
-  def descent(node: ASTNode): List[ASTNode] = {
-    node match {
-      case Program(decls) => decls
-      case ClassDecl(_, _, _, members) => members
-      case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
-      case StmtBlock(decls, stmts) => {
-        decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
-      }
-      case _ => List[ASTNode]()
-    }
+   } while (continue)
   }
 
 }
