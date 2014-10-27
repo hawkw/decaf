@@ -1,8 +1,6 @@
 package decaf
 import decaf.frontend.DecafSyntactical
 import scala.io.Source
-import concurrent.Future
-import concurrent.ExecutionContext.Implicits.global
 
 /**
  * Quick driver class for command-line invocation of the compiler.
@@ -12,15 +10,13 @@ import concurrent.ExecutionContext.Implicits.global
  */
 object Compiler extends App {
   val parser = new DecafSyntactical
-  def parseFromFile(path)
-
-   args.length match {
-     case 0 => println("Please enter a Decaf source code file to compile.")
-     case 1 =>
-       val source = Source.fromFile(args(0)).mkString
-       val ast = parser.parse(source)
-       println(ast)
-     case _ => println("Too many arguments!")
-   }
+  args.length match {
+    case 0 => println("Please enter a Decaf source code file to compile.")
+    case 1 =>
+      val source = Source.fromFile(args(0)).mkString
+      val ast = parser.parse(source)
+      println(ast)
+    case _ => println("Too many arguments!")
+  }
 
 }
