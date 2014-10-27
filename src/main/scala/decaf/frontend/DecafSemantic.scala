@@ -28,7 +28,7 @@ object DecafSemantic extends DecafAST {
       case c: ClassDecl => {
         c.members.foreach {
           _ match {
-            case f: FnDecl => decorateScope(f, scope.child(s"FnDecl ${f.name.name}", f))
+            case f: FnDecl => decorateScope(f, scope)
             case _ => //I don't think we fork scope for variable decls in a class? And class decls can't be embedded.
           }
         }
@@ -113,11 +113,18 @@ object DecafSemantic extends DecafAST {
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
-    var cscope = c.state.get.table
-    if(cscope.contains("this")) {
+    var cscope = c.state.get
+    if(cscope.table.contains("this")) {
       throw new IllegalArgumentException("keyword \'this\' already (accidentally?) bound for class scope in " + c.toString)
     } else {
-      cscope.put("this", new VariableAnnotation(NamedType(c.name)))
+      cscope.table.put("this", new VariableAnnotation(NamedType(c.name)))
+    }
+
+    for(member <- c.members) {
+      member match {
+        case v: VarDecl => annotateVariable(cscope, v)
+        case f: FnDecl => annotateFunction(cscope, f)
+      }
     }
 
     var pscope = c.state.get.parent
@@ -128,10 +135,13 @@ object DecafSemantic extends DecafAST {
       if(ptable.contains(c.name.name)) {
         throw new ConflictingDeclException(c.name.name, c.name.loc.get)
       } else {
-        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope))
+        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table))
       }
     }
     //TODO: Finish me
+  }
+
+  def annotateInterface(node: DecafSemantic.ScopeNode, decl: DecafSemantic.InterfaceDecl) = {
   }
 
   def pullDeclsToScope (tree: ASTNode): Unit = {
@@ -144,9 +154,8 @@ object DecafSemantic extends DecafAST {
         decl match {
           case v: VarDecl => annotateVariable(state, v)
           case f: FnDecl => annotateFunction(state, f)
-          case c: ClassDecl => {
-            annotateClass(state, c)
-          }
+          case c: ClassDecl => annotateClass(state, c)
+          case i: InterfaceDecl => annotateInterface(state, i)
         }
       }
     }
@@ -190,6 +199,6 @@ object DecafSemantic extends DecafAST {
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class cow {} \nvoid main() { cow a; a = b; int b; }").toString);
+    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { } } interface farts {} \nvoid main(String[] args) { cow a; a = b; int b; }").toString);
   }
 }
