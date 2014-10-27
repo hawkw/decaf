@@ -42,5 +42,5 @@ import scala.collection.{mutable, DefaultMap, AbstractMap}
     override def apply(key: K) = back(key)
 
     def fork(): ForkTable[K, V] = new ForkTable[K, V](parent = this)
-    def prettyprint(indentLevel: Int) = (" "*(indentLevel - 1)) + this.mkString("\n"+(" "*indentLevel))
+    def prettyprint(indentLevel: Int) = (" "*(indentLevel)) + this.keys.foldLeft[String](""){(acc, key) => acc + "\n" + (" " * indentLevel) + s"$key ==> ${this.get(key).getOrElse("")}"}
   }

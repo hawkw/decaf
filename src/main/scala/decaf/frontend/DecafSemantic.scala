@@ -18,29 +18,33 @@ object DecafSemantic extends DecafAST {
     tree.state = Some(scope);
     tree match {
       case Program(decls) => decls.foreach { d =>
-        decorateScope(d, scope.child(d))
+        decorateScope(d, scope)
       }
-      case ClassDecl(_, _, _, members) => members.foreach { m =>
-        decorateScope(m, scope.child(m))
+      case c: ClassDecl => {
+        c.members.foreach {
+          _ match {
+            case f: FnDecl => decorateScope(f, scope.child(s"FnDecl: ${f.name.name}", f))
+            case _ => //I don't think we fork scope for variable decls in a class? And class decls can't be embedded.
+          }
+        }
       }
-      case InterfaceDecl(_, members) => members.foreach { i =>
-        decorateScope(i, scope.child(i))
+      case i: InterfaceDecl => i.members.foreach {
+        _ match {
+          case f: FnDecl => decorateScope(f, scope.child(s"FnDecl: ${f.name.name}", f))
+          case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
+        }
       }
-      case FnDecl(_, _, formals, Some(body)) => {
-        var s = scope.child(tree)
-        formals.foreach {
+      case f: FnDecl => {
+        var s = scope.child(s"FnDecl (formals): ${f.name.name}", f)
+        f.formals.foreach {
           decorateScope(_, s)
         }
-        decorateScope(body, s.child(tree))
-      }
-      case FnDecl(_, _, formals, None) => {
-        var s = scope.child(tree)
-        formals.foreach {
-          decorateScope(_, s)
+        if(f.body.isDefined) {
+          decorateScope(f.body.get, s.child(s"FnDecl (body): ${f.name.name}", f))
         }
       }
       case StmtBlock(decls, stmts) => {
-        var s = scope.child(tree)
+        var s = scope.child("StmtBlock",tree)
         decls.foreach {
           decorateScope(_, s)
         }
@@ -156,7 +160,7 @@ object DecafSemantic extends DecafAST {
    */
   def analyze(top: Program): ScopeNode = {
     var continue = true
-    var tree: ScopeNode = new ScopeNode(new ScopeTable, None, top)
+    var tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
     pullDeclsToScope(top)
     top.state.get

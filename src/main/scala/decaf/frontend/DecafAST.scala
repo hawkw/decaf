@@ -50,20 +50,21 @@ trait DecafAST {
     override def toString = s"Variable: ${t.typeName}"
   }
 
-  case class ScopeNode(table: ScopeTable, parent: Option[ScopeNode] = None, statement: ASTNode) {
+  case class ScopeNode(table: ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
     var children = List[ScopeNode]()
-    def child(stmt: ASTNode): ScopeNode = {
-      val c = new ScopeNode(table.fork(), Some(this), stmt)
+    def child(boundName: String, stmt: ASTNode): ScopeNode = {
+      val c = new ScopeNode(table.fork(), boundName, Some(this), stmt)
       children = children :+ c
       c
     }
     override def toString = stringify(0)
     def stringify(indentLevel: Int): String = {
       val s = new StringBuilder
-      s ++= (" "*indentLevel) + statement.getName + "\n"
-      s ++= table.prettyprint(indentLevel)
-      s ++= children.foldLeft[String](""){(acc, child) => acc + child.stringify(indentLevel + 1)}
-      s ++= "\n"
+      s ++= (" "*indentLevel) + boundName + ":"
+      s ++= table.prettyprint(indentLevel + 2)
+      s ++= s"\n${" " * indentLevel}\\\\"
+      s ++= children.foldLeft[String](""){(acc, child) => acc + "\n" + child.stringify(indentLevel + 2)}
+      s ++= s"\n${" " * indentLevel}//"
       s.toString()
     }
 
