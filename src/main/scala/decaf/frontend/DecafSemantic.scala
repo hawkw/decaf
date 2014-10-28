@@ -23,7 +23,8 @@ class UndeclaredTypeException(name: String, where: Position)
 
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
-object DecafSemantic extends DecafAST {
+object DecafSemantic {
+  type ScopeTable = ForkTable[String, TypeAnnotation]
 
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope);
@@ -185,7 +186,7 @@ object DecafSemantic extends DecafAST {
     //TODO: Finish me
   }
 
-  def annotateInterface(i: DecafSemantic.InterfaceDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateInterface(i: InterfaceDecl, compilerProblems: Queue[Exception]): Unit = {
     if(i.state.isEmpty) {
       throw new IllegalArgumentException("Tree doesn't contain a scope for " + i.toString)
     }
@@ -298,12 +299,12 @@ object DecafSemantic extends DecafAST {
   }
 
   def compileToSemantic(progn: String): ScopeNode = {
-    val r = new DecafSyntactical().parse(progn).asInstanceOf[Program]
+    val r = new DecafSyntactical().parse(progn)
     //System.out.println(r)
     analyze(r)
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { Farts q; } }\n interface Animal {void talk(String how);}\n interface Animal {} \nclass Cow {}\nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
+    println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { Farts q; } }\n interface Animal {void talk(String how);}\n interface Animal {} \nclass Cow {}\nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
   }
 }

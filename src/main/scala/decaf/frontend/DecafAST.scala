@@ -4,8 +4,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
  *
- * I have made a couple tweaks to the pretty-printing code ([[DecafAST#ASTNode.stringify stringify()]]) here.
- * Specifically, we've decided that floating-point  numbers ([[DecafAST#ASTDoubleConstant ASTDoubleConstant]])
+ * I have made a couple tweaks to the pretty-printing code ([[ASTNode.stringify stringify()]]) here.
+ * Specifically, we've decided that floating-point  numbers ([[ASTDoubleConstant ASTDoubleConstant]])
  * without fractional parts should print out with a trailing "aesthetic" zero, as this indicates the number's identity
  * as a floating-point number.
  *
@@ -16,9 +16,6 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  *
  * Created by hawk on 9/30/14.
  */
-trait DecafAST {
-
-  type ScopeTable = ForkTable[String, TypeAnnotation]
 
   abstract class TypeAnnotation {
     def matches(that: TypeAnnotation): Boolean
@@ -34,7 +31,7 @@ trait DecafAST {
   case class ClassAnnotation(name: NamedType,
                              ext: Option[NamedType],
                              implements: List[NamedType],
-                             classScope: ScopeTable) extends TypeAnnotation {
+                             classScope: DecafSemantic.ScopeTable) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
       // matches if the that is equal to this
         // WARNING WARNING WARNING
@@ -50,7 +47,7 @@ trait DecafAST {
     override def toString = s"Class: ${name.name.name}"
   }
 
-  case class InterfaceAnnotation(name: NamedType, interfaceScope: ScopeTable) extends TypeAnnotation {
+  case class InterfaceAnnotation(name: NamedType, interfaceScope: DecafSemantic.ScopeTable) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
       case InterfaceAnnotation(_, _) => this == that
       case _ => false
@@ -67,7 +64,7 @@ trait DecafAST {
     override def toString = s"Variable of ${t.typeName}"
   }
 
-  case class ScopeNode(table: ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
+  case class ScopeNode(table: DecafSemantic.ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
     var children = List[ScopeNode]()
     def child(boundName: String, stmt: ASTNode): ScopeNode = {
       val c = new ScopeNode(table.fork(), boundName, Some(this), stmt)
@@ -87,16 +84,6 @@ trait DecafAST {
       s.toString()
     }
 
-  }
-
-  /**
-   * Gets the base type of an array type
-   * @param t
-   * @return
-   */
-  def baseType(t: Type): Type = t match {
-    case ArrayType(_, elem) => baseType(elem)
-    case _ => t
   }
 
   /**
@@ -663,10 +650,8 @@ trait DecafAST {
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Option[Position], elemType: Type) extends Type((elemType.typeName + " Array"), locat) {
+  case class ArrayType(locat: Option[Position], elemType: Type) extends Type (elemType.typeName + " Array", locat) {
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }
-
-}
