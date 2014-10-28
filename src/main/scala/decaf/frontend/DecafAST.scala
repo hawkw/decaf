@@ -17,12 +17,12 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  * Created by hawk on 9/30/14.
  */
 
-  abstract class TypeAnnotation {
+  abstract class TypeAnnotation(where: Position) {
     def matches(that: TypeAnnotation): Boolean
   }
-  case class MethodAnnotation(returnType: Type, formals: List[Type]) extends TypeAnnotation {
+  case class MethodAnnotation(returnType: Type, formals: List[Type], pos: Position) extends TypeAnnotation(pos) {
     override def matches(that: TypeAnnotation): Boolean = that match {
-      case MethodAnnotation(rt, f) => rt == returnType && f == formals
+      case MethodAnnotation(rt, f, _) => rt == returnType && f == formals
       case _ => false
     }
     override def toString = s"Method: ${returnType.typeName} -> (" +
@@ -31,7 +31,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class ClassAnnotation(name: NamedType,
                              ext: Option[NamedType],
                              implements: List[NamedType],
-                             classScope: DecafSemantic.ScopeTable) extends TypeAnnotation {
+                             classScope: DecafSemantic.ScopeTable,
+                             pos: Position) extends TypeAnnotation(pos) {
     override def matches(that: TypeAnnotation): Boolean = that match {
       // matches if the that is equal to this
         // WARNING WARNING WARNING
@@ -41,24 +42,26 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         // check somewhere else, based on ScopeNode
         // rather than by chaining ClassAnnotations.
         // WARNING WARNING WARNING
-      case ClassAnnotation(_, e,i,m) => this == that
+      case ClassAnnotation(_, e,i,m, _) => this == that
       case _ => false
     }
     override def toString = s"Class: ${name.name.name}"
   }
 
-  case class InterfaceAnnotation(name: NamedType, interfaceScope: DecafSemantic.ScopeTable) extends TypeAnnotation {
+  case class InterfaceAnnotation(name: NamedType,
+                                 interfaceScope: DecafSemantic.ScopeTable,
+                                 pos: Position) extends TypeAnnotation(pos) {
     override def matches(that: TypeAnnotation): Boolean = that match {
-      case InterfaceAnnotation(_, _) => this == that
+      case InterfaceAnnotation(_, _, _) => this == that
       case _ => false
     }
 
     override def toString = s"Interface: ${name.name.name}"
   }
 
-  case class VariableAnnotation(t: Type) extends TypeAnnotation {
+  case class VariableAnnotation(t: Type, pos: Position) extends TypeAnnotation(pos) {
     override def matches(that: TypeAnnotation): Boolean = that match {
-      case VariableAnnotation(typ) => typ == t
+      case VariableAnnotation(typ, _) => typ == t
       case _ => false
     }
     override def toString = s"Variable of ${t.typeName}"
@@ -96,7 +99,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
     var color: Boolean = false
     var state: Option[ScopeNode] = None
-    protected[DecafAST] var parent: ASTNode = null
+    var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
     def getPos = this.location.getOrElse(null)
 
@@ -108,7 +111,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
      *
      * @return a String containing the name of this node type for printing
      */
-    protected[DecafAST] def getName: String = this.getClass.getSimpleName + ":"
+     def getName: String = this.getClass.getSimpleName + ":"
 
     /**
      * Returns a String representation of the tree with this node as the root node.
@@ -129,7 +132,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
      * @param label an optional label to attach to the node
      * @return a String containing the pretty-print representation of the node
      */
-    protected[DecafAST] def stringify (indentLevel: Int, label: Option[String]=None): String = {
+     def stringify (indentLevel: Int, label: Option[String]=None): String = {
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
@@ -152,7 +155,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
      * @param indentLevel the level to indent the children of this node; this should be the indentlevel of this node + 1
      * @return pretty-printable String representations of this node's children
      */
-    protected[DecafAST] def stringifyChildren (indentLevel: Int): String
+     def stringifyChildren (indentLevel: Int): String
   }
 
   case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
@@ -488,15 +491,15 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table get name.name get match {
-            case VariableAnnotation(_) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+            case VariableAnnotation(_,_) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
               "\n*** please contact the decaf implementors and I am sorry", loc)
-            case MethodAnnotation(_, _) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+            case MethodAnnotation(_, _, _) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
               "\n*** please contact the decaf implementors and I am sorry", loc)
-            case ClassAnnotation(_, _, _, classScope) => classScope get field.name match {
+            case ClassAnnotation(_, _, _, classScope, _) => classScope get field.name match {
               case Some(thing) => thing match {
-                case VariableAnnotation(t) => t
-                case MethodAnnotation(_, _) => new ErrorType("*** Attempt to field access a method", loc)
-                case ClassAnnotation(_, _, _, _) => new ErrorType("*** Attempt to field access a class", loc)
+                case VariableAnnotation(t, _) => t
+                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", loc)
+                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", loc)
               }
               case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
             }
@@ -512,9 +515,9 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
       case None => if (scope.table chainContains field.name) {
         scope.table.get(field.name).get match {
-          case VariableAnnotation(t) => t
-          case MethodAnnotation(_,_) => new ErrorType("*** Attempt to field access a method", loc)
-          case ClassAnnotation(_,_,_,_) => new ErrorType("*** Attempt to field access a class", loc)
+          case VariableAnnotation(t, _) => t
+          case MethodAnnotation(_,_,_) => new ErrorType("*** Attempt to field access a method", loc)
+          case ClassAnnotation(_,_,_,_,_) => new ErrorType("*** Attempt to field access a class", loc)
         }
       } else {
         UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
@@ -632,7 +635,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   /*----------------------- Types ---------------------------------------------------------------------------------*/
   abstract class Type(val typeName: String, loc: Option[Position]) extends ASTNode(loc) {
     override def getName = "Type: "
-    protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
+     def stringifyChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
   case class IntType() extends Type("int", None)
@@ -650,7 +653,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Option[Position], elemType: Type) extends Type (elemType.typeName + " Array", locat) {
+  case class ArrayType(locat: Option[Position], elemType: Type) extends Type(elemType.typeName + " Array", locat) {
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)

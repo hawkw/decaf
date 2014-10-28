@@ -103,7 +103,7 @@ object DecafSemantic {
       compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
       return
     } else {
-      state.table.put(ident.name, new VariableAnnotation(typ))
+      state.table.put(ident.name, new VariableAnnotation(typ, v.getPos))
     }
   }
 
@@ -122,7 +122,7 @@ object DecafSemantic {
       compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
       return
     } else {
-      state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t)))
+      state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t), fn.pos))
     }
     for (formal <- formals) {
       if(formal.state.isEmpty) {
@@ -161,7 +161,7 @@ object DecafSemantic {
     if(cscope.table.contains("this")) {
       throw new IllegalArgumentException("keyword \'this\' already (accidentally?) bound for class scope in " + c.toString)
     } else {
-      cscope.table.put("this", new VariableAnnotation(NamedType(c.name)))
+      cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
     }
 
     for(member <- c.members) {
@@ -180,7 +180,7 @@ object DecafSemantic {
         compilerProblems += new ConflictingDeclException(c.name.name, c.name.loc.get)
         return
       } else {
-        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table))
+        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table, c.pos))
       }
     }
     //TODO: Finish me
@@ -209,7 +209,7 @@ object DecafSemantic {
         compilerProblems += new ConflictingDeclException(i.name.name, i.name.pos)
         return
       } else {
-        ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table))
+        ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table, i.pos))
       }
     }
   }
