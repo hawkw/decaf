@@ -10,9 +10,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
   lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
 
-  override def toString(): String = {
-    s"${lineOfCode}\n${message}"
-  }
+  override def toString(): String = s"${lineOfCode}\n${message}"
 
 }
 class ConflictingDeclException(name: String, where: Position)
@@ -23,6 +21,79 @@ class UndeclaredTypeException(name: String, where: Position)
 
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
+
+abstract class TypeAnnotation(where: Position) {
+  def matches(that: TypeAnnotation): Boolean
+}
+case class MethodAnnotation(returnType: Type, formals: List[Type], pos: Position) extends TypeAnnotation(pos) {
+  override def matches(that: TypeAnnotation): Boolean = that match {
+    case MethodAnnotation(rt, f, _) => rt == returnType && f == formals
+    case _ => false
+  }
+  override def toString = s"Method: ${returnType.typeName} -> (" +
+    formals.map(_.typeName).mkString(",") + ")"
+}
+case class ClassAnnotation(name: NamedType,
+                           ext: Option[NamedType],
+                           implements: List[NamedType],
+                           classScope: DecafSemantic.ScopeTable,
+                           pos: Position) extends TypeAnnotation(pos) {
+  override def matches(that: TypeAnnotation): Boolean = that match {
+    // matches if the that is equal to this
+    // WARNING WARNING WARNING
+    // Had to remove superclass checking from
+    // this function for Type reasons.
+    // Will have to implement the superclass
+    // check somewhere else, based on ScopeNode
+    // rather than by chaining ClassAnnotations.
+    // WARNING WARNING WARNING
+    case ClassAnnotation(_, e,i,m, _) => this == that
+    case _ => false
+  }
+  override def toString = s"Class: ${name.name.name}"
+}
+
+case class InterfaceAnnotation(name: NamedType,
+                               interfaceScope: DecafSemantic.ScopeTable,
+                               pos: Position) extends TypeAnnotation(pos) {
+  override def matches(that: TypeAnnotation): Boolean = that match {
+    case InterfaceAnnotation(_, _, _) => this == that
+    case _ => false
+  }
+
+  override def toString = s"Interface: ${name.name.name}"
+}
+
+case class VariableAnnotation(t: Type, pos: Position) extends TypeAnnotation(pos) {
+  override def matches(that: TypeAnnotation): Boolean = that match {
+    case VariableAnnotation(typ, _) => typ == t
+    case _ => false
+  }
+  override def toString = s"Variable of ${t.typeName}"
+}
+
+case class ScopeNode(table: DecafSemantic.ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
+  var children = List[ScopeNode]()
+  def child(boundName: String, stmt: ASTNode): ScopeNode = {
+    val c = new ScopeNode(table.fork(), boundName, Some(this), stmt)
+    children = children :+ c
+    c
+  }
+  override def toString = stringify(0)
+  def stringify(indentLevel: Int): String = {
+    val s = new StringBuilder
+    s ++= (" "*indentLevel) + boundName + ":"
+    s ++= table.prettyprint(indentLevel + 2)
+    if(children.length > 0) {
+      s ++= s"\n${" " * indentLevel}\\\\"
+      s ++= children.foldLeft[String]("") { (acc, child) => acc + "\n" + child.stringify(indentLevel + 2)}
+      s ++= s"\n${" " * indentLevel}//"
+    }
+    s.toString()
+  }
+
+}
+
 object DecafSemantic {
   type ScopeTable = ForkTable[String, TypeAnnotation]
 
