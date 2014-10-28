@@ -12,7 +12,7 @@ case class SemanticException(message: String, pos: Position) extends Exception(m
   // def toString() // TODO: Issue
 }
 class ConflictingDeclException(name: String, where: Position)
-  extends SemanticException(s"*** Declaration of ‘$name’ here conflicts with declaration on line ${where.line}}", where)
+  extends SemanticException(s"*** Declaration of ‘$name’ here conflicts with declaration on line ${where.line}", where)
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
 object DecafSemantic extends DecafAST {
@@ -177,8 +177,32 @@ object DecafSemantic extends DecafAST {
     //TODO: Finish me
   }
 
-  def annotateInterface(decl: DecafSemantic.InterfaceDecl, compilerProblems: Queue[Exception]) = {
+  def annotateInterface(i: DecafSemantic.InterfaceDecl, compilerProblems: Queue[Exception]): Unit = {
+    if(i.state.isEmpty) {
+      throw new IllegalArgumentException("Tree doesn't contain a scope for " + i.toString)
+    }
 
+    val iscope = i.state.get
+
+    for(member <- i.members) {
+      member match {
+        case f: FnDecl => annotateFunction(f, compilerProblems)
+      }
+    }
+
+    val pscope = i.state.get.parent
+
+    if(pscope.isEmpty) {
+      throw new IllegalArgumentException("Tree doesn't have a parent scope to enclose interface declaration for interface " + i.toString)
+    } else {
+      val ptable = pscope.get.table
+      if(ptable.contains(i.name.name)) {
+        compilerProblems += new ConflictingDeclException(i.name.name, i.name.pos)
+        return
+      } else {
+        ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table))
+      }
+    }
   }
 
   def pullDeclsToScope (tree: ASTNode, compilerProblems: Queue[Exception]): Unit = {
@@ -240,6 +264,6 @@ object DecafSemantic extends DecafAST {
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { ; } } interface farts {} \nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
+    System.out.println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { ; } } interface Animal {void talk(String how);} interface Animal {} class Cow {} \nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
   }
 }

@@ -50,6 +50,15 @@ trait DecafAST {
     override def toString = s"Class: ${name.name.name}"
   }
 
+  case class InterfaceAnnotation(name: NamedType, interfaceScope: ScopeTable) extends TypeAnnotation {
+    override def matches(that: TypeAnnotation): Boolean = that match {
+      case InterfaceAnnotation(_, _) => this == that
+      case _ => false
+    }
+
+    override def toString = s"Interface: ${name.name.name}"
+  }
+
   case class VariableAnnotation(t: Type) extends TypeAnnotation {
     override def matches(that: TypeAnnotation): Boolean = that match {
       case VariableAnnotation(typ) => typ == t
