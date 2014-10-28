@@ -101,7 +101,7 @@ object DecafSemantic {
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope)
     tree match {
-      case Program(decls) => decls.foreach {
+      case Program(decls, _) => decls.foreach {
         case f: FnDecl => decorateScope(f, scope)
         case v: VarDecl => decorateScope(v, scope)
         case c: ClassDecl => decorateScope(c, scope.child(s"Class Declaration of ${c.name.name}", c))
@@ -130,7 +130,7 @@ object DecafSemantic {
           decls.foreach { decorateScope(_, fs) }
           stmts.foreach { s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) }
         }
-      case StmtBlock(decls, stmts) =>
+      case StmtBlock(decls, stmts, _) =>
         decls.foreach {
           decorateScope(_, scope)
         }
@@ -143,10 +143,10 @@ object DecafSemantic {
 
   def descent(node: ASTNode): List[ASTNode] = {
     node match {
-      case Program(decls) => decls
+      case Program(decls, _) => decls
       case ClassDecl(_, _, _, members) => members
       case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
-      case StmtBlock(decls, stmts) => decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
+      case StmtBlock(decls, stmts, _) => decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
       case _ => List[ASTNode]()
     }
   }
@@ -166,7 +166,7 @@ object DecafSemantic {
       compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
       return
     } else {
-      state.table.put(ident.name, new VariableAnnotation(typ, v.getPos))
+      state.table.put(ident.name, new VariableAnnotation(typ, ident.pos))
     }
   }
 
@@ -239,7 +239,7 @@ object DecafSemantic {
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(c.name.name)) {
-        compilerProblems += new ConflictingDeclException(c.name.name, c.name.loc.get)
+        compilerProblems += new ConflictingDeclException(c.name.name, c.name.pos)
         return
       } else {
         ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table, c.pos))
@@ -280,7 +280,7 @@ object DecafSemantic {
     if (tree.state.isEmpty) throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     var state = tree.state.get
     tree match {
-      case Program(decls) => for(decl <- decls) {
+      case Program(decls, _) => for(decl <- decls) {
         decl match {
           case v: VarDecl => annotateVariable(v, compilerProblems)
           case f: FnDecl => annotateFunction(f, compilerProblems)
@@ -296,7 +296,7 @@ object DecafSemantic {
       case n: NamedType =>
         if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
       case ArrayType(_, t) => checkTypeExists(node, t, compilerProblems)
-      case VoidType() | IntType() | DoubleType() | BoolType() | StringType() | NullType() | UndeclaredType(_,_) =>
+      case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) | UndeclaredType(_,_) =>
       case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", node.statement.pos)
     }
   }

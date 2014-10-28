@@ -24,12 +24,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
    *                 (i.e. [[StmtBlock]]) represent multiple lines and have no position, they will pass
    *                 [[scala.None None]] to the [[ASTNode]] constructor automagically.
    */
-  abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
+  abstract sealed class ASTNode(location: Position) extends Positional {
     var color: Boolean = false
     var state: Option[ScopeNode] = None
     var parent: ASTNode = null
-    this.setPos(location.getOrElse(NoPosition))
-    def getPos = this.location.orNull
+    this.setPos(location)
 
     /**
      * Returns the name of this node type for printing.
@@ -64,9 +63,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
-      if (location.isDefined)
-        result ++= ("%" + spaces + "d").format(location.get.line)
-      else result ++= " "* spaces
+      result ++= ("%" + spaces + "d").format(pos)
       result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
@@ -86,15 +83,13 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
      def stringifyChildren (indentLevel: Int): String
   }
 
-  case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
-    def this (name: String)  = this(None, name)
-    def this (loc: Position, name:String) = this (Some(loc), name)
+  case class ASTIdentifier(loc: Position, name: String) extends ASTNode(loc) {
 
     override def getName = "Identifier: " + name
     def stringifyChildren(indentLevel: Int) = ""
   }
 
-  case class Program(decls: List[Decl]) extends ASTNode(None) {
+  case class Program(decls: List[Decl], loc: Position) extends ASTNode(loc) {
     decls.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int): String = decls.foldLeft[String](""){
@@ -103,10 +98,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   /*----------------------- Statements ----------------------------------------------------------------------------*/
-  abstract class Stmt(locat: Option[Position]) extends ASTNode(locat)
+  abstract class Stmt(locat: Position) extends ASTNode(locat)
 
   case class StmtBlock(decls: List[VarDecl],
-                       stmts: List[Stmt]) extends Stmt(None) {
+                       stmts: List[Stmt],
+                       loc: Position) extends Stmt(loc) {
 
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
@@ -120,7 +116,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None){
+  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(testExpr.pos){
     testExpr.parent = this
     body.parent = this
   }
@@ -159,18 +155,18 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  case class BreakStmt(loc: Position) extends Stmt(Some(loc)) {
+  case class BreakStmt(loc: Position) extends Stmt(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(Some(loc)) {
+  case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(loc) {
     if (expr.isDefined)
       expr.get.parent = this
 
     def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
   }
 
-  case class PrintStmt(args: List[Expr]) extends Stmt(None) {
+  case class PrintStmt(args: List[Expr], loc:Position) extends Stmt(loc) {
     args.foreach{e => e.parent = this}
 
     def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
@@ -178,7 +174,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase]) extends Stmt(None) {
+  case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase], loc: Position) extends Stmt(loc) {
     if (variable.isDefined) { variable.get.parent = this }
     cases.foreach{c => c.parent = this}
     if (default.isDefined) { default.get.parent = this }
@@ -190,7 +186,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
     }
   }
-  case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
+  case class CaseStmt(value: Expr, body: List[Stmt], loc: Position) extends Stmt(loc) {
 
     value.parent = this
     body.foreach{_.parent = this}
@@ -204,7 +200,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  case class DefaultCase(body: List[Stmt]) extends Stmt(None) {
+  case class DefaultCase(body: List[Stmt], loc: Position) extends Stmt(loc) {
 
     body.foreach{_.parent = this}
 
@@ -218,59 +214,59 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
-  abstract class Expr(where: Option[Position]) extends Stmt(where) {
+  abstract class Expr(where: Position) extends Stmt(where) {
     def typeof(scope: ScopeNode): Type
   }
 
-  case class EmptyExpr() extends Expr(None) {
+  case class EmptyExpr(loc: Position) extends Expr(loc) {
     override def getName = "Empty:"
 
-    override def typeof(scope: ScopeNode): Type = VoidType()
+    override def typeof(scope: ScopeNode): Type = VoidType(loc)
 
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
+  case class ASTIntConstant(loc: Position, value: Int) extends Expr(loc) {
     override def getName = "IntConstant: "
 
-    override def typeof(scope: ScopeNode): Type = IntType()
+    override def typeof(scope: ScopeNode): Type = IntType(loc)
 
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
+  case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(loc) {
     override def getName = "DoubleConstant: "
 
-    override def typeof(scope: ScopeNode): Type = DoubleType()
+    override def typeof(scope: ScopeNode): Type = DoubleType(loc)
 
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
+  case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(loc) {
     override def getName = "BoolConstant: "
 
-    override def typeof(scope: ScopeNode): Type = BoolType()
+    override def typeof(scope: ScopeNode): Type = BoolType(loc)
 
     def stringifyChildren(indentLevel: Int): String = value.toString
   }
 
-  case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
+  case class ASTStringConstant(loc: Position, value: String) extends Expr(loc) {
     override def getName = "StringConstant: "
 
-    override def typeof(scope: ScopeNode): Type = StringType()
+    override def typeof(scope: ScopeNode): Type = StringType(loc)
 
     def stringifyChildren(indentLevel: Int): String = value
   }
 
-  case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
+  case class ASTNullConstant(loc: Position) extends Expr(loc) {
     override def getName = "NullConstant: "
 
-    override def typeof(scope: ScopeNode): Type = NullType()
+    override def typeof(scope: ScopeNode): Type = NullType(loc)
 
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTOperator(loc: Position, token: String) extends ASTNode(Some(loc)) {
+  case class ASTOperator(loc: Position, token: String) extends ASTNode(loc) {
     override def getName = "Operator: "
 
     //TODO: Is this even correct?
@@ -282,7 +278,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   abstract class CompoundExpr(loc: Position,
                               protected val left: Option[Expr],
                               protected val op: ASTOperator,
-                              protected val right: Expr) extends Expr(Some(loc)) {
+                              protected val right: Expr) extends Expr(loc) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
@@ -302,13 +298,13 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
-      case (StringType(), ASTOperator(_, "+"), _) => StringType()
-      case (_, ASTOperator(_, "+"), StringType()) => StringType()
-      case (IntType(), _, IntType()) => IntType()
-      case (DoubleType(), ASTOperator(_, oper), DoubleType()) if oper != "%" => DoubleType()
+      case (StringType(_), ASTOperator(_, "+"), _) => StringType(l)
+      case (_, ASTOperator(_, "+"), StringType(l)) => StringType(l)
+      case (IntType(_), _, IntType(_)) => IntType(l)
+      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
       // type lifting int -> double
-      case (IntType(), ASTOperator(_, oper), DoubleType()) if oper != "%" => DoubleType()
-      case (DoubleType(), ASTOperator(_, oper), IntType()) if oper != "%" => DoubleType()
+      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
+      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(l)
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
         new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
@@ -320,7 +316,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType() // butts are null
+      case (_,_) => NullType(l) // butts are null
     }
   }
 
@@ -328,7 +324,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType()
+      case (_,_) => NullType(l)
     }
   }
 
@@ -338,7 +334,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
     override def typeof(scope: ScopeNode): Type = rhs.typeof(scope) match {
       case e: ErrorType => e //TODO: Stub
-      case _ => NullType()
+      case _ => NullType(l)
     }
   }
 
@@ -350,11 +346,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
         case (e: ErrorType, _) => e //TODO: Stub
         case (_, e: ErrorType) => e
-        case (_, _) => NullType()
+        case (_, _) => NullType(l)
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
-        case _ => NullType()
+        case _ => NullType(l)
       }
     }
 
@@ -370,13 +366,13 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType()
+      case (_,_) => NullType(l)
     }
   }
 
-  abstract class LValue(loc: Position) extends Expr(Some(loc))
+  abstract class LValue(loc: Position) extends Expr(loc)
 
-  case class This(loc: Position) extends Expr(Some(loc)) {
+  case class This(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
       val t = scope.table.get("this").get
@@ -397,7 +393,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       base.stringify(indentLevel + 1) +
         subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
   case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
@@ -453,7 +449,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(Some(loc)) {
+  case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(loc) {
     def this(loc: Position, base: Expr, field: ASTIdentifier, args: List[Expr]) = this(loc, Some(base), field, args)
 
     def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
@@ -463,30 +459,30 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
+  case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
     cType.parent = this
     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
+  case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(loc) {
     size.parent = this
     elemType.parent = this
     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
+  case class ReadIntegerExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
+  case class ReadLineExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType() //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
@@ -561,27 +557,27 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
-  abstract class Type(val typeName: String, loc: Option[Position]) extends ASTNode(loc) {
+  abstract class Type(val typeName: String, loc: Position) extends ASTNode(loc) {
     override def getName = "Type: "
      def stringifyChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
-  case class IntType() extends Type("int", None)
-  case class DoubleType() extends Type("double", None)
-  case class BoolType() extends Type("bool", None)
-  case class VoidType() extends Type("void", None)
-  case class NullType() extends Type("null", None)
-  case class StringType() extends Type("string", None)
-  class ErrorType(message: String, where: Position) extends Type("error", None)
+  case class IntType(loc: Position) extends Type("int", loc)
+  case class DoubleType(loc: Position) extends Type("double", loc)
+  case class BoolType(loc: Position) extends Type("bool", loc)
+  case class VoidType(loc: Position) extends Type("void", loc)
+  case class NullType(loc: Position) extends Type("null", loc)
+  case class StringType(loc: Position) extends Type("string", loc)
+  class ErrorType(message: String, where: Position) extends Type("error", where)
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
-  case class NamedType(name: ASTIdentifier) extends Type(name.name, Some(name.getPos)) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Option[Position], elemType: Type) extends Type(elemType.typeName + " Array", locat) {
+  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + " Array", locat) {
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)

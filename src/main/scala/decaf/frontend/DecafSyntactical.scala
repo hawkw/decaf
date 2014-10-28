@@ -56,7 +56,7 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
   override type Elem = DecafToken
   type P[+T] = PackratParser[T]
   lazy val program: PackratParser[Program] = decl.+ ^^ {
-      case decls => new Program(decls)
+      case decls => new Program(decls, decls(0).pos)
     }
   lazy val decl: PackratParser[Decl] = (
     ( variableDecl <~ Delimiter(";") )
@@ -65,12 +65,12 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
     | interfaceDecl
     )
   lazy val stmtBlock = Delimiter("{") ~ ((variableDecl <~ Delimiter(";"))| stmt).* ~ Delimiter("}") ^^ {
-    case Delimiter("{") ~ stuff ~ Delimiter("}") => StmtBlock(
+    case d ~ stuff ~ Delimiter("}") => StmtBlock(
       stuff.filter(_.isInstanceOf[VarDecl]).asInstanceOf[List[VarDecl]],
-      stuff.filter(_.isInstanceOf[Stmt]).asInstanceOf[List[Stmt]])
+      stuff.filter(_.isInstanceOf[Stmt]).asInstanceOf[List[Stmt]], d.pos)
   }
   lazy val returnType: PackratParser[Type] = (
-    Keyword("void") ^^^ VoidType()
+    Keyword("void") ^^ { case kw => VoidType(kw.pos) }
     | typ
     )
   lazy val formals: PackratParser[List[VarDecl]] = (
@@ -85,9 +85,9 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
   }
   lazy val stmt: PackratParser[Stmt] =(
     expr.? ~ Delimiter(";") ^^{
-      case e ~ d => if (e.isDefined) {e.get.asInstanceOf[Stmt]} else {EmptyExpr()}
+      case e ~ d => if (e.isDefined) {e.get.asInstanceOf[Stmt]} else {EmptyExpr(d.pos)}
     }
-      | Keyword("Print") ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ~ Delimiter(";") ^^ { case _ ~ _ ~ e ~ _ ~ _ => PrintStmt(e)}
+      | Keyword("Print") ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ~ Delimiter(";") ^^ { case kw ~ _ ~ e ~ _ ~ _ => PrintStmt(e, kw.pos)}
       | ifStmt
       | whileStmt
       | forStmt
@@ -95,12 +95,12 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
       | breakStmt
       | stmtBlock
       | Keyword("return") ~ expr.? <~ Delimiter(";") ^^{
-      case k ~ None => ReturnStmt(k.getPos, Some(EmptyExpr()))
-      case k ~ Some(thing) => ReturnStmt(k.getPos, Some(thing))
+      case k ~ None => ReturnStmt(k.pos, Some(EmptyExpr(k.pos)))
+      case k ~ Some(thing) => ReturnStmt(k.pos, Some(thing))
 
     }
    )
-  lazy val breakStmt: PackratParser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.getPos)}
+  lazy val breakStmt: PackratParser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.pos)}
   lazy val ifStmt: PackratParser[Stmt] =
     Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ opt(Keyword("else") ~> stmt) ^^{
       case Keyword("if") ~ Delimiter("(") ~ test ~ Delimiter(")") ~ testbody ~ elsebody => IfStmt(test,testbody,elsebody)
@@ -110,20 +110,20 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
   }
   lazy val forStmt: PackratParser[Stmt] =
     Keyword("for") ~ Delimiter("(") ~ opt(expr) ~ Delimiter(";") ~ expr ~ Delimiter(";") ~ opt(expr) ~ Delimiter(")") ~ stmt ^^{
-      case k ~ _ ~ None ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b => ForStmt(Some(EmptyExpr()),t,Some(step),b)
+      case k ~ _ ~ None ~ s1 ~ t ~ s2 ~ Some(step) ~ _ ~ b => ForStmt(Some(EmptyExpr(s1.pos)),t,Some(step),b)
       case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ Some(step) ~ _ ~ b =>ForStmt(Some(init),t,Some(step),b)
-      case k ~ _ ~ None ~ _ ~ t ~ _ ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr()),t,Some(EmptyExpr()),b)
-      case k ~ _ ~ Some(init) ~ _ ~ t ~ _ ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr()),b)
+      case k ~ _ ~ None ~ s1 ~ t ~ s2 ~ None ~ _ ~ b => ForStmt(Some(EmptyExpr(s1.pos)),t,Some(EmptyExpr(s2.pos)),b)
+      case k ~ _ ~ Some(init) ~ _ ~ t ~ s2 ~ None ~ _ ~ b =>ForStmt(Some(init),t,Some(EmptyExpr(s2.pos)),b)
     }
   lazy val switchStmt: P[Stmt] =
-    Keyword("switch") ~> Delimiter("(") ~> expr.? ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) ~ defaultCase.? <~ Delimiter("}") ^^{
-      case value ~ Delimiter(")") ~ Delimiter("{") ~ cases ~ default => SwitchStmt(value, cases, default)
+    Keyword("switch") ~ Delimiter("(") ~ expr.? ~ Delimiter(")") ~ Delimiter("{") ~ rep(caseStmt) ~ defaultCase.? <~ Delimiter("}") ^^{
+      case kw ~ Delimiter("(") ~ value ~ Delimiter(")") ~ Delimiter("{") ~ cases ~ default => SwitchStmt(value, cases, default, kw.pos)
     }
-  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~> expr ~ Delimiter(":") ~ stmt.* ^^{
-    case value ~ Delimiter(":") ~ body => CaseStmt(value, body)
+  lazy val caseStmt: P[CaseStmt] = Keyword("case") ~ expr ~ Delimiter(":") ~ stmt.* ^^{
+    case kw ~ value ~ Delimiter(":") ~ body => CaseStmt(value, body, kw.pos)
   }
-  lazy val defaultCase: P[DefaultCase] = (Keyword("default") ~ Delimiter(":")) ~> stmt.* ^^{
-    case body => DefaultCase(body)
+  lazy val defaultCase: P[DefaultCase] = Keyword("default") ~ Delimiter(":") ~ stmt.* ^^{
+    case kw ~ d ~ body => DefaultCase(body, kw.pos)
   }
   lazy val expr: P[Expr] = indirect ||| logical
   lazy val indirect: P[Expr] = (
@@ -134,43 +134,43 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
       ||| postfixOps
     )
   lazy val postfixOps: P[Expr] = ( unaryRHS ||| arrayAccess ||| fieldAccess ) ~ (Operator("++") | Operator("--")) ^^{
-    case thing ~ op => PostfixExpr(thing.getPos, ASTOperator(op.getPos, op.chars), thing)
+    case thing ~ op => PostfixExpr(thing.pos, ASTOperator(op.pos, op.chars), thing)
   }
   lazy val call: P[Expr] = (
     (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ {
-      case base ~ _ ~ f ~ args => new Call(base.getPos, base, f, args)
+      case base ~ _ ~ f ~ args => new Call(base.pos, base, f, args)
     }
-    ||| ident ~ fnargs ^^ { case f ~ args => new Call(f.getPos, f, args) }
+    ||| ident ~ fnargs ^^ { case f ~ args => new Call(f.pos, f, args) }
 
       ||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.pos)
       }
       ||| Keyword("ReadInteger") ~ Delimiter("(") ~ Delimiter(")") ^^{
-        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.getPos)
+        case k ~ Delimiter("(") ~ Delimiter(")") => ReadIntegerExpr(k.pos)
       }
     )
   lazy val arrayAccess: P[Expr] = (fieldAccess ||| indirect) ~ Delimiter("[") ~ expr ~ Delimiter("]") ^^ {
-    case first ~ _ ~ last ~ _ => ArrayAccess(first.getPos, first, last)
+    case first ~ _ ~ last ~ _ => ArrayAccess(first.pos, first, last)
   }
   lazy val assign: P[Expr] = assignable ~ Operator("=") ~ expr ^^{
-        case left ~ _ ~ right => AssignExpr(left.getPos, left, right)
+        case left ~ _ ~ right => AssignExpr(left.pos, left, right)
       }
   lazy val assignable: P[Expr] =  arrayAccess ||| fieldAccess
   lazy val fieldAccess: P[Expr] = (
-    ident ^^ { case i => FieldAccess(i.getPos, None, i)}
+    ident ^^ { case i => FieldAccess(i.pos, None, i)}
     ||| ( arrayAccess
       ||| fieldAccess
-      ||| call) ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.getPos, Some(base), i) }
-    ||| exprThis ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.getPos, Some(base), i) }
+      ||| call) ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.pos, Some(base), i) }
+    ||| exprThis ~ Delimiter(".") ~ ident ^^ { case base ~ _ ~ i => FieldAccess(base.pos, Some(base), i) }
     )
   lazy val exprThis: P[Expr] = Keyword("this") ^^ {
-      case k => This(k.getPos)
+      case k => This(k.pos)
     }
   lazy val exprNew: P[Expr] = (
       Keyword("new") ~ ident ^^
-          { case Keyword("new") ~ i => NewExpr(i.getPos, NamedType(i)) }
+          { case Keyword("new") ~ i => NewExpr(i.pos, NamedType(i)) }
       | ( Keyword("NewArray") ~ Delimiter("(") ) ~> expr ~ Delimiter(",") ~ typ <~ Delimiter(")") ^^
-          { case e ~ Delimiter(",") ~ t  => NewArrayExpr(e.getPos,e,t) }
+          { case e ~ Delimiter(",") ~ t  => NewArrayExpr(e.pos,e,t) }
     )
 /*
   lazy val tlmath: P[Expr] = (
@@ -179,42 +179,42 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
 */
   lazy val logical: P[Expr] = (
     (relational ||| logical ||| rexpr) ~ ( Operator("||") | Operator("&&"))  ~ relational ^^
-        { case left ~ op ~ right => new LogicalExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
+        { case left ~ op ~ right => new LogicalExpr(left.pos, left, ASTOperator(op.pos, op.chars), right) }
     ||| relational
     )
   lazy val relational: P[Expr] = (
     (term ||| relational ||| rexpr) ~ ((
       Operator(">=") | Operator("==") | Operator("!=") | Operator("<=") | Operator(">") | Operator("<")
-      ) ^^ {case o => ASTOperator(o.getPos, o.chars)}) ~ term ^^{
+      ) ^^ {case o => ASTOperator(o.pos, o.chars)}) ~ term ^^{
       case left ~ op ~ right => op match {
-        case ASTOperator(_,"==") | ASTOperator(_,"!=") => EqualityExpr(left.getPos, left, op, right)
-        case _ => RelationalExpr(left.getPos, left, op, right)
+        case ASTOperator(_,"==") | ASTOperator(_,"!=") => EqualityExpr(left.pos, left, op, right)
+        case _ => RelationalExpr(left.pos, left, op, right)
       }
     }
     ||| term
     )
   lazy val term: P[Expr] = (
     (factor ||| term ||| rexpr) ~ (Operator("-") | Operator("+") ) ~  factor ^^
-          { case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, op.chars), right) }
+          { case left ~ op ~ right => ArithmeticExpr(left.pos, left, ASTOperator(op.pos, op.chars), right) }
     ||| factor
     )
   lazy val factor: P[Expr] =(
     ( (unary ||| factor ||| rexpr) ~ Operator("%") ~ unary ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "%"), right)
+      case left ~ op ~ right => ArithmeticExpr(left.pos, left, ASTOperator(op.pos, "%"), right)
     }
     | (unary ||| factor ||| rexpr) ~ Operator("*") ~ unary ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "*"), right)
+      case left ~ op ~ right => ArithmeticExpr(left.pos, left, ASTOperator(op.pos, "*"), right)
     }
     | (unary ||| factor ||| rexpr) ~ Operator("/") ~  unary ^^{
-      case left ~ op ~ right => ArithmeticExpr(left.getPos, left, ASTOperator(op.getPos, "/"), right)
+      case left ~ op ~ right => ArithmeticExpr(left.pos, left, ASTOperator(op.pos, "/"), right)
     } )
     ||| unary
     )
   lazy val unary: P[Expr] = ( Operator("!") ~ unaryRHS ^^{
-    case op ~ e => LogicalExpr(op.getPos, None, ASTOperator(op.getPos, "!"), e)
+    case op ~ e => LogicalExpr(op.pos, None, ASTOperator(op.pos, "!"), e)
   }
     | Operator("-") ~ unaryRHS ^^{
-      case op ~ e => ArithmeticExpr(op.getPos, ASTIntConstant(op.getPos, 0), ASTOperator(op.getPos, "-"), e)}
+      case op ~ e => ArithmeticExpr(op.pos, ASTIntConstant(op.pos, 0), ASTOperator(op.pos, "-"), e)}
     /*
      * The correct handling for the unary minus operator is not documented in the reference implementation
      * as there are no sample programs with correct output for the unary minus expression. Therefore, we've
@@ -236,17 +236,17 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
       | elem("StringConst", _.isInstanceOf[StringConstant])
       | Keyword("null")
     )^^{
-    case i: IntConstant => ASTIntConstant(i.getPos, i.value)
-    case d: DoubleConstant => ASTDoubleConstant(d.getPos, d.value)
-    case b: BoolConstant => ASTBoolConstant(b.getPos, b.value)
-    case s: StringConstant => ASTStringConstant(s.getPos, s.value)
-    case n: Keyword => ASTNullConstant(n.getPos)
+    case i: IntConstant => ASTIntConstant(i.pos, i.value)
+    case d: DoubleConstant => ASTDoubleConstant(d.pos, d.value)
+    case b: BoolConstant => ASTBoolConstant(b.pos, b.value)
+    case s: StringConstant => ASTStringConstant(s.pos, s.value)
+    case n: Keyword => ASTNullConstant(n.pos)
   }
   lazy val variableDecl: PackratParser[VarDecl] = typ ~ ident ^^ {
     case t ~ e => VarDecl(e, t)
   }
   lazy val ident: PackratParser[ASTIdentifier] = _ident ^^{
-    case i: Identifier => ASTIdentifier(Some(i.getPos), i.value)
+    case i: Identifier => ASTIdentifier(i.pos, i.value)
   }
   lazy val _ident: PackratParser[Elem] = acceptIf(_.isInstanceOf[Identifier])("Identifier token expected but " + _ + " found")
   lazy val atyp: PackratParser[Type] = (
@@ -255,14 +255,14 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
          Otherwise, take it out.
        */
       typ
-      | Keyword("int") ^^^ IntType()
-      | Keyword("double") ^^^ DoubleType()
-      | Keyword("bool") ^^^ BoolType()
-      | Keyword("string") ^^^ StringType()
+      | Keyword("int") ^^{ case kw => IntType(kw.pos) }
+      | Keyword("double") ^^{case kw =>  DoubleType(kw.pos)}
+      | Keyword("bool") ^^{case kw => BoolType(kw.pos) }
+      | Keyword("string") ^^{case kw => StringType(kw.pos) }
       | ident ^^ { case i => NamedType(i)}
     )
   lazy val typ: PackratParser[Type] = (
-      atyp ~ Delimiter("[]") ^^ { case t ~ dims => ArrayType(Some(dims.getPos), t)}
+      atyp ~ Delimiter("[]") ^^ { case t ~ dims => ArrayType(dims.pos, t)}
       | atyp
     )
   lazy val classDecl: P[Decl] =
@@ -321,11 +321,11 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
 
   def call: Parser[Call] = (
     ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
-      case field ~ Delimiter("(") ~ args ~ Delimiter(")")  => new Call(field.getPos, field, args)
+      case field ~ Delimiter("(") ~ args ~ Delimiter(")")  => new Call(field.pos, field, args)
     }
     | expr ~ Delimiter(".") ~ ident ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
       case base ~ Delimiter(".") ~ field ~ Delimiter("(") ~ args ~ Delimiter(")")  =>
-        new Call(base.getPos, base, field, args)
+        new Call(base.pos, base, field, args)
     }
     )
   def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals.? ~ Delimiter(")") ~ stmtBlock ^^{
