@@ -8,11 +8,19 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  * Created by hawk on 10/26/14.
  */
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
-  lazy val lineOfCode = "" // TODO : go get the actual line of code from the parser
-  // def toString() // TODO: Issue
+  lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
+
+  override def toString(): String = {
+    s"${lineOfCode}\n${message}"
+  }
+
 }
 class ConflictingDeclException(name: String, where: Position)
-  extends SemanticException(s"*** Declaration of ‘$name’ here conflicts with declaration on line ${where.line}", where)
+  extends SemanticException(s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}", where)
+
+class UndeclaredTypeException(name: String, where: Position)
+  extends SemanticException(s"*** No declaration for class '${name}' found", where)
+
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
 object DecafSemantic extends DecafAST {
@@ -222,6 +230,37 @@ object DecafSemantic extends DecafAST {
     }
   }
 
+  def checkTypeExists(node: ScopeNode, value: Type, compilerProblems: Queue[Exception]): Unit = {
+    value match {
+      case n: NamedType => {
+        if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
+      }
+      case ArrayType(_, t) => checkTypeExists(node, t, compilerProblems)
+      case VoidType() | IntType() | DoubleType() | BoolType() | StringType() | NullType() | UndeclaredType(_,_) =>
+      case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", node.statement.pos)
+    }
+  }
+
+  def simpleCheckTypes(scopeTree: ScopeNode, compilerProblems: Queue[Exception]): Unit = {
+    scopeTree.table.keys.foreach { key =>
+      for(decl <- scopeTree.table.get(key)) {
+        decl match {
+          case m: MethodAnnotation => {
+            checkTypeExists(scopeTree, m.returnType, compilerProblems)
+            m.formals.foreach(checkTypeExists(scopeTree,_,compilerProblems))
+          }
+          case c: ClassAnnotation => {
+            if(c.ext.isDefined) checkTypeExists(scopeTree, c.ext.get, compilerProblems)
+            c.implements.foreach(checkTypeExists(scopeTree,_,compilerProblems))
+          }
+          case i: InterfaceAnnotation => //don't actually need to check any inherent types in this declaration.
+          case v: VariableAnnotation => checkTypeExists(scopeTree, v.t, compilerProblems)
+        }
+      }
+    }
+    scopeTree.children.foreach(simpleCheckTypes(_, compilerProblems))
+  }
+
   /**
    * Performs the semantic analysis
    *
@@ -253,17 +292,18 @@ object DecafSemantic extends DecafAST {
     decorateScope(top, tree)
     val problems = Queue[Exception]()
     pullDeclsToScope(top, problems)
+    simpleCheckTypes(top.state.get, problems)
     problems.map(System.err.println(_))
     top.state.get
   }
 
   def compileToSemantic(progn: String): ScopeNode = {
     val r = new DecafSyntactical().parse(progn).asInstanceOf[Program]
-    System.out.println(r)
+    //System.out.println(r)
     analyze(r)
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { ; } } interface Animal {void talk(String how);} interface Animal {} class Cow {} \nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
+    System.out.println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { Farts q; } }\n interface Animal {void talk(String how);}\n interface Animal {} \nclass Cow {}\nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
   }
 }
