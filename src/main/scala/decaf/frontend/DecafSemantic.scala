@@ -277,7 +277,9 @@ object DecafSemantic {
   }
 
   def pullDeclsToScope (tree: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
-    if (tree.state.isEmpty) throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
+    if (tree.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
+    }
     var state = tree.state.get
     tree match {
       case Program(decls, _) => for(decl <- decls) {
@@ -291,13 +293,13 @@ object DecafSemantic {
     }
   }
 
-  def checkTypeExists(node: ScopeNode, value: Type, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def checkTypeExists(node: ScopeNode,pos: Position, value: Type, compilerProblems: mutable.Queue[Exception]): Unit = {
     value match {
       case n: NamedType =>
         if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
-      case ArrayType(_, t) => checkTypeExists(node, t, compilerProblems)
+      case ArrayType(_, t) => checkTypeExists(node,pos, t, compilerProblems)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) | UndeclaredType(_,_) =>
-      case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", node.statement.pos)
+      case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", pos)
     }
   }
 
@@ -306,13 +308,13 @@ object DecafSemantic {
       for(decl <- scopeTree.table.get(key)) {
         decl match {
           case m: MethodAnnotation =>
-            checkTypeExists(scopeTree, m.returnType, compilerProblems)
-            m.formals.foreach(checkTypeExists(scopeTree,_,compilerProblems))
+            checkTypeExists(scopeTree, m.pos, m.returnType, compilerProblems)
+            m.formals.foreach(checkTypeExists(scopeTree,m.pos,_,compilerProblems))
           case c: ClassAnnotation =>
-            if(c.ext.isDefined) checkTypeExists(scopeTree, c.ext.get, compilerProblems)
-            c.implements.foreach(checkTypeExists(scopeTree,_,compilerProblems))
+            if(c.ext.isDefined) checkTypeExists(scopeTree,c.pos, c.ext.get, compilerProblems)
+            c.implements.foreach(checkTypeExists(scopeTree,c.pos,_,compilerProblems))
           case i: InterfaceAnnotation => //don't actually need to check any inherent types in this declaration.
-          case v: VariableAnnotation => checkTypeExists(scopeTree, v.t, compilerProblems)
+          case v: VariableAnnotation => checkTypeExists(scopeTree,v.pos, v.t, compilerProblems)
         }
       }
     }
@@ -346,7 +348,7 @@ object DecafSemantic {
    */
   def analyze(top: Program): ScopeNode = {
     var continue = true
-    val tree = new ScopeNode(new ScopeTable, "Global", None, top)
+    val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
     val problems = mutable.Queue[Exception]()
     pullDeclsToScope(top, problems)
