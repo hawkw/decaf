@@ -29,7 +29,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     var state: Option[ScopeNode] = None
     var parent: ASTNode = null
     this.setPos(location.getOrElse(NoPosition))
-    def getPos = this.location.getOrElse(null)
+    def getPos = this.location.orNull
 
     /**
      * Returns the name of this node type for printing.
@@ -167,7 +167,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     if (expr.isDefined)
       expr.get.parent = this
 
-    def stringifyChildren(indentLevel: Int): String = (if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""})
+    def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
   }
 
   case class PrintStmt(args: List[Expr]) extends Stmt(None) {
@@ -270,7 +270,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTOperator(loc: Position, val token: String) extends ASTNode(Some(loc)) {
+  case class ASTOperator(loc: Position, token: String) extends ASTNode(Some(loc)) {
     override def getName = "Operator: "
 
     //TODO: Is this even correct?
@@ -305,10 +305,10 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       case (StringType(), ASTOperator(_, "+"), _) => StringType()
       case (_, ASTOperator(_, "+"), StringType()) => StringType()
       case (IntType(), _, IntType()) => IntType()
-      case (DoubleType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
+      case (DoubleType(), ASTOperator(_, oper), DoubleType()) if oper != "%" => DoubleType()
       // type lifting int -> double
-      case (IntType(), ASTOperator(_, op), DoubleType()) if op != "%" => DoubleType()
-      case (DoubleType(), ASTOperator(_, op), IntType()) if op != "%" => DoubleType()
+      case (IntType(), ASTOperator(_, oper), DoubleType()) if oper != "%" => DoubleType()
+      case (DoubleType(), ASTOperator(_, oper), IntType()) if oper != "%" => DoubleType()
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
         new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
@@ -347,7 +347,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
     override def typeof(scope: ScopeNode): Type = lhs match {
-      case Some(l) => (l.typeof(scope), rhs.typeof(scope)) match {
+        case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
         case (e: ErrorType, _) => e //TODO: Stub
         case (_, e: ErrorType) => e
         case (_, _) => NullType()
@@ -380,10 +380,10 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     def stringifyChildren(indentLevel: Int): String = ""
     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
       val t = scope.table.get("this").get
-      if (t.isInstanceOf[ClassAnnotation])
-        t.asInstanceOf[ClassAnnotation].name
-      else
-        new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+      t match {
+        case c: ClassAnnotation => c.name
+        case _ => new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+      }
     } else {
       new ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
     }
@@ -418,18 +418,18 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = base match {
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
-          scope.table get name.name get match {
-            case VariableAnnotation(_,_) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", loc)
-            case MethodAnnotation(_, _, _) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", loc)
-            case ClassAnnotation(_, _, _, classScope, _) => classScope get field.name match {
+          scope.table.get(name.name).get match {
+            case VariableAnnotation(_,where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", where)
+            case MethodAnnotation(_, _, where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", where)
+            case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t, _) => t
-                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", loc)
-                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", loc)
+                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
+                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
               }
-              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", where)
             }
           }
         } else {
@@ -444,8 +444,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       case None => if (scope.table chainContains field.name) {
         scope.table.get(field.name).get match {
           case VariableAnnotation(t, _) => t
-          case MethodAnnotation(_,_,_) => new ErrorType("*** Attempt to field access a method", loc)
-          case ClassAnnotation(_,_,_,_,_) => new ErrorType("*** Attempt to field access a class", loc)
+          case MethodAnnotation(_,_,where) => new ErrorType("*** Attempt to field access a method", where)
+          case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
         }
       } else {
         UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)

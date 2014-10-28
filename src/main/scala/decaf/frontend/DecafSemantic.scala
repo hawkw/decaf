@@ -2,7 +2,7 @@ package decaf.frontend
 
 import scala.collection.mutable.Queue
 
-import scala.util.parsing.input.{NoPosition, Positional, Position}
+import scala.util.parsing.input.{Position}
 
 /**
  * Created by hawk on 10/26/14.
@@ -10,14 +10,14 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
   lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
 
-  override def toString(): String = s"${lineOfCode}\n${message}"
+  override def toString: String = s"$lineOfCode\n$message"
 
 }
 class ConflictingDeclException(name: String, where: Position)
   extends SemanticException(s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}", where)
 
 class UndeclaredTypeException(name: String, where: Position)
-  extends SemanticException(s"*** No declaration for class '${name}' found", where)
+  extends SemanticException(s"*** No declaration for class '$name' found", where)
 
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
@@ -98,7 +98,7 @@ object DecafSemantic {
   type ScopeTable = ForkTable[String, TypeAnnotation]
 
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
-    tree.state = Some(scope);
+    tree.state = Some(scope)
     tree match {
       case Program(decls) => decls.foreach {
         _ match {

@@ -102,7 +102,7 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
    )
   lazy val breakStmt: PackratParser[Stmt] = Keyword("break") ~ Delimiter(";") ^^{case k ~ Delimiter(";") => BreakStmt(k.getPos)}
   lazy val ifStmt: PackratParser[Stmt] =
-    Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ (opt(Keyword("else") ~> stmt)) ^^{
+    Keyword("if") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ~ opt(Keyword("else") ~> stmt) ^^{
       case Keyword("if") ~ Delimiter("(") ~ test ~ Delimiter(")") ~ testbody ~ elsebody => IfStmt(test,testbody,elsebody)
     }
   lazy val whileStmt: PackratParser[Stmt] = Keyword("while") ~ Delimiter("(") ~ expr ~ Delimiter(")") ~ stmt ^^{
@@ -138,9 +138,9 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
   }
   lazy val call: P[Expr] = (
     (rexpr ||| fieldAccess ||| indirect) ~ Delimiter(".") ~ ident ~ fnargs ^^ {
-      case base ~ _ ~ field ~ args => new Call(base.getPos, base, field, args)
+      case base ~ _ ~ f ~ args => new Call(base.getPos, base, f, args)
     }
-    ||| ident ~ fnargs ^^ { case field ~ args => new Call(field.getPos, field, args) }
+    ||| ident ~ fnargs ^^ { case f ~ args => new Call(f.getPos, f, args) }
 
       ||| Keyword("ReadLine") ~ Delimiter("(") ~ Delimiter(")") ^^{
         case k ~ Delimiter("(") ~ Delimiter(")") => ReadLineExpr(k.getPos)
