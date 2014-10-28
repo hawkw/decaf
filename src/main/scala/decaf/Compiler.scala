@@ -1,5 +1,5 @@
 package decaf
-import decaf.frontend.DecafSyntactical
+import decaf.frontend.{DecafSyntactical, DecafSemantic}
 import scala.io.Source
 
 /**
@@ -15,6 +15,7 @@ object Compiler extends App {
     case 1 =>
       val source = Source.fromFile(args(0)).mkString
       val ast = parser.parse(source)
+      DecafSemantic.analyze(ast)
       println(ast)
     case _ => println("Too many arguments!")
   }
