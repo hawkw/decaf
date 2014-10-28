@@ -32,7 +32,8 @@ object DecafSemantic extends DecafAST {
         c.members.foreach {
           _ match {
             case f: FnDecl => decorateScope(f, scope)
-            case _ => //I don't think we fork scope for variable decls in a class? And class decls can't be embedded.
+            case v: VarDecl => decorateScope(v, scope)
+            case _ => //class/interface decls can't be embedded.
           }
         }
       }
@@ -52,7 +53,7 @@ object DecafSemantic extends DecafAST {
           val stmts = f.body.get.stmts
           val fs = s.child(s"FnDecl (body) ${f.name.name}", f.body.get)
           f.body.get.state = Some(fs)
-          decls.foreach { decorateScope(_, scope) }
+          decls.foreach { decorateScope(_, fs) }
           stmts.foreach { s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) }
         }
       }
@@ -78,9 +79,17 @@ object DecafSemantic extends DecafAST {
     }
   }
 
-  def annotateVariable(state: ScopeNode, v: VarDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateVariable(v: VarDecl, compilerProblems: Queue[Exception]): Unit = {
     var ident = v.n
     var typ = v.t
+
+    if(v.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't contain a scope for\n" + v.toString)
+    }
+
+    val state = v.state.get
+
+
     if (state.table.contains(ident.name)) {
       compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
       return
@@ -89,10 +98,17 @@ object DecafSemantic extends DecafAST {
     }
   }
 
-  def annotateFunction(state: ScopeNode, fn: FnDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateFunction(fn: FnDecl, compilerProblems: Queue[Exception]): Unit = {
     var ident = fn.name
     var rettype = fn.returnType
     var formals = fn.formals
+
+    if(fn.state.isEmpty) {
+      throw new IllegalArgumentException("Tree didn't contain a scope for\n" + fn.toString)
+    }
+
+    val state = fn.state.get
+
     if(state.table.contains(ident.name)) {
       compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
       return
@@ -103,7 +119,7 @@ object DecafSemantic extends DecafAST {
       if(formal.state.isEmpty) {
         throw new IllegalArgumentException("Tree didn't contain a scope for\n" + formal.toString + "\nin " + fn.toString)
       }
-      annotateVariable(formal.state.get, formal, compilerProblems)
+      annotateVariable(formal, compilerProblems)
     }
     if(fn.body.isDefined) {
       annotateStmtBlock(fn.body.get, compilerProblems)
@@ -116,7 +132,7 @@ object DecafSemantic extends DecafAST {
     } else {
       val state = b.state.get
       for (decl <- b.decls) {
-        annotateVariable(state, decl, compilerProblems)
+        annotateVariable(decl, compilerProblems)
       }
 
       for(stmt <- b.stmts) {
@@ -128,7 +144,7 @@ object DecafSemantic extends DecafAST {
     }
   }
 
-  def annotateClass(state: ScopeNode, c: ClassDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateClass(c: ClassDecl, compilerProblems: Queue[Exception]): Unit = {
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
@@ -141,8 +157,8 @@ object DecafSemantic extends DecafAST {
 
     for(member <- c.members) {
       member match {
-        case v: VarDecl => annotateVariable(cscope, v, compilerProblems)
-        case f: FnDecl => annotateFunction(cscope, f, compilerProblems)
+        case v: VarDecl => annotateVariable(v, compilerProblems)
+        case f: FnDecl => annotateFunction(f, compilerProblems)
       }
     }
 
@@ -161,7 +177,8 @@ object DecafSemantic extends DecafAST {
     //TODO: Finish me
   }
 
-  def annotateInterface(node: DecafSemantic.ScopeNode, decl: DecafSemantic.InterfaceDecl, compilerProblems: Queue[Exception]) = {
+  def annotateInterface(decl: DecafSemantic.InterfaceDecl, compilerProblems: Queue[Exception]) = {
+
   }
 
   def pullDeclsToScope (tree: ASTNode, compilerProblems: Queue[Exception]): Unit = {
@@ -172,10 +189,10 @@ object DecafSemantic extends DecafAST {
     tree match {
       case Program(decls) => for(decl <- decls) {
         decl match {
-          case v: VarDecl => annotateVariable(state, v, compilerProblems)
-          case f: FnDecl => annotateFunction(state, f, compilerProblems)
-          case c: ClassDecl => annotateClass(state, c, compilerProblems)
-          case i: InterfaceDecl => annotateInterface(state, i, compilerProblems)
+          case v: VarDecl => annotateVariable(v, compilerProblems)
+          case f: FnDecl => annotateFunction(f, compilerProblems)
+          case c: ClassDecl => annotateClass(c, compilerProblems)
+          case i: InterfaceDecl => annotateInterface(i, compilerProblems)
         }
       }
     }
@@ -223,6 +240,6 @@ object DecafSemantic extends DecafAST {
   }
 
   def main(args: Array[String]): Unit = {
-    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { ; } } interface farts {} \nvoid main(String[][] args) { cow a; {a = b; int b;} }").toString)
+    System.out.println(compileToSemantic("class cow implements farts { int a; void moo(String how) { ; } } interface farts {} \nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
   }
 }
