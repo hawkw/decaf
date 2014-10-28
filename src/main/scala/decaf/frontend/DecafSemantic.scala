@@ -1,8 +1,9 @@
 package decaf.frontend
 
+import scala.collection.mutable
 import scala.collection.mutable.Queue
 
-import scala.util.parsing.input.{Position}
+import scala.util.parsing.input.Position
 
 /**
  * Created by hawk on 10/26/14.
@@ -101,29 +102,24 @@ object DecafSemantic {
     tree.state = Some(scope)
     tree match {
       case Program(decls) => decls.foreach {
-        _ match {
+        match {
           case f: FnDecl => decorateScope(f, scope)
           case v: VarDecl => decorateScope(v, scope)
           case c: ClassDecl => decorateScope(c, scope.child(s"Class Declaration of ${c.name.name}", c))
           case i: InterfaceDecl => decorateScope(i, scope.child(s"Interface Declaration of ${i.name.name}", i))
         }
       }
-      case c: ClassDecl => {
+      case c: ClassDecl =>
         c.members.foreach {
-          _ match {
             case f: FnDecl => decorateScope(f, scope)
             case v: VarDecl => decorateScope(v, scope)
             case _ => //class/interface decls can't be embedded.
           }
-        }
-      }
       case i: InterfaceDecl => i.members.foreach {
-        _ match {
-          case f: FnDecl => decorateScope(f, scope)
-          case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
-        }
+        case f: FnDecl => decorateScope(f, scope)
+        case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
       }
-      case f: FnDecl => {
+      case f: FnDecl =>
         var s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
         f.formals.foreach {
           decorateScope(_, s)
@@ -136,15 +132,13 @@ object DecafSemantic {
           decls.foreach { decorateScope(_, fs) }
           stmts.foreach { s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) }
         }
-      }
-      case StmtBlock(decls, stmts) => {
+      case StmtBlock(decls, stmts) =>
         decls.foreach {
           decorateScope(_, scope)
         }
         stmts.foreach { s =>
           if(s.isInstanceOf[StmtBlock]) decorateScope(s, scope.child("Subblock", s))
         }
-      }
       case n: ASTNode => n.state = Some(scope)
     }
   }
@@ -159,9 +153,9 @@ object DecafSemantic {
     }
   }
 
-  def annotateVariable(v: VarDecl, compilerProblems: Queue[Exception]): Unit = {
-    var ident = v.n
-    var typ = v.t
+  def annotateVariable(v: VarDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
+    val ident = v.n
+    val typ = v.t
 
     if(v.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + v.toString)
@@ -178,9 +172,9 @@ object DecafSemantic {
     }
   }
 
-  def annotateFunction(fn: FnDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateFunction(fn: FnDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
     var ident = fn.name
-    var rettype = fn.returnType
+    val rettype = fn.returnType
     var formals = fn.formals
 
     if(fn.state.isEmpty) {
@@ -206,7 +200,7 @@ object DecafSemantic {
     }
   }
 
-  def annotateStmtBlock(b: StmtBlock, compilerProblems: Queue[Exception]): Unit = {
+  def annotateStmtBlock(b: StmtBlock, compilerProblems: mutable.Queue[Exception]): Unit = {
     if(b.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
     } else {
@@ -224,7 +218,7 @@ object DecafSemantic {
     }
   }
 
-  def annotateClass(c: ClassDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateClass(c: ClassDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
@@ -257,7 +251,7 @@ object DecafSemantic {
     //TODO: Finish me
   }
 
-  def annotateInterface(i: InterfaceDecl, compilerProblems: Queue[Exception]): Unit = {
+  def annotateInterface(i: InterfaceDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
     if(i.state.isEmpty) {
       throw new IllegalArgumentException("Tree doesn't contain a scope for " + i.toString)
     }
@@ -285,7 +279,7 @@ object DecafSemantic {
     }
   }
 
-  def pullDeclsToScope (tree: ASTNode, compilerProblems: Queue[Exception]): Unit = {
+  def pullDeclsToScope (tree: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
     if (tree.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     }
@@ -302,29 +296,26 @@ object DecafSemantic {
     }
   }
 
-  def checkTypeExists(node: ScopeNode, value: Type, compilerProblems: Queue[Exception]): Unit = {
+  def checkTypeExists(node: ScopeNode, value: Type, compilerProblems: mutable.Queue[Exception]): Unit = {
     value match {
-      case n: NamedType => {
+      case n: NamedType =>
         if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
-      }
       case ArrayType(_, t) => checkTypeExists(node, t, compilerProblems)
       case VoidType() | IntType() | DoubleType() | BoolType() | StringType() | NullType() | UndeclaredType(_,_) =>
       case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", node.statement.pos)
     }
   }
 
-  def simpleCheckTypes(scopeTree: ScopeNode, compilerProblems: Queue[Exception]): Unit = {
+  def simpleCheckTypes(scopeTree: ScopeNode, compilerProblems: mutable.Queue[Exception]): Unit = {
     scopeTree.table.keys.foreach { key =>
       for(decl <- scopeTree.table.get(key)) {
         decl match {
-          case m: MethodAnnotation => {
+          case m: MethodAnnotation =>
             checkTypeExists(scopeTree, m.returnType, compilerProblems)
             m.formals.foreach(checkTypeExists(scopeTree,_,compilerProblems))
-          }
-          case c: ClassAnnotation => {
+          case c: ClassAnnotation =>
             if(c.ext.isDefined) checkTypeExists(scopeTree, c.ext.get, compilerProblems)
             c.implements.foreach(checkTypeExists(scopeTree,_,compilerProblems))
-          }
           case i: InterfaceAnnotation => //don't actually need to check any inherent types in this declaration.
           case v: VariableAnnotation => checkTypeExists(scopeTree, v.t, compilerProblems)
         }
@@ -362,7 +353,7 @@ object DecafSemantic {
     var continue = true
     var tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = Queue[Exception]()
+    val problems = mutable.Queue[Exception]()
     pullDeclsToScope(top, problems)
     simpleCheckTypes(top.state.get, problems)
     problems.map(System.err.println(_))
