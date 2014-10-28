@@ -102,12 +102,10 @@ object DecafSemantic {
     tree.state = Some(scope)
     tree match {
       case Program(decls) => decls.foreach {
-        match {
-          case f: FnDecl => decorateScope(f, scope)
-          case v: VarDecl => decorateScope(v, scope)
-          case c: ClassDecl => decorateScope(c, scope.child(s"Class Declaration of ${c.name.name}", c))
-          case i: InterfaceDecl => decorateScope(i, scope.child(s"Interface Declaration of ${i.name.name}", i))
-        }
+        case f: FnDecl => decorateScope(f, scope)
+        case v: VarDecl => decorateScope(v, scope)
+        case c: ClassDecl => decorateScope(c, scope.child(s"Class Declaration of ${c.name.name}", c))
+        case i: InterfaceDecl => decorateScope(i, scope.child(s"Interface Declaration of ${i.name.name}", i))
       }
       case c: ClassDecl =>
         c.members.foreach {
@@ -120,7 +118,7 @@ object DecafSemantic {
         case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
       }
       case f: FnDecl =>
-        var s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
+        val s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
         f.formals.foreach {
           decorateScope(_, s)
         }
@@ -175,7 +173,7 @@ object DecafSemantic {
   def annotateFunction(fn: FnDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
     var ident = fn.name
     val rettype = fn.returnType
-    var formals = fn.formals
+    val formals = fn.formals
 
     if(fn.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + fn.toString)
@@ -204,9 +202,8 @@ object DecafSemantic {
     if(b.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
     } else {
-      val state = b.state.get
-      for (decl <- b.decls) {
-        annotateVariable(decl, compilerProblems)
+      b.decls.foreach {
+        case decl => annotateVariable(decl, compilerProblems)
       }
 
       for(stmt <- b.stmts) {
@@ -222,7 +219,7 @@ object DecafSemantic {
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
-    var cscope = c.state.get
+    val cscope = c.state.get
     if(cscope.table.contains("this")) {
       throw new IllegalArgumentException("keyword \'this\' already (accidentally?) bound for class scope in " + c.toString)
     } else {
@@ -236,11 +233,11 @@ object DecafSemantic {
       }
     }
 
-    var pscope = c.state.get.parent
+    val pscope = c.state.get.parent
     if(pscope.isEmpty) {
       throw new IllegalArgumentException("Tree doesn't have a parent scope to enclose class type declaration in class " + c.toString)
     } else {
-      var ptable = pscope.get.table
+      val ptable = pscope.get.table
       if(ptable.contains(c.name.name)) {
         compilerProblems += new ConflictingDeclException(c.name.name, c.name.loc.get)
         return
@@ -280,9 +277,7 @@ object DecafSemantic {
   }
 
   def pullDeclsToScope (tree: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
-    if (tree.state.isEmpty) {
-      throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
-    }
+    if (tree.state.isEmpty) throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     var state = tree.state.get
     tree match {
       case Program(decls) => for(decl <- decls) {
@@ -351,7 +346,7 @@ object DecafSemantic {
    */
   def analyze(top: Program): ScopeNode = {
     var continue = true
-    var tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
+    val tree = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
     val problems = mutable.Queue[Exception]()
     pullDeclsToScope(top, problems)
