@@ -18,6 +18,8 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 
+sourceCompatibility = '1.7'
+
 // define a configuration for scala compiler plugins
 // the transitive=false means that the plugin won't show up
 // as a dependency in the final output
