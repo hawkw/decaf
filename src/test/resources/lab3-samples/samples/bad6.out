@@ -1,0 +1,30 @@
+
+*** Error line 4.
+  if (a != 10 && 5) {
+              ^^
+*** Incompatible operands: bool && int
+
+
+*** Error line 6.
+    break;
+    ^^^^^
+*** break is only allowed inside a loop
+
+
+*** Error line 7.
+  } else if (!a) 
+             ^
+*** Incompatible operand: ! int
+
+
+*** Error line 10.
+  for (a = 0; a + 10 * 5; a = a + 1) {
+              ^^^^^^^^^^
+*** Test expression must have boolean type
+
+
+*** Error line 13.
+  return a;
+         ^
+*** Incompatible return: int given, void expected
+

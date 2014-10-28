@@ -1,0 +1,6 @@
+
+*** Error line 5.
+int Rutabaga(int a, double b, bool c) {
+    ^^^^^^^^
+*** Declaration of 'Rutabaga' here conflicts with declaration on line 1
+

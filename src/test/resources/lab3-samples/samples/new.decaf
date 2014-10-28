@@ -1,0 +1,17 @@
+void test(int a) {}
+class Cow {}
+
+void main()
+{
+   int[] a;
+
+   test(3.0 * 5.6 - 1.0);
+   NewArray(true && false, bool);
+   if (NewArray(5, int)) 1;
+   if (ReadInteger()) 1;
+   if (ReadLine()) 1;
+   if (new Cow) 1;
+   if (a[3+5]) 1;
+   a[true && false];
+   a[test(4)];
+}

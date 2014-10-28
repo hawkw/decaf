@@ -1,0 +1,12 @@
+
+*** Error line 7.
+  x = b;
+    ^
+*** Incompatible operands: int = bool
+
+
+*** Error line 9.
+  x = 4 + 1.0 / 5 * 3;
+              ^
+*** Incompatible operands: double / int
+

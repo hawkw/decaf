@@ -1,0 +1,21 @@
+interface Comparable {
+  bool equals(Comparable other);
+  Streamable GetStream();
+}
+
+interface Streamable {
+   void Stream(int a);
+}
+
+class Ruler implements Streamable,Comparable {
+   void Stream(int b) {}
+   bool equals(Comparable other) { return false; }
+   Streamable GetStream() { return this; }
+}
+
+void main()
+{
+    Comparable c;
+    Streamable[] s;
+    Ruler r;
+}

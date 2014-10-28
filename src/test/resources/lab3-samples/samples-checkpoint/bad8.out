@@ -1,0 +1,12 @@
+
+*** Error line 4.
+   bool f(int[] a) {}
+        ^
+*** Declaration of 'f' here conflicts with declaration on line 3
+
+
+*** Error line 9.
+   int a;
+       ^
+*** Declaration of 'a' here conflicts with declaration on line 2
+

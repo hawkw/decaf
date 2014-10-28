@@ -1,0 +1,42 @@
+
+*** Error line 2.
+   void Meet() { FindTime(); }
+                 ^^^^^^^^
+*** No declaration found for function 'FindTime'
+
+
+*** Error line 7.
+   nico = trish + katie;
+   ^^^^
+*** No declaration found for variable 'nico'
+
+
+*** Error line 7.
+   nico = trish + katie;
+          ^^^^^
+*** No declaration found for variable 'trish'
+
+
+*** Error line 7.
+   nico = trish + katie;
+                  ^^^^^
+*** No declaration found for variable 'katie'
+
+
+*** Error line 8.
+   cheryl();
+   ^^^^^^
+*** No declaration found for function 'cheryl'
+
+
+*** Error line 9.
+   tbc.Meeting(caroline);
+               ^^^^^^^^
+*** No declaration found for variable 'caroline'
+
+
+*** Error line 9.
+   tbc.Meeting(caroline);
+       ^^^^^^^
+*** Club has no such field 'Meeting'
+

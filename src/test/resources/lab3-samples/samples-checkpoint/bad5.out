@@ -1,0 +1,12 @@
+
+*** Error line 1.
+int Oops(int x, int x) {
+                    ^
+*** Declaration of 'x' here conflicts with declaration on line 1
+
+
+*** Error line 5.
+    void Winky(int a, double b, int[] a) {
+                                      ^
+*** Declaration of 'a' here conflicts with declaration on line 5
+

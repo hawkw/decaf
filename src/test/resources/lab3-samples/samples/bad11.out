@@ -1,0 +1,18 @@
+
+*** Error line 7.
+    void ToString(string s) {}
+         ^^^^^^^^
+*** Method 'ToString' must match inherited type signature
+
+
+*** Error line 6.
+class Number implements Printable {
+                        ^^^^^^^^^
+*** Class 'Number' does not implement entire interface 'Printable'
+
+
+*** Error line 14.
+     n = p;
+       ^
+*** Incompatible operands: Number = Printable
+

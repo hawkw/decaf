@@ -1,12 +1,11 @@
 package decaf.frontend
-
 import scala.util.parsing.input.{NoPosition, Positional, Position}
 
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
  *
- * I have made a couple tweaks to the pretty-printing code ([[DecafAST#ASTNode.stringify stringify()]]) here.
- * Specifically, we've decided that floating-point  numbers ([[DecafAST#ASTDoubleConstant ASTDoubleConstant]])
+ * I have made a couple tweaks to the pretty-printing code ([[ASTNode.stringify stringify()]]) here.
+ * Specifically, we've decided that floating-point  numbers ([[ASTDoubleConstant ASTDoubleConstant]])
  * without fractional parts should print out with a trailing "aesthetic" zero, as this indicates the number's identity
  * as a floating-point number.
  *
@@ -17,7 +16,6 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
  *
  * Created by hawk on 9/30/14.
  */
-trait DecafAST {
 
   /**
    * Abstract class for nodes in the Decaf abstract syntax tree.
@@ -26,10 +24,11 @@ trait DecafAST {
    *                 (i.e. [[StmtBlock]]) represent multiple lines and have no position, they will pass
    *                 [[scala.None None]] to the [[ASTNode]] constructor automagically.
    */
-  abstract sealed class ASTNode(val location: Option[Position]) extends Positional {
-    protected[DecafAST] var parent: ASTNode = null
-    this.setPos(location.getOrElse(NoPosition))
-    def getPos = this.location.getOrElse(null)
+  abstract sealed class ASTNode(location: Position) extends Positional {
+    var color: Boolean = false
+    var state: Option[ScopeNode] = None
+    var parent: ASTNode = null
+    this.setPos(location)
 
     /**
      * Returns the name of this node type for printing.
@@ -39,7 +38,7 @@ trait DecafAST {
      *
      * @return a String containing the name of this node type for printing
      */
-    protected[DecafAST] def getName: String = this.getClass.getSimpleName + ":"
+     def getName: String = this.getClass.getSimpleName + ":"
 
     /**
      * Returns a String representation of the tree with this node as the root node.
@@ -60,13 +59,11 @@ trait DecafAST {
      * @param label an optional label to attach to the node
      * @return a String containing the pretty-print representation of the node
      */
-    protected[DecafAST] def stringify (indentLevel: Int, label: Option[String]=None): String = {
+     def stringify (indentLevel: Int, label: Option[String]=None): String = {
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
-      if (location.isDefined)
-        result ++= ("%" + spaces + "d").format(location.get.line)
-      else result ++= " "* spaces
+      result ++= ("%" + spaces + "d").format(pos)
       result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
@@ -83,18 +80,16 @@ trait DecafAST {
      * @param indentLevel the level to indent the children of this node; this should be the indentlevel of this node + 1
      * @return pretty-printable String representations of this node's children
      */
-    protected[DecafAST] def stringifyChildren (indentLevel: Int): String
+     def stringifyChildren (indentLevel: Int): String
   }
 
-  case class ASTIdentifier(loc: Option[Position], name: String) extends ASTNode(loc) {
-    def this (name: String)  = this(None, name)
-    def this (loc: Position, name:String) = this (Some(loc), name)
+  case class ASTIdentifier(loc: Position, name: String) extends ASTNode(loc) {
 
     override def getName = "Identifier: " + name
     def stringifyChildren(indentLevel: Int) = ""
   }
 
-  case class Program(decls: List[Decl]) extends ASTNode(None) {
+  case class Program(decls: List[Decl], loc: Position) extends ASTNode(loc) {
     decls.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int): String = decls.foldLeft[String](""){
@@ -103,10 +98,11 @@ trait DecafAST {
   }
 
   /*----------------------- Statements ----------------------------------------------------------------------------*/
-  abstract class Stmt(locat: Option[Position]) extends ASTNode(locat)
+  abstract class Stmt(locat: Position) extends ASTNode(locat)
 
-  case class StmtBlock(decls: List[Decl],
-                       stmts: List[Stmt]) extends Stmt(None) {
+  case class StmtBlock(decls: List[VarDecl],
+                       stmts: List[Stmt],
+                       loc: Position) extends Stmt(loc) {
 
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
@@ -120,7 +116,7 @@ trait DecafAST {
     }
   }
 
-  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(None) {
+  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(testExpr.pos){
     testExpr.parent = this
     body.parent = this
   }
@@ -135,8 +131,8 @@ trait DecafAST {
     if (step.isDefined) step.get.parent = this
     loopBody.parent = this
 
-     def stringifyChildren(indentLevel: Int): String = {
-        ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
+    def stringifyChildren(indentLevel: Int): String = {
+      ( if (init.isDefined) { init.get.stringify(indentLevel + 1, Some("(init)")) } else {""} ) +
         test.stringify(indentLevel + 1, Some("(test)")) +
         ( if (step.isDefined) { step.get.stringify(indentLevel + 1, Some("(step)")) } else {""} ) +
         loopBody.stringify(indentLevel + 1, Some("(body)"))
@@ -144,7 +140,7 @@ trait DecafAST {
   }
 
   case class WhileStmt(test: Expr, loopBody: Stmt) extends LoopStmt(test, loopBody) {
-     def stringifyChildren(indentLevel: Int): String = test.stringify(indentLevel + 1, Some("(test)")) +
+    def stringifyChildren(indentLevel: Int): String = test.stringify(indentLevel + 1, Some("(test)")) +
       loopBody.stringify(indentLevel + 1, Some("(body)"))
   }
 
@@ -152,45 +148,45 @@ trait DecafAST {
     def this(test: Expr, testBody: Stmt, elseBody: Stmt)  = this(test, testBody, Some(elseBody))
     def this(test: Expr, testBody: Stmt) = this(test, testBody, None)
     if (elseBody.isDefined) {elseBody.get.parent = this}
-     def stringifyChildren(indentLevel: Int): String = {
+    def stringifyChildren(indentLevel: Int): String = {
       test.stringify(indentLevel + 1, Some("(test)")) +
         testBody.stringify(indentLevel + 1, Some("(then)")) +
         (if (elseBody.isDefined) { elseBody.get.stringify(indentLevel + 1, Some("(else)")) } else { "" })
     }
   }
 
-  case class BreakStmt(loc: Position) extends Stmt(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+  case class BreakStmt(loc: Position) extends Stmt(loc) {
+    def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(Some(loc)) {
+  case class ReturnStmt(loc: Position, expr: Option[Expr]) extends Stmt(loc) {
     if (expr.isDefined)
       expr.get.parent = this
 
-    def stringifyChildren(indentLevel: Int): String = (if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""})
+    def stringifyChildren(indentLevel: Int): String = if (expr.isDefined) { expr.get.stringify(indentLevel + 1) } else {""}
   }
 
-  case class PrintStmt(args: List[Expr]) extends Stmt(None) {
+  case class PrintStmt(args: List[Expr], loc:Position) extends Stmt(loc) {
     args.foreach{e => e.parent = this}
 
-     def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
+    def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
       (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(args)"))
     }
   }
 
-  case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase]) extends Stmt(None) {
+  case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase], loc: Position) extends Stmt(loc) {
     if (variable.isDefined) { variable.get.parent = this }
     cases.foreach{c => c.parent = this}
     if (default.isDefined) { default.get.parent = this }
     def stringifyChildren(indentLevel: Int): String = {
       (if (variable.isDefined) { variable.get.stringify(indentLevel + 1) } else {""}) +
-      cases.foldLeft[String](""){
-        (acc, c) => acc + c.stringify(indentLevel + 1)
-      } +
-      (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
+        cases.foldLeft[String](""){
+          (acc, c) => acc + c.stringify(indentLevel + 1)
+        } +
+        (if (default.isDefined) { default.get.stringify(indentLevel + 1) } else {""})
     }
   }
-  case class CaseStmt(value: Expr, body: List[Stmt]) extends Stmt(None) {
+  case class CaseStmt(value: Expr, body: List[Stmt], loc: Position) extends Stmt(loc) {
 
     value.parent = this
     body.foreach{_.parent = this}
@@ -204,7 +200,7 @@ trait DecafAST {
     }
   }
 
-  case class DefaultCase(body: List[Stmt]) extends Stmt(None) {
+  case class DefaultCase(body: List[Stmt], loc: Position) extends Stmt(loc) {
 
     body.foreach{_.parent = this}
 
@@ -218,48 +214,71 @@ trait DecafAST {
   }
 
   /*----------------------- Expressions ----------------------------------------------------------------------------*/
-  abstract class Expr(where: Option[Position]) extends Stmt(where) {}
+  abstract class Expr(where: Position) extends Stmt(where) {
+    def typeof(scope: ScopeNode): Type
+  }
 
-  case class EmptyExpr() extends Expr(None) {
+  case class EmptyExpr(loc: Position) extends Expr(loc) {
     override def getName = "Empty:"
 
-     def stringifyChildren(indentLevel: Int): String = ""
-  }
+    override def typeof(scope: ScopeNode): Type = VoidType(loc)
 
-  case class ASTIntConstant(loc: Position, value: Int) extends Expr(Some(loc)) {
-    override def getName = "IntConstant: "
-     def stringifyChildren(indentLevel: Int): String = value.toString
-  }
-
-  case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(Some(loc)) {
-    override def getName = "DoubleConstant: "
-    def stringifyChildren(indentLevel: Int): String = value.toString
-  }
-
-  case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(Some(loc)) {
-    override def getName = "BoolConstant: "
-    def stringifyChildren(indentLevel: Int): String = value.toString
-  }
-
-  case class ASTStringConstant(loc: Position, value: String) extends Expr(Some(loc)) {
-    override def getName = "StringConstant: "
-    def stringifyChildren(indentLevel: Int): String = value
-  }
-
-  case class ASTNullConstant(loc: Position) extends Expr(Some(loc)) {
-    override def getName = "NullConstant: "
     def stringifyChildren(indentLevel: Int): String = ""
   }
 
-  case class ASTOperator(loc: Position, token: String) extends Expr(Some(loc)) {
+  case class ASTIntConstant(loc: Position, value: Int) extends Expr(loc) {
+    override def getName = "IntConstant: "
+
+    override def typeof(scope: ScopeNode): Type = IntType(loc)
+
+    def stringifyChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class ASTDoubleConstant(loc: Position, value: Double) extends Expr(loc) {
+    override def getName = "DoubleConstant: "
+
+    override def typeof(scope: ScopeNode): Type = DoubleType(loc)
+
+    def stringifyChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class ASTBoolConstant(loc: Position, value: Boolean) extends Expr(loc) {
+    override def getName = "BoolConstant: "
+
+    override def typeof(scope: ScopeNode): Type = BoolType(loc)
+
+    def stringifyChildren(indentLevel: Int): String = value.toString
+  }
+
+  case class ASTStringConstant(loc: Position, value: String) extends Expr(loc) {
+    override def getName = "StringConstant: "
+
+    override def typeof(scope: ScopeNode): Type = StringType(loc)
+
+    def stringifyChildren(indentLevel: Int): String = value
+  }
+
+  case class ASTNullConstant(loc: Position) extends Expr(loc) {
+    override def getName = "NullConstant: "
+
+    override def typeof(scope: ScopeNode): Type = NullType(loc)
+
+    def stringifyChildren(indentLevel: Int): String = ""
+  }
+
+  case class ASTOperator(loc: Position, token: String) extends ASTNode(loc) {
     override def getName = "Operator: "
+
+    //TODO: Is this even correct?
+    //override def typeof(scope: ScopeNode): Type = ???
+
     def stringifyChildren(indentLevel: Int): String = token
   }
 
   abstract class CompoundExpr(loc: Position,
                               protected val left: Option[Expr],
                               protected val op: ASTOperator,
-                              protected val right: Expr) extends Expr(Some(loc)) {
+                              protected val right: Expr) extends Expr(loc) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
@@ -277,15 +296,45 @@ trait DecafAST {
   }
 
 
-  case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
+      case (StringType(_), ASTOperator(_, "+"), _) => StringType(l)
+      case (_, ASTOperator(_, "+"), StringType(l)) => StringType(l)
+      case (IntType(_), _, IntType(_)) => IntType(l)
+      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
+      // type lifting int -> double
+      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
+      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(l)
+      case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
+        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
+      case (e: ErrorType,_,_) => e // Most specific error bubbles through
+      case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
+    }
+  }
 
-  case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType(l) // butts are null
+    }
+  }
 
-  case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs)
+  case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType(l)
+    }
+  }
 
   case class PostfixExpr(l: Position, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, None, o, rhs) {
     override def stringifyChildren(indentLevel: Int): String = {
       rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
+    }
+    override def typeof(scope: ScopeNode): Type = rhs.typeof(scope) match {
+      case e: ErrorType => e //TODO: Stub
+      case _ => NullType(l)
     }
   }
 
@@ -293,21 +342,47 @@ trait DecafAST {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
+    override def typeof(scope: ScopeNode): Type = lhs match {
+        case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
+        case (e: ErrorType, _) => e //TODO: Stub
+        case (_, e: ErrorType) => e
+        case (_, _) => NullType(l)
+      }
+      case None => rhs.typeof(scope) match {
+        case e: ErrorType => e
+        case _ => NullType(l)
+      }
+    }
+
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
     override def stringifyChildren(indentLevel: Int): String = {
-     right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
-     else {
-       ""
-     })
+      right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
+      else {
+        ""
+      })
+    }
+    override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
+      case (e: ErrorType, _) => e //TODO: Stub
+      case (_,e: ErrorType) => e
+      case (_,_) => NullType(l)
     }
   }
 
-  abstract class LValue(loc: Position) extends Expr(Some(loc))
+  abstract class LValue(loc: Position) extends Expr(loc)
 
-  case class This(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+  case class This(loc: Position) extends Expr(loc) {
+    def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
+      val t = scope.table.get("this").get
+      t match {
+        case c: ClassAnnotation => c.name
+        case _ => new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+      }
+    } else {
+      new ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
+    }
   }
 
   case class ArrayAccess(loc: Position, base: Expr, subscript: Expr) extends LValue(loc) {
@@ -316,8 +391,9 @@ trait DecafAST {
 
     override def stringifyChildren(indentLevel: Int): String = {
       base.stringify(indentLevel + 1) +
-      subscript.stringify(indentLevel + 1, Some("(subscript)"))
+        subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
   case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
@@ -328,44 +404,85 @@ trait DecafAST {
     field.parent = this
     if (base.isDefined) base.get.parent = this
 
-     def stringifyChildren(indentLevel: Int): String = {
-       (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
+    def stringifyChildren(indentLevel: Int): String = {
+      (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
       else {
         ""
       }) +
         field.stringify(indentLevel + 1)
     }
+    override def typeof(scope: ScopeNode): Type = base match {
+      case Some(b) => b.typeof(scope) match {
+        case NamedType(name) => if (scope.table chainContains name.name) {
+          scope.table.get(name.name).get match {
+            case VariableAnnotation(_,where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", where)
+            case MethodAnnotation(_, _, where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+              "\n*** please contact the decaf implementors and I am sorry", where)
+            case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
+              case Some(thing) => thing match {
+                case VariableAnnotation(t, _) => t
+                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
+                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
+              }
+              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", where)
+            }
+          }
+        } else {
+          UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
+        }
+        // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
+        // something that should be impossible for it to generate.
+        case _ => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
+          "\n*** please contact the decaf implementors and I am sorry", loc)
+      }
+
+      case None => if (scope.table chainContains field.name) {
+        scope.table.get(field.name).get match {
+          case VariableAnnotation(t, _) => t
+          case MethodAnnotation(_,_,where) => new ErrorType("*** Attempt to field access a method", where)
+          case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
+        }
+      } else {
+        UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+      }
+    }
   }
 
-  case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(Some(loc)) {
+  case class Call(loc: Position, base: Option[Expr], field: ASTIdentifier, args: List[Expr]) extends Expr(loc) {
     def this(loc: Position, base: Expr, field: ASTIdentifier, args: List[Expr]) = this(loc, Some(base), field, args)
 
     def this(loc: Position, field: ASTIdentifier, args: List[Expr]) = this(loc, None, field, args: List[Expr])
 
-     def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
+    def stringifyChildren(indentLevel: Int): String = (if (base.isDefined) { base.get.stringify(indentLevel + 1) }
     else {
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class NewExpr(loc: Position, cType: NamedType) extends Expr(Some(loc)) {
+  case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
     cType.parent = this
-     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
+    def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(Some(loc)) {
+  case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(loc) {
     size.parent = this
     elemType.parent = this
-     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
+    def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class ReadIntegerExpr(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+  case class ReadIntegerExpr(loc: Position) extends Expr(loc) {
+    def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
 
-  case class ReadLineExpr(loc: Position) extends Expr(Some(loc)) {
-     def stringifyChildren(indentLevel: Int): String = ""
+  case class ReadLineExpr(loc: Position) extends Expr(loc) {
+    def stringifyChildren(indentLevel: Int): String = ""
+    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
@@ -396,9 +513,9 @@ trait DecafAST {
 
     def stringifyChildren(indentLevel: Int) = {
       name.stringify(indentLevel +1) +
-      (if (extnds.isDefined) {
-        extnds.get.stringify(indentLevel+1, Some("(extends)"))
-      } else {""}) + implements.foldLeft[String](""){
+        (if (extnds.isDefined) {
+          extnds.get.stringify(indentLevel+1, Some("(extends)"))
+        } else {""}) + implements.foldLeft[String](""){
         (acc, nt) => acc + nt.stringify(indentLevel + 1, Some("(implements)"))
       } + members.foldLeft[String](""){
         (acc, decl) => acc + decl.stringify(indentLevel + 1)
@@ -440,29 +557,28 @@ trait DecafAST {
   }
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
-  abstract class Type(typeName: String, loc: Option[Position]) extends ASTNode(loc) {
+  abstract class Type(val typeName: String, loc: Position) extends ASTNode(loc) {
     override def getName = "Type: "
-    protected[DecafAST] def stringifyChildren(indentLevel: Int): String = typeName
+     def stringifyChildren(indentLevel: Int): String = typeName
   }
   // builtin classes for primitive types
-  case class IntType() extends Type("int", None)
-  case class DoubleType() extends Type("double", None)
-  case class BoolType() extends Type("bool", None)
-  case class VoidType() extends Type("void", None)
-  case class NullType() extends Type("null", None)
-  case class StringType() extends Type("string", None)
-  case class ErrorType() extends Type("error", None)
+  case class IntType(loc: Position) extends Type("int", loc)
+  case class DoubleType(loc: Position) extends Type("double", loc)
+  case class BoolType(loc: Position) extends Type("bool", loc)
+  case class VoidType(loc: Position) extends Type("void", loc)
+  case class NullType(loc: Position) extends Type("null", loc)
+  case class StringType(loc: Position) extends Type("string", loc)
+  class ErrorType(message: String, where: Position) extends Type("error", where)
+  case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
-  case class NamedType(name: ASTIdentifier) extends Type(name.getName, Some(name.getPos)) {
+  case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Option[Position], elemType: Type) extends Type("", locat) {
+  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + " Array", locat) {
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }
-
-}
