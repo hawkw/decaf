@@ -25,6 +25,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
    *                 [[scala.None None]] to the [[ASTNode]] constructor automagically.
    */
   abstract sealed class ASTNode(location: Position) extends Positional {
+    val printLine = true
     var color: Boolean = false
     var state: Option[ScopeNode] = None
     var parent: ASTNode = null
@@ -63,7 +64,10 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
-      result ++= ("%" + spaces + "d").format(pos)
+      if (printLine)
+        result ++= ("%" + spaces + "d").format(pos.line)
+      else
+        result ++= " "* spaces
       result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
@@ -90,6 +94,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   case class Program(decls: List[Decl], loc: Position) extends ASTNode(loc) {
+    override val printLine = false
     decls.foreach{d => d.parent = this}
 
     def stringifyChildren(indentLevel: Int): String = decls.foldLeft[String](""){
@@ -103,7 +108,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class StmtBlock(decls: List[VarDecl],
                        stmts: List[Stmt],
                        loc: Position) extends Stmt(loc) {
-
+    override val printLine=false
     decls.foreach(d => d.parent = this)
     stmts.foreach(s => s.parent = this)
 
@@ -117,6 +122,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(testExpr.pos){
+    override val printLine = false
     testExpr.parent = this
     body.parent = this
   }
@@ -167,6 +173,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   case class PrintStmt(args: List[Expr], loc:Position) extends Stmt(loc) {
+    override val printLine = false
     args.foreach{e => e.parent = this}
 
     def stringifyChildren(indentLevel: Int): String = args.foldLeft[String](""){
@@ -175,6 +182,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   case class SwitchStmt(variable: Option[Expr], cases: List[CaseStmt], default: Option[DefaultCase], loc: Position) extends Stmt(loc) {
+    override val printLine = false
     if (variable.isDefined) { variable.get.parent = this }
     cases.foreach{c => c.parent = this}
     if (default.isDefined) { default.get.parent = this }
@@ -187,7 +195,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
   case class CaseStmt(value: Expr, body: List[Stmt], loc: Position) extends Stmt(loc) {
-
+    override val printLine = false
     value.parent = this
     body.foreach{_.parent = this}
 
@@ -201,7 +209,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   case class DefaultCase(body: List[Stmt], loc: Position) extends Stmt(loc) {
-
+    override val printLine = false
     body.foreach{_.parent = this}
 
     override def getName = "Default:"
@@ -219,6 +227,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   }
 
   case class EmptyExpr(loc: Position) extends Expr(loc) {
+    override val printLine = false
     override def getName = "Empty:"
 
     override def typeof(scope: ScopeNode): Type = VoidType(loc)
@@ -558,6 +567,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   /*----------------------- Types ---------------------------------------------------------------------------------*/
   abstract class Type(val typeName: String, loc: Position) extends ASTNode(loc) {
+    override val printLine = false
     override def getName = "Type: "
      def stringifyChildren(indentLevel: Int): String = typeName
   }
@@ -572,12 +582,14 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
+    override val printLine = true
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
   case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + " Array", locat) {
+    override val printLine = true
     override def getName = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
