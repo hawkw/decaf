@@ -63,7 +63,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       val spaces = 3
       val result = new StringBuilder
       result += '\n'
-      result ++= ("%" + spaces + "d").format(pos)
+      result ++= ("%" + spaces + "d").format(pos.line)
       result ++= " " * (indentLevel*spaces) + (label match { case None => "" case Some(s) => s + " "}) + getName
       result ++= stringifyChildren(indentLevel)
 
