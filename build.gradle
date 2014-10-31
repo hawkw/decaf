@@ -1,15 +1,17 @@
 apply plugin: "java"
 apply plugin: "scala"
 apply plugin: "idea"
-apply plugin: 'gradle-one-jar'
 
-buildscript {
-    repositories {
-        mavenCentral()
+/*
+ * Gets the version name from the latest Git tag
+ */
+def getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
     }
-    dependencies {
-        classpath 'com.github.rholder:gradle-one-jar:1.0.4'
-    }
+    return stdout.toString().trim()
 }
 
 repositories {
@@ -19,6 +21,7 @@ repositories {
 }
 
 sourceCompatibility = '1.7'
+version = getVersionName
 
 // define a configuration for scala compiler plugins
 // the transitive=false means that the plugin won't show up
@@ -27,6 +30,8 @@ configurations {
     //noinspection GroovyAssignabilityCheck
     scalaCompilerPlugins { transitive = false }
 }
+
+
 
 tasks.withType(ScalaCompile) {
     // use zinc-based incremental compiler
@@ -57,22 +62,21 @@ test << {
     }
 }
 
-jar {
-    manifest {
-        attributes( 'Main-Class': 'decaf.Compiler',
-                    'Created-By': 'Hawk Weisman & Matthew Clive',
-                    'Class-Path': configurations.runtime
-        )
-    }
-}
-
-task dccJar(type: OneJar) {
+task dccJar(type: Jar) {
     description "Create runnable dcc jarfile"
-    mainClass = 'decaf.Compiler'
+    manifest {
+        attributes(
+                'Implementation-Title': 'Decaf',
+                'Implementation-Version': version,
+                'Created-By': 'Hawk Weisman & Matthew Clive',
+                'Main-Class': 'decaf.Compiler',
+                'Class-Path': configurations.runtime
+            )
+    }
     archiveName = 'dcc.jar'
-    mergeManifestFromJar = true
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
-
 
 
 
