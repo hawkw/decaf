@@ -308,37 +308,4 @@ class DecafSyntactical extends Parsers with DecafTokens with PackratParsers {
       case x: Error => throw new RuntimeException(x.toString())
     }
   }
-} /*
-
-
-  def eexpr: Parser[Expr] = (
-      const
-    )
-
-  def expr: Parser[Expr] = (
-
-    )
-
-  def call: Parser[Call] = (
-    ident ~  Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
-      case field ~ Delimiter("(") ~ args ~ Delimiter(")")  => new Call(field.pos, field, args)
-    }
-    | expr ~ Delimiter(".") ~ ident ~ Delimiter("(") ~ repsep(expr, Delimiter(",")) ~ Delimiter(")") ^^{
-      case base ~ Delimiter(".") ~ field ~ Delimiter("(") ~ args ~ Delimiter(")")  =>
-        new Call(base.pos, base, field, args)
-    }
-    )
-  def functionDecl: Parser[Decl] = returnType ~ ident ~ Delimiter("(") ~ formals.? ~ Delimiter(")") ~ stmtBlock ^^{
-      case rt ~ name ~ _ ~ fs ~ _ ~ body => FnDecl( name, rt, fs.getOrElse(Nil), body)
-    }
-  def classDecl: Parser[Decl] =
-    Keyword("class") ~> ident ~ extendPart.? ~ implementsPart ~ Delimiter("{") ~ rep(field) ~ Delimiter("}") ^^{
-      case name ~ ext  ~ imp ~ Delimiter("{") ~ fields ~ Delimiter("}") => ClassDecl(name, ext, imp, fields)
-    }
-  def extendPart: Parser[NamedType] = Keyword("extends") ~> className
-  def implementsPart: Parser[List[NamedType]] = Keyword("implements") ~> repsep(className, Delimiter(","))
-  def field: Parser[Decl] = (variableDecl | functionDecl)
-
-  def className: Parser[NamedType] = ident ^^{ case i=> NamedType(i) }
-
-  */
+}

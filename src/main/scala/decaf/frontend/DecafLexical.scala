@@ -32,7 +32,9 @@ trait DecafTokens extends Tokens {
   sealed abstract class DecafToken(val chars: String) extends Token with Positional {
     def value: Any = None
 
-    def name = "T_" + this.getClass.getSimpleName
+    def getPos = this.pos
+
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name"
 
     def spaces = " " * (12 - chars.length)
 
@@ -42,37 +44,38 @@ trait DecafTokens extends Tokens {
 
     def last_col = pos.column + (chars.length - 1)
 
-    def getPos = this.pos
-
-    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name"
     override def equals(obj: Any) = obj match {
-      case that: DecafToken => (this.name == that.name)
+      case that: DecafToken => this.name == that.name
       case _ => false
     }
+
+    def name = "T_" + this.getClass.getSimpleName
   }
 
   case class IntConstant(ch: String) extends DecafToken(ch) {
+    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
+
     override def value: Integer = if (chars.contains("0x") || chars.contains("0X"))
       Integer.parseInt(chars.drop(2), 16)
     else chars.toInt
-
-    override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
   }
 
   case class BoolConstant(ch: String) extends DecafToken(ch) {
-    override def value: Boolean = chars.toBoolean
-
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
+
+    override def value: Boolean = chars.toBoolean
   }
 
   case class StringConstant(ch: String) extends DecafToken(ch) {
-    override def value: String = chars
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
+
+    override def value: String = chars
   }
 
   case class DoubleConstant(ch: String) extends DecafToken(ch) {
-    override def value: Double = chars.toDouble
     override def toString = s"$chars$spaces line $line cols $first_col-$last_col is $name (value = $value)"
+
+    override def value: Double = chars.toDouble
   }
 
   case class Identifier(ch: String) extends DecafToken(ch) {
@@ -111,20 +114,17 @@ trait DecafTokens extends Tokens {
  * Created by hawk on 9/27/14.
  */
 
-class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafTokens with Scanners {
+class DecafLexical extends Lexical with DecafTokens with Scanners {
 
   type Token = DecafToken
 
-  val keywords = HashSet("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
+  val keywords = Set("void", "int", "double", "bool", "string", "null", "class", "extends", "this", "interface",
   "implements", "while", "for", "if", "switch", "case", "default", "else", "return", "break", "new", "NewArray",
   "Print", "ReadInteger", "ReadLine")
 
-  val boolLit = HashSet("true", "false")
+  val boolLit = Set("true", "false")
 
   def chrIn(cs: Char*) = elem("", ch => cs contains ch)
-
-  protected def exponent = chrIn('e', 'E') ~ chrIn('+', '-').? ~ digit.+ ^^ { case first ~ sign ~ rest => first :: sign.getOrElse("") :: rest mkString ""}
-  protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
 
   def program: Parser[List[Any]] = rep(token) ^^ { case tokens => tokens.filter(!_.isInstanceOf[Ignore])}
 
@@ -158,13 +158,6 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
     | failure("Error: Unrecognized character")
    )
 
-
-  protected def processIdent(chars: String) = if (keywords contains chars)
-                                              Keyword(chars)
-                                            else if (boolLit contains chars)
-                                              BoolConstant(chars)
-                                            else Identifier(chars)
-
   def whitespace: Parser[Any] = rep[Any](
     whitespaceChar
       | '/' ~ '*' ~ comment
@@ -172,29 +165,46 @@ class DecafLexical(val trackPos: Boolean = true) extends Lexical with DecafToken
       | '/' ~ '*' ~ failure("unclosed comment")
   )
 
+  protected def exponent = chrIn('e', 'E') ~ chrIn('+', '-').? ~ digit.+ ^^ { case first ~ sign ~ rest => first :: sign.getOrElse("") :: rest mkString ""}
+
+  protected def hexLetter = chrIn('a','b','c','d','e','f','A','B','C','D','E','F')
+
+  protected def processIdent(chars: String) = if (keywords(chars))
+                                              Keyword(chars)
+                                            else if (boolLit(chars))
+                                              BoolConstant(chars)
+                                            else Identifier(chars)
+
   protected def comment: Parser[Any] = (
     '*' ~ '/' ^^ { case _ => ' '}
       | chrExcept(EofCh) ~ comment
     )
 
   class DecafScanner(in: Reader[Char]) extends Reader[DecafToken] {
-    /** Convenience constructor (makes a character reader out of the given string) */
-    def this(in: String) = this(new CharArrayReader(in.toCharArray()))
     private val (tok, rest1, rest2) = whitespace(in) match {
       case Success(_, in1) =>
         token(in1) match {
-          case Success(tok, in2) => (tok, in1, in2)
+          case Success(token, in2) => (token, in1, in2)
           case ns: NoSuccess => (errorToken(ns.msg), ns.next, skip(ns.next))
         }
       case ns: NoSuccess => (errorToken(ns.msg), ns.next, skip(ns.next))
     }
-    private def skip(in: Reader[Char]) = if (in.atEnd) in else in.rest
+
+    /** Convenience constructor (makes a character reader out of the given string) */
+    def this(in: String) = this(new CharArrayReader(in.toCharArray))
 
     override def source: java.lang.CharSequence = in.source
+
     override def offset: Int = in.offset
+
     def first = tok.asInstanceOf[Token]
+
     def rest = new Scanner(rest2)
+
     def pos = rest1.pos
+
     def atEnd = in.atEnd || (whitespace(in) match { case Success(_, in1) => in1.atEnd case _ => false })
+
+    private def skip(in: Reader[Char]) = if (in.atEnd) in else in.rest
   }
 }
