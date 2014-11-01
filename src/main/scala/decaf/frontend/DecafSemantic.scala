@@ -11,7 +11,7 @@ import scala.util.parsing.input.Position
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
   lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
 
-  override def toString: String = s"$lineOfCode\n$message"
+  override def toString: String = s"$lineOfCode\n$message\n"
 
 }
 class IllegalClassInheritanceCycle(className: String, where: Position)
@@ -297,8 +297,8 @@ object DecafSemantic {
   def checkTypeExists(node: ScopeNode,pos: Position, value: Type, compilerProblems: mutable.Queue[Exception]): Unit = {
     value match {
       case n: NamedType =>
-        if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
-      case ArrayType(_, t) => checkTypeExists(node,pos, t, compilerProblems)
+        if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, pos)
+      case ArrayType(_, t) => checkTypeExists(node, pos, t, compilerProblems)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) =>
       case UndeclaredType(_,_) | _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", pos)
     }
@@ -349,7 +349,7 @@ object DecafSemantic {
       case p: Program => p.decls.foreach(realCheckTypes(_, compilerProblems))
       case v: VarDecl => {
         if(v.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + v)
-        checkTypeExists(v.state.get, v.pos, v.t, compilerProblems)
+        checkTypeExists(v.state.get, v.t.pos, v.t, compilerProblems)
       }
       case c: ClassDecl => {
         if(c.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + c)
@@ -370,7 +370,7 @@ object DecafSemantic {
         if(f.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + f)
         val scope = f.state.get
         checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
-        f.formals.foreach(v => checkTypeExists(v.state.get, v.pos, v.t, compilerProblems))
+        f.formals.foreach(realCheckTypes(_, compilerProblems))
         if(f.body.isDefined) realCheckTypes(f.body.get, compilerProblems)
       }
       case s: StmtBlock => {
@@ -379,7 +379,7 @@ object DecafSemantic {
         s.decls.foreach(realCheckTypes(_, compilerProblems))
         s.stmts.foreach(realCheckTypes(_, compilerProblems))
       }
-      case c: ConditionalStmt => {
+      case i: IfStmt => {
         //TODO: Implement me, and other kinds of statement
       }
     }
@@ -428,6 +428,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("class A extends B {} class B extends A {}").toString)
+    println(compileToSemantic("int A; moo A;").toString)
   }
 }
