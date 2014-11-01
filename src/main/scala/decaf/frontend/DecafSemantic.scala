@@ -363,12 +363,19 @@ object DecafSemantic {
         elsebody.foreach(checkTypes(_, compilerProblems))
 
       case ForStmt(init, test, step, body) =>
+        test.typeof(scope) match {
+          case BoolType(_) => {}
+          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        }
         init.foreach(checkTypes(_, compilerProblems))
-        checkTypes(test, compilerProblems)
         step.foreach(checkTypes(_, compilerProblems))
         checkTypes(body, compilerProblems)
 
       case WhileStmt(test, body) =>
+        test.typeof(scope) match {
+          case BoolType(_) => {}
+          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        }
         checkTypes(body, compilerProblems)
         checkTypes(test, compilerProblems)
 
