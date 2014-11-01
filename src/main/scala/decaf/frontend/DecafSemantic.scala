@@ -335,9 +335,9 @@ object DecafSemantic {
         checkTypeExists(v.state.get, v.t.pos, v.t, compilerProblems)
 
       case c: ClassDecl =>
-        if(c.extnds.isDefined) {
-          verifyClassChain(scope, List[String](), c.extnds.get, c.pos, compilerProblems)
-        }
+        c.extnds.foreach(
+          verifyClassChain(scope, List[String](), _, c.pos, compilerProblems)
+        )
         c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
         c.members.foreach(checkTypes(_, compilerProblems))
 
@@ -347,7 +347,7 @@ object DecafSemantic {
       case f: FnDecl =>
         checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
         f.formals.foreach(checkTypes(_, compilerProblems))
-        if(f.body.isDefined) checkTypes(f.body.get, compilerProblems)
+        f.body.foreach(checkTypes(_, compilerProblems))
 
       case s: StmtBlock =>
         s.decls.foreach(checkTypes(_, compilerProblems))
