@@ -325,9 +325,9 @@ object DecafSemantic {
     }
   }
 
-  def realCheckTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def checkTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
     ast match {
-      case p: Program => p.decls.foreach(realCheckTypes(_, compilerProblems))
+      case p: Program => p.decls.foreach(checkTypes(_, compilerProblems))
 
       case v: VarDecl =>
         if(v.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + v)
@@ -340,25 +340,25 @@ object DecafSemantic {
           verifyClassChain(scope, List[String](), c.extnds.get, c.pos, compilerProblems)
         }
         c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
-        c.members.foreach(realCheckTypes(_, compilerProblems))
+        c.members.foreach(checkTypes(_, compilerProblems))
 
       case i: InterfaceDecl =>
         if(i.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + i)
         val scope = i.state.get
-        i.members.foreach(realCheckTypes(_, compilerProblems))
+        i.members.foreach(checkTypes(_, compilerProblems))
 
       case f: FnDecl =>
         if(f.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + f)
         val scope = f.state.get
         checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
-        f.formals.foreach(realCheckTypes(_, compilerProblems))
-        if(f.body.isDefined) realCheckTypes(f.body.get, compilerProblems)
+        f.formals.foreach(checkTypes(_, compilerProblems))
+        if(f.body.isDefined) checkTypes(f.body.get, compilerProblems)
 
       case s: StmtBlock =>
         if(s.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + s)
         val scope = s.state.get
-        s.decls.foreach(realCheckTypes(_, compilerProblems))
-        s.stmts.foreach(realCheckTypes(_, compilerProblems))
+        s.decls.foreach(checkTypes(_, compilerProblems))
+        s.stmts.foreach(checkTypes(_, compilerProblems))
 
       case i: IfStmt =>
         //TODO: Implement me, and other kinds of statement
@@ -395,7 +395,7 @@ object DecafSemantic {
     decorateScope(top, tree)
     val problems = mutable.Queue[Exception]()
     pullDeclsToScope(top, problems)
-    realCheckTypes(top, problems)
+    checkTypes(top, problems)
     problems.map(System.err.println(_))
     top.state.get
   }
