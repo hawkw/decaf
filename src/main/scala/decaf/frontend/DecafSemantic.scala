@@ -354,8 +354,9 @@ object DecafSemantic {
         s.stmts.foreach(checkTypes(_, compilerProblems))
 
       case i: IfStmt =>
-        i.test
-        //TODO: Implement me, and other kinds of statement
+        checkTypes(i.test, compilerProblems)
+        checkTypes(i.testBody, compilerProblems)
+        i.elseBody.foreach(checkTypes(_, compilerProblems))
     }
   }
 
