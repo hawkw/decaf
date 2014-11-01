@@ -26,6 +26,9 @@ class UndeclaredTypeException(name: String, where: Position)
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
 
+class InvalidTestException(where: Position)
+  extends SemanticException("*** Test expression must have boolean type", where)
+
 abstract class TypeAnnotation(where: Position) {
   def matches(that: TypeAnnotation): Boolean
 }
@@ -326,43 +329,50 @@ object DecafSemantic {
   }
 
   def checkTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
-    if(ast.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
+    if(!ast.isInstanceOf[Program] && ast.state.isEmpty)
+      throw new IllegalArgumentException("Tree does not contain scope for " + ast)
     val scope = ast.state.get
     ast match {
-      case p: Program => p.decls.foreach(checkTypes(_, compilerProblems))
+      case Program(d) => d.foreach(checkTypes(_, compilerProblems))
 
-      case v: VarDecl =>
-        checkTypeExists(v.state.get, v.t.pos, v.t, compilerProblems)
+      case VarDecl(_, typ) =>
+        checkTypeExists(ast.state.get, typ.pos, typ, compilerProblems)
 
-      case c: ClassDecl =>
-        c.extnds.foreach(
-          verifyClassChain(scope, List[String](), _, c.pos, compilerProblems)
-        )
-        c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
-        c.members.foreach(checkTypes(_, compilerProblems))
+      case ClassDecl(_, ext, impl, mems) =>
+        ext.foreach(verifyClassChain(scope, List[String](), _, ast.pos, compilerProblems))
+        impl.foreach(checkTypeExists(scope, ast.pos, _, compilerProblems))
+        mems.foreach(checkTypes(_, compilerProblems))
 
-      case i: InterfaceDecl =>
-        i.members.foreach(checkTypes(_, compilerProblems))
+      case InterfaceDecl(_, members) => members.foreach(checkTypes(_, compilerProblems))
 
-      case f: FnDecl =>
-        checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
-        f.formals.foreach(checkTypes(_, compilerProblems))
-        f.body.foreach(checkTypes(_, compilerProblems))
+      case FnDecl(_, rt, formals, body) =>
+        checkTypeExists(scope, ast.pos, rt, compilerProblems)
+        formals.foreach(checkTypes(_, compilerProblems))
+        body.foreach(checkTypes(_, compilerProblems))
 
-      case s: StmtBlock =>
-        s.decls.foreach(checkTypes(_, compilerProblems))
-        s.stmts.foreach(checkTypes(_, compilerProblems))
+      case StmtBlock(decls, stmts) =>
+        decls.foreach(checkTypes(_, compilerProblems))
+        stmts.foreach(checkTypes(_, compilerProblems))
 
-      case i: IfStmt =>
-        checkTypes(i.test, compilerProblems)
-        checkTypes(i.testBody, compilerProblems)
-        i.elseBody.foreach(checkTypes(_, compilerProblems))
+      case IfStmt(test, ifbody, elsebody) =>
+        test.typeof(scope) match {
+          case BoolType(_) => {}
+          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        }
+        checkTypes(ifbody, compilerProblems)
+        elsebody.foreach(checkTypes(_, compilerProblems))
 
-      case f: ForStmt =>
-        f.init.foreach(checkTypes(_, compilerProblems))
-        checkTypes(f.test, compilerProblems)
-        f.step.foreach(checkTypes(_, compilerProblems))
-        checkTypes(f.loopBody, compilerProblems)
+      case ForStmt(init, test, step, body) =>
+        init.foreach(checkTypes(_, compilerProblems))
+        checkTypes(test, compilerProblems)
+        step.foreach(checkTypes(_, compilerProblems))
+        checkTypes(body, compilerProblems)
+
+      case WhileStmt(test, body) =>
+        checkTypes(body, compilerProblems)
+        checkTypes(test, compilerProblems)
+
+      case
     }
   }
 
