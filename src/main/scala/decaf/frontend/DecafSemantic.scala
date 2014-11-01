@@ -1,7 +1,6 @@
 package decaf.frontend
 
 import scala.collection.mutable
-import scala.collection.mutable.Queue
 
 import scala.util.parsing.input.Position
 
