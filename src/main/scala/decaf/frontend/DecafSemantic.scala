@@ -14,6 +14,9 @@ case class SemanticException(message: String, pos: Position) extends Exception(m
   override def toString: String = s"$lineOfCode\n$message"
 
 }
+class IllegalClassInheritanceCycle(className: String, where: Position)
+  extends SemanticException(s"*** Illegal cyclic class inheritance involving $className on line ${where.line}", where)
+
 class ConflictingDeclException(name: String, where: Position)
   extends SemanticException(s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}", where)
 
@@ -255,9 +258,9 @@ object DecafSemantic {
 
     val iscope = i.state.get
 
-    for(member <- i.members) {
-      annotateFunction(_, compilerProblems)
-    }
+    i.members.foreach({case m: FnDecl =>
+      annotateFunction(m, compilerProblems)}
+    )
 
     val pscope = i.state.get.parent
 
@@ -319,6 +322,28 @@ object DecafSemantic {
     scopeTree.children.foreach(simpleCheckTypes(_, compilerProblems))
   }
 
+  def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position, exceptions: Queue[Exception]): Unit = {
+    if(seen.contains(c.name.name)) {
+      exceptions += new IllegalClassInheritanceCycle(seen.head, p)
+    } else if(!scope.table.chainContains(c.name.name)) {
+      //Exception is silent in this case; since we will report it during general typechecking elsewhere.
+      //Unless we actually want to typecheck on this a billion times?
+    } else {
+      val t = scope.table.get(c.name.name).get
+      t match {
+        case otherc: ClassAnnotation => {
+          if(otherc.ext.isDefined) {
+            verifyClassChain(scope, seen ::: c.name.name :: Nil, otherc.name, p, exceptions)
+          } else {
+            //we've found a class which goes to ground, do we want to do anything here?
+            //I think no.
+          }
+        }
+        case _ => //what should we even cause here? I.e. the type we got was NOT a class.
+      }
+    }
+  }
+
   def realCheckTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
     ast match {
       case p: Program => p.decls.foreach(realCheckTypes(_, compilerProblems))
@@ -329,7 +354,10 @@ object DecafSemantic {
       case c: ClassDecl => {
         if(c.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + c)
         val scope = c.state.get
-        if(c.extnds.isDefined) checkTypeExists(scope, c.pos, c.extnds.get, compilerProblems)
+        if(c.extnds.isDefined) {
+          verifyClassChain(scope, List[String](), c.extnds.get, c.pos, compilerProblems)
+        }
+
         c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
         c.members.foreach(realCheckTypes(_, compilerProblems))
       }
@@ -351,7 +379,7 @@ object DecafSemantic {
         s.decls.foreach(realCheckTypes(_, compilerProblems))
         s.stmts.foreach(realCheckTypes(_, compilerProblems))
       }
-      case c: ConditionalStmt {
+      case c: ConditionalStmt => {
         //TODO: Implement me, and other kinds of statement
       }
     }
@@ -388,7 +416,7 @@ object DecafSemantic {
     decorateScope(top, tree)
     val problems = mutable.Queue[Exception]()
     pullDeclsToScope(top, problems)
-    simpleCheckTypes(top.state.get, problems)
+    realCheckTypes(top, problems)
     problems.map(System.err.println(_))
     top.state.get
   }
@@ -400,6 +428,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("class Cow implements Animal { int a; void talk(String how) { Farts q; } }\n interface Animal {void talk(String how);}\n interface Animal {} \nclass Cow {}\nvoid main(String[][] args) { cow a; {a = b; int b;{}} }").toString)
+    println(compileToSemantic("class A extends B {} class B extends A {}").toString)
   }
 }
