@@ -357,6 +357,12 @@ object DecafSemantic {
         checkTypes(i.test, compilerProblems)
         checkTypes(i.testBody, compilerProblems)
         i.elseBody.foreach(checkTypes(_, compilerProblems))
+
+      case f: ForStmt =>
+        f.init.foreach(checkTypes(_, compilerProblems))
+        checkTypes(f.test, compilerProblems)
+        f.step.foreach(checkTypes(_, compilerProblems))
+        checkTypes(f.loopBody, compilerProblems)
     }
   }
 
