@@ -304,24 +304,6 @@ object DecafSemantic {
     }
   }
 
-  def simpleCheckTypes(scopeTree: ScopeNode, compilerProblems: mutable.Queue[Exception]): Unit = {
-    scopeTree.table.keys.foreach { key =>
-      for(decl <- scopeTree.table.get(key)) {
-        decl match {
-          case m: MethodAnnotation =>
-            checkTypeExists(scopeTree, m.pos, m.returnType, compilerProblems)
-            m.formals.foreach(checkTypeExists(scopeTree,m.pos,_,compilerProblems))
-          case c: ClassAnnotation =>
-            if(c.ext.isDefined) checkTypeExists(scopeTree,c.pos, c.ext.get, compilerProblems)
-            c.implements.foreach(checkTypeExists(scopeTree,c.pos,_,compilerProblems))
-          case i: InterfaceAnnotation => //don't actually need to check any inherent types in this declaration.
-          case v: VariableAnnotation => checkTypeExists(scopeTree,v.pos, v.t, compilerProblems)
-        }
-      }
-    }
-    scopeTree.children.foreach(simpleCheckTypes(_, compilerProblems))
-  }
-
   def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position, exceptions: Queue[Exception]): Unit = {
     if(seen.contains(c.name.name)) {
       exceptions += new IllegalClassInheritanceCycle(seen.head, p)
