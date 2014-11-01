@@ -322,6 +322,10 @@ object DecafSemantic {
   def realCheckTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
     ast match {
       case p: Program => p.decls.foreach(realCheckTypes(_, compilerProblems))
+      case v: VarDecl => {
+        if(v.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + v)
+        checkTypeExists(v.state.get, v.pos, v.t, compilerProblems)
+      }
       case c: ClassDecl => {
         if(c.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + c)
         val scope = c.state.get
@@ -329,12 +333,26 @@ object DecafSemantic {
         c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
         c.members.foreach(realCheckTypes(_, compilerProblems))
       }
+      case i: InterfaceDecl => {
+        if(i.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + i)
+        val scope = i.state.get
+        i.members.foreach(realCheckTypes(_, compilerProblems))
+      }
       case f: FnDecl => {
         if(f.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + f)
         val scope = f.state.get
         checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
         f.formals.foreach(v => checkTypeExists(v.state.get, v.pos, v.t, compilerProblems))
         if(f.body.isDefined) realCheckTypes(f.body.get, compilerProblems)
+      }
+      case s: StmtBlock => {
+        if(s.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + s)
+        val scope = s.state.get
+        s.decls.foreach(realCheckTypes(_, compilerProblems))
+        s.stmts.foreach(realCheckTypes(_, compilerProblems))
+      }
+      case c: ConditionalStmt {
+        //TODO: Implement me, and other kinds of statement
       }
     }
   }
