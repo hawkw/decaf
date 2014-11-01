@@ -256,9 +256,7 @@ object DecafSemantic {
     val iscope = i.state.get
 
     for(member <- i.members) {
-      member match {
-        case f: FnDecl => annotateFunction(f, compilerProblems)
-      }
+      annotateFunction(_, compilerProblems)
     }
 
     val pscope = i.state.get.parent
@@ -298,8 +296,8 @@ object DecafSemantic {
       case n: NamedType =>
         if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, node.statement.pos)
       case ArrayType(_, t) => checkTypeExists(node,pos, t, compilerProblems)
-      case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) | UndeclaredType(_,_) =>
-      case _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", pos)
+      case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) =>
+      case UndeclaredType(_,_) | _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", pos)
     }
   }
 
@@ -319,6 +317,26 @@ object DecafSemantic {
       }
     }
     scopeTree.children.foreach(simpleCheckTypes(_, compilerProblems))
+  }
+
+  def realCheckTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
+    ast match {
+      case p: Program => p.decls.foreach(realCheckTypes(_, compilerProblems))
+      case c: ClassDecl => {
+        if(c.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + c)
+        val scope = c.state.get
+        if(c.extnds.isDefined) checkTypeExists(scope, c.pos, c.extnds.get, compilerProblems)
+        c.implements.foreach(checkTypeExists(scope, c.pos, _, compilerProblems))
+        c.members.foreach(realCheckTypes(_, compilerProblems))
+      }
+      case f: FnDecl => {
+        if(f.state.isEmpty) throw new IllegalArgumentException("Tree does not contain scope for " + f)
+        val scope = f.state.get
+        checkTypeExists(scope, f.pos, f.returnType, compilerProblems)
+        f.formals.foreach(v => checkTypeExists(v.state.get, v.pos, v.t, compilerProblems))
+        if(f.body.isDefined) realCheckTypes(f.body.get, compilerProblems)
+      }
+    }
   }
 
   /**
