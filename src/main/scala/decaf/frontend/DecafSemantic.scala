@@ -29,6 +29,8 @@ class TypeSignatureException(name: String, where: Position)
 class InvalidTestException(where: Position)
   extends SemanticException("*** Test expression must have boolean type", where)
 
+class TypeErrorException(what: String, where: Position) extends SemanticException(what, where)
+
 abstract class TypeAnnotation(where: Position) {
   def matches(that: TypeAnnotation): Boolean
 }
@@ -103,6 +105,7 @@ case class ScopeNode(table: DecafSemantic.ScopeTable, boundName: String, parent:
 
 object DecafSemantic {
   type ScopeTable = ForkTable[String, TypeAnnotation]
+  implicit def errorType2TypeError(e: ErrorType): Exception = new TypeErrorException(e.message, e.pos)
 
   def decorateScope (tree: ASTNode, scope: ScopeNode): Unit = {
     tree.state = Some(scope)
@@ -357,6 +360,7 @@ object DecafSemantic {
       case IfStmt(test, ifbody, elsebody) =>
         test.typeof(scope) match {
           case BoolType(_) => {}
+          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
           case _ => compilerProblems += new InvalidTestException(ast.pos)
         }
         checkTypes(ifbody, compilerProblems)
@@ -365,6 +369,7 @@ object DecafSemantic {
       case ForStmt(init, test, step, body) =>
         test.typeof(scope) match {
           case BoolType(_) => {}
+          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
           case _ => compilerProblems += new InvalidTestException(ast.pos)
         }
         init.foreach(checkTypes(_, compilerProblems))
@@ -374,12 +379,19 @@ object DecafSemantic {
       case WhileStmt(test, body) =>
         test.typeof(scope) match {
           case BoolType(_) => {}
+          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
           case _ => compilerProblems += new InvalidTestException(ast.pos)
         }
         checkTypes(body, compilerProblems)
         checkTypes(test, compilerProblems)
 
-      case
+      case SwitchStmt(what, cases, default, _) =>
+        what.foreach(checkTypes(_, compilerProblems))
+        cases.foreach(checkTypes(_, compilerProblems))
+        default.foreach(checkTypes(_, compilerProblems))
+
+      case CaseStmt(value,body,_) =>
+        body.foreach(checkTypes(_, compilerProblems))
     }
   }
 

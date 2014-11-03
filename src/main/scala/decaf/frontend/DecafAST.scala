@@ -578,7 +578,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class VoidType(loc: Position) extends Type("void", loc)
   case class NullType(loc: Position) extends Type("null", loc)
   case class StringType(loc: Position) extends Type("string", loc)
-  class ErrorType(message: String, where: Position) extends Type("error", where)
+  class ErrorType(val message: String, where: Position) extends Type("error", where)
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
