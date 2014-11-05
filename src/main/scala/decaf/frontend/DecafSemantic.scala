@@ -216,12 +216,12 @@ object DecafSemantic {
         case decl => annotateVariable(decl) ::: compilerProblems
       }
 
-      for(stmt <- b.stmts) {
-        stmt match {
-          case s if s.isInstanceOf[StmtBlock] => annotateStmtBlock(stmt.asInstanceOf[StmtBlock]) ::: compilerProblems
+      compilerProblems = compilerProblems ::: b.stmts.map(
+        _ match {
+          case s: StmtBlock => annotateStmtBlock(s)
           case _ =>
         }
-      }
+      ).flatten
     }
   compilerProblems
   }
@@ -296,7 +296,7 @@ object DecafSemantic {
       case Program(decls, _) => decls.map(
         _ match {
           case v: VarDecl => annotateVariable(v)
-          case f: FnDecl => annotateFunction(f
+          case f: FnDecl => annotateFunction(f)
           case c: ClassDecl => annotateClass(c)
           case i: InterfaceDecl => annotateInterface(i)
         }
@@ -309,7 +309,7 @@ object DecafSemantic {
       case n: NamedType =>
         if(!node.table.chainContains(n.name.name)) { new UndeclaredTypeException(n.name.name, pos) :: Nil } else Nil
       case ArrayType(_, t) => checkTypeExists(node, pos, t)
-      case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) =>
+      case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) => Nil
       case UndeclaredType(_,_) | _ => new SemanticException(s"Unexpected type '${value.typeName}'!", pos) :: Nil
     }
   }
@@ -342,62 +342,51 @@ object DecafSemantic {
       throw new IllegalArgumentException("Tree does not contain scope for " + ast)
     val scope = ast.state.get
     ast match {
-      case Program(d) => d.foreach(checkTypes(_))
+      case Program(d) => d.flatMap(checkTypes(_))
 
       case VarDecl(_, typ) =>
         checkTypeExists(ast.state.get, typ.pos, typ)
 
       case ClassDecl(_, ext, impl, mems) =>
-        ext.foreach(verifyClassChain(scope, List[String](), _, ast.pos))
-        impl.foreach(checkTypeExists(scope, ast.pos, _,))
-        mems.foreach(checkTypes(_, compilerProblems))
+        ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
+          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) ::: Nil
 
-      case InterfaceDecl(_, members) => members.foreach(checkTypes(_, compilerProblems))
+      case InterfaceDecl(_, members) => members.flatMap(checkTypes(_))
 
       case FnDecl(_, rt, formals, body) =>
-        checkTypeExists(scope, ast.pos, rt, compilerProblems)
-        formals.foreach(checkTypes(_, compilerProblems))
-        body.foreach(checkTypes(_, compilerProblems))
+        checkTypeExists(scope, ast.pos, rt) :::
+          formals.flatMap(checkTypes(_)) ::: body.map(checkTypes(_)).getOrElse(Nil)
 
-      case StmtBlock(decls, stmts) =>
-        decls.foreach(checkTypes(_, compilerProblems))
-        stmts.foreach(checkTypes(_, compilerProblems))
+      case StmtBlock(decls, stmts) => decls.flatMap(checkTypes(_)) ::: stmts.flatMap(checkTypes(_))
 
       case IfStmt(test, ifbody, elsebody) =>
-        test.typeof(scope) match {
-          case BoolType(_) => {}
-          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
-          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        val t: List[Exception] = test.typeof(scope) match {
+          case BoolType(_) => Nil
+          case e: ErrorType =>  e :: new InvalidTestException(ast.pos) :: Nil
+          case _ => new InvalidTestException(ast.pos) :: Nil
         }
-        checkTypes(ifbody, compilerProblems)
-        elsebody.foreach(checkTypes(_, compilerProblems))
+        t ::: checkTypes(ifbody) ::: elsebody.map(checkTypes(_)).getOrElse(Nil)
 
       case ForStmt(init, test, step, body) =>
-        test.typeof(scope) match {
-          case BoolType(_) => {}
-          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
-          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        val t: List[Exception] = test.typeof(scope) match {
+          case BoolType(_) => Nil
+          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
+          case _ => new InvalidTestException(ast.pos) :: Nil
         }
-        init.foreach(checkTypes(_, compilerProblems))
-        step.foreach(checkTypes(_, compilerProblems))
-        checkTypes(body, compilerProblems)
+        t ::: init.map(checkTypes(_)).getOrElse(Nil) ::: step.map(checkTypes(_)).getOrElse(Nil) ::: checkTypes(body)
 
       case WhileStmt(test, body) =>
-        test.typeof(scope) match {
-          case BoolType(_) => {}
-          case e: ErrorType => compilerProblems ++= e :: new InvalidTestException(ast.pos) :: Nil
-          case _ => compilerProblems += new InvalidTestException(ast.pos)
+        val t: List[Exception] = test.typeof(scope) match {
+          case BoolType(_) => Nil
+          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
+          case _ => new InvalidTestException(ast.pos) :: Nil
         }
-        checkTypes(body, compilerProblems)
-        checkTypes(test, compilerProblems)
+        t ::: checkTypes(body) ::: checkTypes(test)
 
       case SwitchStmt(what, cases, default, _) =>
-        what.foreach(checkTypes(_, compilerProblems))
-        cases.foreach(checkTypes(_, compilerProblems))
-        default.foreach(checkTypes(_, compilerProblems))
+        what.map(checkTypes(_)).getOrElse(Nil) ::: cases.flatMap(checkTypes(_)) ::: default.map(checkTypes(_)).getOrElse(Nil)
 
-      case CaseStmt(value,body,_) =>
-        body.foreach(checkTypes(_, compilerProblems))
+      case CaseStmt(value,body,_) => body.flatMap(checkTypes(_))
     }
   }
 
@@ -429,10 +418,8 @@ object DecafSemantic {
   def analyze(top: Program): ScopeNode = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = mutable.Queue[Exception]()
-    pullDeclsToScope(top, problems)
-    checkTypes(top, problems)
-    problems.map(System.err.println(_))
+    val problems = pullDeclsToScope(top) ::: checkTypes(top)
+    problems.map(System.err.println(_)) // TODO: maybe throw the exceptions from problems upstream?
     top.state.get
   }
 
