@@ -216,12 +216,12 @@ object DecafSemantic {
         case decl => annotateVariable(decl) ::: compilerProblems
       }
 
-      compilerProblems = compilerProblems ::: b.stmts.map(
+      compilerProblems = compilerProblems ::: b.stmts.flatMap(
         _ match {
           case s: StmtBlock => annotateStmtBlock(s)
-          case _ =>
+          case _ => Nil
         }
-      ).flatten
+      )
     }
   compilerProblems
   }
@@ -342,7 +342,7 @@ object DecafSemantic {
       throw new IllegalArgumentException("Tree does not contain scope for " + ast)
     val scope = ast.state.get
     ast match {
-      case Program(d) => d.flatMap(checkTypes(_))
+      case Program(d, _) => d.flatMap(checkTypes(_))
 
       case VarDecl(_, typ) =>
         checkTypeExists(ast.state.get, typ.pos, typ)
@@ -357,7 +357,7 @@ object DecafSemantic {
         checkTypeExists(scope, ast.pos, rt) :::
           formals.flatMap(checkTypes(_)) ::: body.map(checkTypes(_)).getOrElse(Nil)
 
-      case StmtBlock(decls, stmts) => decls.flatMap(checkTypes(_)) ::: stmts.flatMap(checkTypes(_))
+      case StmtBlock(decls, stmts, _) => decls.flatMap(checkTypes(_)) ::: stmts.flatMap(checkTypes(_))
 
       case IfStmt(test, ifbody, elsebody) =>
         val t: List[Exception] = test.typeof(scope) match {
