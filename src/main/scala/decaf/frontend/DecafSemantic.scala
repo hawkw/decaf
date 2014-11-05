@@ -160,7 +160,7 @@ object DecafSemantic {
     }
   }
 
-  def annotateVariable(v: VarDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def annotateVariable(v: VarDecl): List[Exception] = {
     val ident = v.n
     val typ = v.t
 
@@ -172,15 +172,16 @@ object DecafSemantic {
 
 
     if (state.table.contains(ident.name)) {
-      compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
-      return
+      new ConflictingDeclException(ident.name, ident.pos) :: List()
     } else {
       state.table.put(ident.name, new VariableAnnotation(typ, ident.pos))
+      List()
     }
   }
 
-  def annotateFunction(fn: FnDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def annotateFunction(fn: FnDecl): List[Exception] = {
     var ident = fn.name
+    var compilerProblems = List[Exception]()
     val rettype = fn.returnType
     val formals = fn.formals
 
@@ -191,8 +192,8 @@ object DecafSemantic {
     val state = fn.state.get
 
     if(state.table.contains(ident.name)) {
-      compilerProblems += new ConflictingDeclException(ident.name, ident.pos)
-      return
+      compilerProblems = new ConflictingDeclException(ident.name, ident.pos) :: compilerProblems
+      return compilerProblems
     } else {
       state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t), fn.pos))
     }
@@ -200,31 +201,33 @@ object DecafSemantic {
       if(formal.state.isEmpty) {
         throw new IllegalArgumentException("Tree didn't contain a scope for\n" + formal.toString + "\nin " + fn.toString)
       }
-      annotateVariable(formal, compilerProblems)
+      compilerProblems = annotateVariable(formal) ::: compilerProblems
     }
-    if(fn.body.isDefined) {
-      annotateStmtBlock(fn.body.get, compilerProblems)
-    }
+    fn.body.foreach(body => compilerProblems = annotateStmtBlock(body) ::: compilerProblems)
+    compilerProblems
   }
 
-  def annotateStmtBlock(b: StmtBlock, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def annotateStmtBlock(b: StmtBlock): List[Exception] = {
+    var compilerProblems = List[Exception]()
     if(b.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
     } else {
       b.decls.foreach {
-        case decl => annotateVariable(decl, compilerProblems)
+        case decl => annotateVariable(decl) ::: compilerProblems
       }
 
       for(stmt <- b.stmts) {
         stmt match {
-          case s if s.isInstanceOf[StmtBlock] => annotateStmtBlock(stmt.asInstanceOf[StmtBlock], compilerProblems)
+          case s if s.isInstanceOf[StmtBlock] => annotateStmtBlock(stmt.asInstanceOf[StmtBlock]) ::: compilerProblems
           case _ =>
         }
       }
     }
+  compilerProblems
   }
 
-  def annotateClass(c: ClassDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def annotateClass(c: ClassDecl): List[Exception] = {
+    var compilerProblems = List[Exception]()
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
@@ -235,12 +238,12 @@ object DecafSemantic {
       cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
     }
 
-    for(member <- c.members) {
-      member match {
-        case v: VarDecl => annotateVariable(v, compilerProblems)
-        case f: FnDecl => annotateFunction(f, compilerProblems)
+    compilerProblems = compilerProblems ::: c.members.map{
+      _ match {
+        case v: VarDecl => annotateVariable(v)
+        case f: FnDecl => annotateFunction(f)
       }
-    }
+    }.flatten
 
     val pscope = c.state.get.parent
     if(pscope.isEmpty) {
@@ -248,25 +251,26 @@ object DecafSemantic {
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(c.name.name)) {
-        compilerProblems += new ConflictingDeclException(c.name.name, c.name.pos)
-        return
+        compilerProblems = new ConflictingDeclException(c.name.name, c.name.pos) :: compilerProblems
       } else {
         ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table, c.pos))
       }
     }
     //TODO: Finish me
+    compilerProblems
   }
 
-  def annotateInterface(i: InterfaceDecl, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def annotateInterface(i: InterfaceDecl): List[Exception] = {
+    var compilerProblems = List[Exception]()
     if(i.state.isEmpty) {
       throw new IllegalArgumentException("Tree doesn't contain a scope for " + i.toString)
     }
 
     val iscope = i.state.get
 
-    i.members.foreach({case m: FnDecl =>
-      annotateFunction(m, compilerProblems)}
-    )
+    compilerProblems ::: i.members.map({case m: FnDecl =>
+      annotateFunction(m)}
+    ).flatten
 
     val pscope = i.state.get.parent
 
@@ -275,75 +279,77 @@ object DecafSemantic {
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(i.name.name)) {
-        compilerProblems += new ConflictingDeclException(i.name.name, i.name.pos)
-        return
+        compilerProblems = new ConflictingDeclException(i.name.name, i.name.pos) :: compilerProblems
       } else {
         ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table, i.pos))
       }
     }
+    compilerProblems
   }
 
-  def pullDeclsToScope (tree: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def pullDeclsToScope (tree: ASTNode): List[Exception] = {
     if (tree.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     }
     var state = tree.state.get
     tree match {
-      case Program(decls, _) => for(decl <- decls) {
-        decl match {
-          case v: VarDecl => annotateVariable(v, compilerProblems)
-          case f: FnDecl => annotateFunction(f, compilerProblems)
-          case c: ClassDecl => annotateClass(c, compilerProblems)
-          case i: InterfaceDecl => annotateInterface(i, compilerProblems)
+      case Program(decls, _) => decls.map(
+        _ match {
+          case v: VarDecl => annotateVariable(v)
+          case f: FnDecl => annotateFunction(f
+          case c: ClassDecl => annotateClass(c)
+          case i: InterfaceDecl => annotateInterface(i)
         }
-      }
+      ).flatten
     }
   }
 
-  def checkTypeExists(node: ScopeNode,pos: Position, value: Type, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def checkTypeExists(node: ScopeNode,pos: Position, value: Type): List[Exception] = {
     value match {
       case n: NamedType =>
-        if(!node.table.chainContains(n.name.name)) compilerProblems += new UndeclaredTypeException(n.name.name, pos)
-      case ArrayType(_, t) => checkTypeExists(node, pos, t, compilerProblems)
+        if(!node.table.chainContains(n.name.name)) { new UndeclaredTypeException(n.name.name, pos) :: Nil } else Nil
+      case ArrayType(_, t) => checkTypeExists(node, pos, t)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) =>
-      case UndeclaredType(_,_) | _ => compilerProblems += new SemanticException(s"Unexpected type '${value.typeName}'!", pos)
+      case UndeclaredType(_,_) | _ => new SemanticException(s"Unexpected type '${value.typeName}'!", pos) :: Nil
     }
   }
 
-  def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position, exceptions: mutable.Queue[Exception]): Unit = {
+  def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position): List[Exception] = {
     if(seen.contains(c.name.name)) {
-      exceptions += new IllegalClassInheritanceCycle(seen.head, p)
+      new IllegalClassInheritanceCycle(seen.head, p) :: Nil
     } else if(!scope.table.chainContains(c.name.name)) {
       //Exception is silent in this case; since we will report it during general typechecking elsewhere.
       //Unless we actually want to typecheck on this a billion times?
+      Nil
     } else {
       val t = scope.table.get(c.name.name).get
       t match {
         case otherc: ClassAnnotation =>
           if(otherc.ext.isDefined) {
-            verifyClassChain(scope, seen ::: c.name.name :: Nil, otherc.name, p, exceptions)
+            verifyClassChain(scope, seen ::: c.name.name :: Nil, otherc.name, p)
           } else {
             //we've found a class which goes to ground, do we want to do anything here?
             //I think no.
+            Nil
           }
-        case _ => //what should we even cause here? I.e. the type we got was NOT a class.
+        case _ => Nil //what should we even cause here? I.e. the type we got was NOT a class.
       }
     }
   }
 
-  def checkTypes(ast: ASTNode, compilerProblems: mutable.Queue[Exception]): Unit = {
+  def checkTypes(ast: ASTNode): List[Exception] = {
     if(!ast.isInstanceOf[Program] && ast.state.isEmpty)
       throw new IllegalArgumentException("Tree does not contain scope for " + ast)
     val scope = ast.state.get
     ast match {
-      case Program(d) => d.foreach(checkTypes(_, compilerProblems))
+      case Program(d) => d.foreach(checkTypes(_))
 
       case VarDecl(_, typ) =>
-        checkTypeExists(ast.state.get, typ.pos, typ, compilerProblems)
+        checkTypeExists(ast.state.get, typ.pos, typ)
 
       case ClassDecl(_, ext, impl, mems) =>
-        ext.foreach(verifyClassChain(scope, List[String](), _, ast.pos, compilerProblems))
-        impl.foreach(checkTypeExists(scope, ast.pos, _, compilerProblems))
+        ext.foreach(verifyClassChain(scope, List[String](), _, ast.pos))
+        impl.foreach(checkTypeExists(scope, ast.pos, _,))
         mems.foreach(checkTypes(_, compilerProblems))
 
       case InterfaceDecl(_, members) => members.foreach(checkTypes(_, compilerProblems))
