@@ -15,8 +15,8 @@ object Compiler extends App {
     case 1 =>
       val source = Source.fromFile(args(0)).mkString
       val ast = parser.parse(source)
-      DecafSemantic.analyze(ast)
-      println(ast)
+      val (scopes, errors) = DecafSemantic.analyze(ast)
+      errors.foreach(System.err.println(_))
     case _ => println("Too many arguments!")
   }
 
