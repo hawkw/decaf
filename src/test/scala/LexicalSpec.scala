@@ -8,7 +8,7 @@ import org.scalatest._
 import scala.io.Source
 import scala.util.parsing.input.CharArrayReader
 
-class LexicalSamplesSpec extends FlatSpec with Matchers {
+class LexicalSpec extends FlatSpec with Matchers {
 
   val target = new DecafLexical
 
