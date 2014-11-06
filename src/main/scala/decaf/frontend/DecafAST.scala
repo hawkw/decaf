@@ -307,15 +307,15 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
-      case (StringType(_), ASTOperator(_, "+"), _) => StringType(l)
-      case (_, ASTOperator(_, "+"), StringType(l)) => StringType(l)
-      case (IntType(_), _, IntType(_)) => IntType(l)
-      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
+      case (StringType(_), ASTOperator(_, "+"), _) => StringType(pos)
+      case (_, ASTOperator(_, "+"), StringType(_)) => StringType(pos)
+      case (IntType(_), _, IntType(_)) => IntType(pos)
+      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(pos)
       // type lifting int -> double
-      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
-      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(l)
+      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(pos)
+      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(pos)
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
-        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
+        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, pos)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
       case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
