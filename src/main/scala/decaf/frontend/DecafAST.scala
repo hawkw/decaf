@@ -323,7 +323,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
       case (IntType(_), IntType(_)) => BoolType(pos)
       case (IntType(_), DoubleType(_)) => BoolType(pos)
@@ -335,7 +335,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
       case (l: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
       case (l, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
@@ -348,7 +348,9 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
     }
     override def typeof(scope: ScopeNode): Type = rhs.typeof(scope) match {
-      case e: ErrorType => e //TODO: Stub
+      case e: ErrorType => e
+      case IntType(_) => IntType(pos)
+      case DoubleType(_) => DoubleType(pos)
       case _ => NullType(l)
     }
   }
@@ -365,7 +367,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
-        case _ => NullType(l)
+        case BoolType(_) => BoolType(pos)
+        case r => new ErrorType(s" *** Incompatible operand: ! ${r.typeName}", pos)
       }
     }
 
