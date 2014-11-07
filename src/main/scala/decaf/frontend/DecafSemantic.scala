@@ -169,13 +169,11 @@ object DecafSemantic {
     }
 
     val state = v.state.get
-
-
     if (state.table.contains(ident.name)) {
-      new ConflictingDeclException(ident.name, ident.pos) :: List()
+      new ConflictingDeclException(ident.name, ident.pos) :: Nil
     } else {
       state.table.put(ident.name, new VariableAnnotation(typ, ident.pos))
-      List()
+      Nil
     }
   }
 
@@ -213,7 +211,7 @@ object DecafSemantic {
       throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
     } else {
       b.decls.foreach {
-        case decl => annotateVariable(decl) ::: compilerProblems
+        case decl => compilerProblems = annotateVariable(decl) ::: compilerProblems
       }
 
       compilerProblems = compilerProblems ::: b.stmts.flatMap(
