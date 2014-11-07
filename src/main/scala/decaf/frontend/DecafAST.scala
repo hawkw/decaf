@@ -325,7 +325,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l) // butts are null
+      case (IntType(_), IntType(_)) => BoolType(pos)
+      case (IntType(_), DoubleType(_)) => BoolType(pos)
+      case (DoubleType(_), IntType(_)) => BoolType(pos)
+      case (DoubleType(_), DoubleType(_)) => BoolType(pos)
+      case (l, r) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
     }
   }
 
@@ -333,7 +337,9 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l)
+      case (l: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (l, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (_,_) => BoolType(pos)
     }
   }
 
