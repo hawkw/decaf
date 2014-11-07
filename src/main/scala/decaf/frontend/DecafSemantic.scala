@@ -266,7 +266,7 @@ object DecafSemantic {
 
     val iscope = i.state.get
 
-    compilerProblems ::: i.members.map({case m: FnDecl =>
+    compilerProblems = compilerProblems ::: i.members.map({case m: FnDecl =>
       annotateFunction(m)}
     ).flatten
 
