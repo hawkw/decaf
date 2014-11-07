@@ -174,8 +174,8 @@ object DecafSemantic {
     node match {
       case Program(decls, _) => decls
       case ClassDecl(_, _, _, members) => members
-      case FnDecl(_,_,formals,Some(body)) => formals.asInstanceOf[List[ASTNode]] ::: body.asInstanceOf[ASTNode] :: Nil
-      case StmtBlock(decls, stmts, _) => decls.asInstanceOf[List[ASTNode]] ::: stmts.asInstanceOf[List[ASTNode]]
+      case FnDecl(_,_,formals,Some(body)) => formals ::: body :: Nil
+      case StmtBlock(decls, stmts, _) => decls ::: stmts
       case _ => List[ASTNode]()
     }
   }
