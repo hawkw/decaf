@@ -1,4 +1,4 @@
-import decaf.frontend.{UndeclaredTypeException, DecafSemantic, DecafSyntactical, ConflictingDeclException}
+import decaf.frontend._
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.io.Source
@@ -13,7 +13,8 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
 
   "checkTypes()" should "detect the conflicting declaration in bad1.decaf" in {
     val source = Source fromFile "build/resources/test/lab3-samples/samples-checkpoint/bad1.decaf" mkString
-    val (scopes, errs) = target analyze (parser parse source)
+    val ast = parser parse source
+    val (scopes, errs) = target analyze ast
     errs should have length 1
     errs(0) shouldBe a [ConflictingDeclException]
     errs(0).getMessage should include ("Declaration of 'b' here conflicts")
@@ -30,10 +31,11 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
   it should "detect the undeclared types in bad3.decaf" in {
     val source = Source fromFile "build/resources/test/lab3-samples/samples-checkpoint/bad3.decaf" mkString
     val (scopes, errs) = target analyze (parser parse source)
-    errs should have length 3
-    errs(0) shouldBe a [UndeclaredTypeException]
-    errs(1) shouldBe a [UndeclaredTypeException]
-    errs(2) shouldBe a [UndeclaredTypeException]
+    errs should have length 4
+    errs(0) shouldBe an [UndeclaredTypeException]
+    errs(1) shouldBe an [UndeclaredTypeException]
+    errs(2) shouldBe an [UnimplementedInterfaceException]
+    errs(3) shouldBe an [UndeclaredTypeException]
   }
 
 }
