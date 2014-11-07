@@ -20,8 +20,8 @@ class IllegalClassInheritanceCycle(className: String, where: Position)
 class ConflictingDeclException(name: String, where: Position)
   extends SemanticException(s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}", where)
 
-class UndeclaredTypeException(name: String, where: Position)
-  extends SemanticException(s"*** No declaration for class '$name' found", where)
+class UndeclaredTypeException(name: String, where: Position, what: String="class")
+  extends SemanticException(s"*** No declaration for $what '$name' found", where)
 
 class TypeSignatureException(name: String, where: Position)
   extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
@@ -179,7 +179,7 @@ object DecafSemantic {
 
   def annotateFunction(fn: FnDecl): List[Exception] = {
     var ident = fn.name
-    var compilerProblems = List[Exception]()
+    var errors = List[Exception]()
     val rettype = fn.returnType
     val formals = fn.formals
 
@@ -190,8 +190,8 @@ object DecafSemantic {
     val state = fn.state.get
 
     if(state.table.contains(ident.name)) {
-      compilerProblems = new ConflictingDeclException(ident.name, ident.pos) :: compilerProblems
-      return compilerProblems
+      errors = new ConflictingDeclException(ident.name, ident.pos) :: errors
+      return errors
     } else {
       state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t), fn.pos))
     }
@@ -199,33 +199,33 @@ object DecafSemantic {
       if(formal.state.isEmpty) {
         throw new IllegalArgumentException("Tree didn't contain a scope for\n" + formal.toString + "\nin " + fn.toString)
       }
-      compilerProblems = annotateVariable(formal) ::: compilerProblems
+      errors = annotateVariable(formal) ::: errors
     }
-    fn.body.foreach(body => compilerProblems = annotateStmtBlock(body) ::: compilerProblems)
-    compilerProblems
+    fn.body.foreach(body => errors = annotateStmtBlock(body) ::: errors)
+    errors
   }
 
   def annotateStmtBlock(b: StmtBlock): List[Exception] = {
-    var compilerProblems = List[Exception]()
+    var errors = List[Exception]()
     if(b.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't conatin a scope for\n" + b.toString)
     } else {
       b.decls.foreach {
-        case decl => compilerProblems = annotateVariable(decl) ::: compilerProblems
+        case decl => errors = annotateVariable(decl) ::: errors
       }
 
-      compilerProblems = compilerProblems ::: b.stmts.flatMap(
+      errors = errors ::: b.stmts.flatMap(
         _ match {
           case s: StmtBlock => annotateStmtBlock(s)
           case _ => Nil
         }
       )
     }
-  compilerProblems
+  errors
   }
 
   def annotateClass(c: ClassDecl): List[Exception] = {
-    var compilerProblems = List[Exception]()
+    var errors = List[Exception]()
     if (c.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope for\n" + c.toString)
     }
@@ -236,7 +236,7 @@ object DecafSemantic {
       cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
     }
 
-    compilerProblems = compilerProblems ::: c.members.map{
+    errors = errors ::: c.members.map{
       _ match {
         case v: VarDecl => annotateVariable(v)
         case f: FnDecl => annotateFunction(f)
@@ -249,24 +249,24 @@ object DecafSemantic {
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(c.name.name)) {
-        compilerProblems = new ConflictingDeclException(c.name.name, c.name.pos) :: compilerProblems
+        errors = new ConflictingDeclException(c.name.name, c.name.pos) :: errors
       } else {
         ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table, c.pos))
       }
     }
     //TODO: Finish me
-    compilerProblems
+    errors
   }
 
   def annotateInterface(i: InterfaceDecl): List[Exception] = {
-    var compilerProblems = List[Exception]()
+    var errors = List[Exception]()
     if(i.state.isEmpty) {
       throw new IllegalArgumentException("Tree doesn't contain a scope for " + i.toString)
     }
 
     val iscope = i.state.get
 
-    compilerProblems = compilerProblems ::: i.members.map({case m: FnDecl =>
+    errors = errors ::: i.members.map({case m: FnDecl =>
       annotateFunction(m)}
     ).flatten
 
@@ -277,12 +277,12 @@ object DecafSemantic {
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(i.name.name)) {
-        compilerProblems = new ConflictingDeclException(i.name.name, i.name.pos) :: compilerProblems
+        errors = new ConflictingDeclException(i.name.name, i.name.pos) :: errors
       } else {
         ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table, i.pos))
       }
     }
-    compilerProblems
+    errors
   }
 
   def pullDeclsToScope (tree: ASTNode): List[Exception] = {
@@ -387,6 +387,8 @@ object DecafSemantic {
       case CaseStmt(value,body,_) => body.flatMap(checkTypes(_))
     }
   }
+
+  def checkClassIntegrity
 
   /**
    * Performs the semantic analysis
