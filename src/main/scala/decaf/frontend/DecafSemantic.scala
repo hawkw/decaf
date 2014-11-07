@@ -14,11 +14,18 @@ case class SemanticException(message: String, pos: Position) extends Exception(m
   override def toString: String = s"$lineOfCode\n$message\n"
 
 }
+
 class IllegalClassInheritanceCycle(className: String, where: Position)
-  extends SemanticException(s"*** Illegal cyclic class inheritance involving $className on line ${where.line}", where)
+  extends SemanticException(
+    s"*** Illegal cyclic class inheritance involving $className on line ${where.line}",
+    where
+  )
 
 class ConflictingDeclException(name: String, where: Position)
-  extends SemanticException(s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}", where)
+  extends SemanticException(
+    s"*** Declaration of '$name' here conflicts with declaration on line ${where.line}",
+    where
+  )
 
 class UndeclaredTypeException(name: String, where: Position, what: String="class")
   extends SemanticException(s"*** No declaration for $what '$name' found", where)
@@ -30,14 +37,19 @@ class InvalidTestException(where: Position)
   extends SemanticException("*** Test expression must have boolean type", where)
 
 class UnimplementedInterfaceException(which: String, interface: String, where: Position)
-  extends SemanticException(s"*** Class ‘$which’ does not implement entire interface ’$interface’", where)
+  extends SemanticException(
+    s"*** Class ‘$which’ does not implement entire interface ’$interface’",
+    where
+  )
 
 class TypeErrorException(what: String, where: Position) extends SemanticException(what, where)
 
 abstract class TypeAnnotation(where: Position) {
   def matches(that: TypeAnnotation): Boolean
 }
-case class MethodAnnotation(returnType: Type, formals: List[Type], pos: Position) extends TypeAnnotation(pos) {
+case class MethodAnnotation(returnType: Type,
+                            formals: List[Type],
+                            pos: Position) extends TypeAnnotation(pos) {
   override def matches(that: TypeAnnotation): Boolean = that match {
     case MethodAnnotation(rt, f, _) => rt == returnType && f == formals
     case _ => false
@@ -84,7 +96,10 @@ case class VariableAnnotation(t: Type, pos: Position) extends TypeAnnotation(pos
   override def toString = s"Variable of ${t.typeName}"
 }
 
-case class ScopeNode(table: DecafSemantic.ScopeTable, boundName: String, parent: Option[ScopeNode] = None, statement: ASTNode) {
+case class ScopeNode(table: DecafSemantic.ScopeTable,
+                     boundName: String,
+                     parent: Option[ScopeNode] = None,
+                     statement: ASTNode) {
   var children = List[ScopeNode]()
   def child(boundName: String, stmt: ASTNode): ScopeNode = {
     val c = new ScopeNode(table.fork(), boundName, Some(this), stmt)
@@ -127,8 +142,8 @@ object DecafSemantic {
           }
       case i: InterfaceDecl => i.members.foreach {
         case f: FnDecl => decorateScope(f, scope)
-        case _ => //We shouldn't have any other types of decl in an interface. If we do, then we have a problem.
-      }
+        case _ => //We shouldn't have any other types of decl in an interface.
+      }           //If we do, then we hae a problem
       case f: FnDecl =>
         val s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
         f.formals.foreach {
@@ -140,7 +155,9 @@ object DecafSemantic {
           val fs = s.child(s"FnDecl (body) ${f.name.name}", f.body.get)
           f.body.get.state = Some(fs)
           decls.foreach { decorateScope(_, fs) }
-          stmts.foreach { s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) }
+          stmts.foreach {
+            s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s))
+          }
         }
       case StmtBlock(decls, stmts, _) =>
         decls.foreach {
@@ -200,7 +217,11 @@ object DecafSemantic {
     }
     for (formal <- formals) {
       if(formal.state.isEmpty) {
-        throw new IllegalArgumentException("Tree didn't contain a scope for\n" + formal.toString + "\nin " + fn.toString)
+        throw new IllegalArgumentException(
+          "Tree didn't contain a scope for\n"
+          + formal.toString +
+          "\nin "
+          + fn.toString)
       }
       errors = annotateVariable(formal) ::: errors
     }
@@ -217,12 +238,10 @@ object DecafSemantic {
         case decl => errors = annotateVariable(decl) ::: errors
       }
 
-      errors = errors ::: b.stmts.flatMap(
-        _ match {
-          case s: StmtBlock => annotateStmtBlock(s)
-          case _ => Nil
-        }
-      )
+      errors = errors ::: b.stmts.flatMap {
+        case s: StmtBlock => annotateStmtBlock(s)
+        case _ => Nil
+      }
     }
   errors
   }
@@ -234,27 +253,35 @@ object DecafSemantic {
     }
     val cscope = c.state.get
     if(cscope.table.contains("this")) {
-      throw new IllegalArgumentException("keyword \'this\' already (accidentally?) bound for class scope in " + c.toString)
+      throw new IllegalArgumentException(
+        "keyword \'this\' already (accidentally?) bound for class scope in "
+        + c.toString)
     } else {
       cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
     }
 
-    errors = errors ::: c.members.map{
-      _ match {
-        case v: VarDecl => annotateVariable(v)
-        case f: FnDecl => annotateFunction(f)
-      }
+    errors = errors ::: c.members.map {
+      case v: VarDecl => annotateVariable(v)
+      case f: FnDecl => annotateFunction(f)
     }.flatten
 
     val pscope = c.state.get.parent
     if(pscope.isEmpty) {
-      throw new IllegalArgumentException("Tree doesn't have a parent scope to enclose class type declaration in class " + c.toString)
+      throw new IllegalArgumentException(
+        "Tree doesn't have a parent scope to enclose class type declaration in class "
+          + c.toString)
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(c.name.name)) {
         errors = new ConflictingDeclException(c.name.name, c.name.pos) :: errors
       } else {
-        ptable.put(c.name.name, new ClassAnnotation(new NamedType(c.name), c.extnds, c.implements, cscope.table, c.pos))
+        ptable.put(c.name.name,
+                   new ClassAnnotation(new NamedType(c.name),
+                   c.extnds,
+                   c.implements,
+                   cscope.table,
+                   c.pos))
+
       }
     }
     //TODO: Finish me
@@ -276,45 +303,71 @@ object DecafSemantic {
     val pscope = i.state.get.parent
 
     if(pscope.isEmpty) {
-      throw new IllegalArgumentException("Tree doesn't have a parent scope to enclose interface declaration for interface " + i.toString)
+      throw new IllegalArgumentException(
+        "Tree doesn't have a parent scope to enclose interface declaration for interface "
+          + i.toString)
     } else {
       val ptable = pscope.get.table
       if(ptable.contains(i.name.name)) {
         errors = new ConflictingDeclException(i.name.name, i.name.pos) :: errors
       } else {
-        ptable.put(i.name.name, new InterfaceAnnotation(new NamedType(i.name), iscope.table, i.pos))
+        ptable.put(i.name.name,
+                   new InterfaceAnnotation(new NamedType(i.name),
+                   iscope.table,
+                   i.pos))
       }
     }
     errors
   }
 
+  /**
+   * Annotates all declarations in the specified scope in that scope's symbol table.
+   * This essentially performs the first walk
+   * @param tree the node to walk
+   * @return a [[List]] of [[Exception]]s for each error generated during the check
+   */
   def pullDeclsToScope (tree: ASTNode): List[Exception] = {
     if (tree.state.isEmpty) {
       throw new IllegalArgumentException("Tree didn't contain a scope at " + tree.toString)
     }
     var state = tree.state.get
     tree match {
-      case Program(decls, _) => decls.map(
-        _ match {
-          case v: VarDecl => annotateVariable(v)
-          case f: FnDecl => annotateFunction(f)
-          case c: ClassDecl => annotateClass(c)
-          case i: InterfaceDecl => annotateInterface(i)
-        }
-      ).flatten
+      case Program(decls, _) => decls.map {
+        case v: VarDecl => annotateVariable(v)
+        case f: FnDecl => annotateFunction(f)
+        case c: ClassDecl => annotateClass(c)
+        case i: InterfaceDecl => annotateInterface(i)
+      }.flatten
     }
   }
 
+  /**
+   * Checks that a given type is declared
+   * @param node the [[ScopeNode]] against which to check
+   * @param pos the position (for error reporting)
+   * @param value the [[Type]] to check
+   * @return a [[List]] of [[Exception]]s for each error generated during the check
+   */
   def checkTypeExists(node: ScopeNode,pos: Position, value: Type): List[Exception] = {
     value match {
       case n: NamedType =>
-        if(!node.table.chainContains(n.name.name)) { new UndeclaredTypeException(n.name.name, pos) :: Nil } else Nil
+        if(!node.table.chainContains(n.name.name)) {
+          new UndeclaredTypeException(n.name.name, pos) :: Nil
+        } else Nil
       case ArrayType(_, t) => checkTypeExists(node, pos, t)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) => Nil
       case UndeclaredType(_,_) | _ => new SemanticException(s"Unexpected type '${value.typeName}'!", pos) :: Nil
     }
   }
 
+  /**
+   * Check that all inheritance cycles are legal
+   * @param scope The scope at which to conduct checks
+   * @param seen a list of all the names we've seen so far
+   * @param c the [[decaf.frontend.NamedType]] ({class | interface}) to check
+   * @param p the position
+   * @return a [[List]] of [[Exception]]s for each error generated during the check
+   */
   def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position): List[Exception] = {
     if(seen.contains(c.name.name)) {
       new IllegalClassInheritanceCycle(seen.head, p) :: Nil
@@ -339,6 +392,12 @@ object DecafSemantic {
     }
   }
 
+  /**
+   * Second walk over the AST. Most typechecking happens here.
+   * //TODO: explain this better
+   * @param ast the [[decaf.frontend.ASTNode]] over which to walk
+   * @return
+   */
   def checkTypes(ast: ASTNode): List[Exception] = {
     if(!ast.isInstanceOf[Program] && ast.state.isEmpty)
       throw new IllegalArgumentException("Tree does not contain scope for " + ast)
@@ -393,12 +452,18 @@ object DecafSemantic {
     }
   }
 
+  /**
+   * Checks a ClassDecl for correct inheritance.
+   * @param c the class declaration to check
+   * @return a list of [[Exception]]s generated during the check
+   */
   def checkClassIntegrity(c: ClassDecl): List[Exception] = {
     val classState = c.state.getOrElse(throw new IllegalArgumentException("Tree does not contain scope for " + c))
     val extErr = for {
       t <- c.extnds
     } yield {
-      checkTypeExists(classState, t.pos, t)
+      checkTypeExists(classState, t.pos, t) // can't extend something that doesn't exist
+      // TODO: we should do additional checking here
     }
 
     (for {
@@ -412,12 +477,18 @@ object DecafSemantic {
         } yield {
           new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
         }
-        case None => new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
+        case None => //is this the right thing to throw if i has no state? Or is it UndeclaredType?
+          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
     }).flatten ::: extErr.getOrElse(Nil)
   }
 
-
+  /**
+   * Performs the third walk across the AST, doing all semantic checks that require a complete symbol table.
+   * Currently, this is limited to class integrity checking ([[checkClassIntegrity()]]).
+   * @param ast the ASTNode over which to walk
+   * @return a list of errors that were generated during the walk
+   */
   def thirdPass(ast: ASTNode): List[Exception] = if (!ast.isInstanceOf[Program] && ast.state.isEmpty)
     throw new IllegalArgumentException("Tree does not contain scope for " + ast)
   else {
