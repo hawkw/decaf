@@ -321,6 +321,7 @@ object DecafSemantic {
     } else if(!scope.table.chainContains(c.name.name)) {
       //Exception is silent in this case; since we will report it during general typechecking elsewhere.
       //Unless we actually want to typecheck on this a billion times?
+      // 11/7/14: This now happens in thirdPass() ~ Hawk
       Nil
     } else {
       val t = scope.table.get(c.name.name).get
@@ -350,8 +351,8 @@ object DecafSemantic {
 
       case ClassDecl(_, ext, impl, mems) =>
         ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
-          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) :::
-          checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: Nil
+          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) /*:::
+          checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */ // 11/7/14: Moved to thirdPass() ~ Hawk
 
       case InterfaceDecl(_, members) => members.flatMap(checkTypes(_))
 
@@ -409,11 +410,27 @@ object DecafSemantic {
           if annotation.isInstanceOf[MethodAnnotation]
           if annotation matches classState.table(name)
         } yield {
-          new UnimplementedInterfaceException(c.getName, i.getName, c.pos)
+          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
         }
-        case None => Nil
+        case None => new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
     }).flatten ::: extErr.getOrElse(Nil)
+  }
+
+
+  def thirdPass(ast: ASTNode): List[Exception] = if (!ast.isInstanceOf[Program] && ast.state.isEmpty)
+    throw new IllegalArgumentException("Tree does not contain scope for " + ast)
+  else {
+    val scope = ast.state.get
+    ast match {
+      case Program(declarations, _) => declarations.flatMap(thirdPass(_))
+      case c: ClassDecl => checkClassIntegrity(c) /* :::
+        c.extnds.map(thirdPass(_)).getOrElse(Nil) :::
+        c.members.flatMap(thirdPass(_))           :::
+        c.implements.flatMap(thirdPass(_))        ::: Nil */ //currently we don't need to do this but we might later
+        //todo: insert inner classes here?
+      case _ => Nil
+    }
   }
   /**
    * Performs the semantic analysis
@@ -443,7 +460,7 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: checkTypes(top)
+    val problems = pullDeclsToScope(top) ::: checkTypes(top) ::: thirdPass(top)
     (top.state.get, problems)
   }
 
