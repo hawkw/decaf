@@ -29,6 +29,9 @@ class TypeSignatureException(name: String, where: Position)
 class InvalidTestException(where: Position)
   extends SemanticException("*** Test expression must have boolean type", where)
 
+class UnimplementedInterfaceException(which: String, interface: String, where: Position)
+  extends SemanticException(s"*** Class ‘$which’ does not implement entire interface ’$interface’", where)
+
 class TypeErrorException(what: String, where: Position) extends SemanticException(what, where)
 
 abstract class TypeAnnotation(where: Position) {
@@ -347,7 +350,8 @@ object DecafSemantic {
 
       case ClassDecl(_, ext, impl, mems) =>
         ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
-          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) ::: Nil
+          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) :::
+          checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: Nil
 
       case InterfaceDecl(_, members) => members.flatMap(checkTypes(_))
 
@@ -388,8 +392,29 @@ object DecafSemantic {
     }
   }
 
-  def checkClassIntegrity
+  def checkClassIntegrity(c: ClassDecl): List[Exception] = {
+    val classState = c.state.getOrElse(throw new IllegalArgumentException("Tree does not contain scope for " + c))
+    val extErr = for {
+      t <- c.extnds
+    } yield {
+      checkTypeExists(classState, t.pos, t)
+    }
 
+    (for {
+      i: NamedType <- c.implements
+      } yield {
+      i.state match {
+        case Some(state) => for {
+          (name: String, annotation: TypeAnnotation) <- state.table
+          if annotation.isInstanceOf[MethodAnnotation]
+          if annotation matches classState.table(name)
+        } yield {
+          new UnimplementedInterfaceException(c.getName, i.getName, c.pos)
+        }
+        case None => Nil
+      }
+    }).flatten ::: extErr.getOrElse(Nil)
+  }
   /**
    * Performs the semantic analysis
    *
