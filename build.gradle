@@ -38,7 +38,7 @@ tasks.withType(ScalaDoc) {
 }
 
 dependencies {
-    compile "org.scala-lang:scala-library:2.11.2"
+    compile "org.scala-lang:scala-library:2.11.4"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
     testCompile 'org.scalatest:scalatest_2.11:2.2.0'
 }

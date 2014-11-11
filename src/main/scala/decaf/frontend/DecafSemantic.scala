@@ -44,6 +44,11 @@ class UnimplementedInterfaceException(which: String, interface: String, where: P
 
 class TypeErrorException(what: String, where: Position) extends SemanticException(what, where)
 
+class IncompatibleReturnException(got: String,
+                                  expected: String,
+                                  where: Position)
+  extends SemanticException(s"*** Incompatible return : $got given, $expected expected", where)
+
 abstract class TypeAnnotation(where: Position) {
   def matches(that: TypeAnnotation): Boolean
 }
@@ -156,7 +161,7 @@ object DecafSemantic {
           f.body.get.state = Some(fs)
           decls.foreach { decorateScope(_, fs) }
           stmts.foreach {
-            s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s))
+            s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) else s.state = Some(fs)
           }
         }
       case StmtBlock(decls, stmts, _) =>
@@ -164,7 +169,7 @@ object DecafSemantic {
           decorateScope(_, scope)
         }
         stmts.foreach { s =>
-          if(s.isInstanceOf[StmtBlock]) decorateScope(s, scope.child("Subblock", s))
+          if(s.isInstanceOf[StmtBlock]) decorateScope(s, scope.child("Subblock", s)) else s.state = Some(scope)
         }
       case n: ASTNode => n.state = Some(scope)
     }
@@ -449,9 +454,34 @@ object DecafSemantic {
         what.map(checkTypes(_)).getOrElse(Nil) ::: cases.flatMap(checkTypes(_)) ::: default.map(checkTypes(_)).getOrElse(Nil)
 
       case CaseStmt(value,body,_) => body.flatMap(checkTypes(_))
+      case ReturnStmt(_, Some(exp)) =>
+        val state: ScopeNode = ast.state.orNull
+        if (state == null) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
+        state.table.get(findReturnType(ast)) match {
+          case Some(m: MethodAnnotation) =>
+            if (m.matches(MethodAnnotation(exp.typeof(state), m.formals, m.pos))) {
+              Nil
+            } else {
+              new IncompatibleReturnException(exp.typeof(state).typeName,m.returnType.typeName,ast.pos) :: Nil
+            }
+          case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" +     // this should not happen,
+            " return statement without function declaration") // the parser should never allow this
+        }
     }
   }
 
+  /**
+   * Walks backwards up the AST from a given node until it finds
+   * a function declaration and returns the return type.
+   * @param node
+   * @return
+   */
+  def findReturnType(node: ASTNode): String = node match {
+    case FnDecl(ident, _, _, _) => ident.name
+    case n: ASTNode => findReturnType(n.parent)
+    case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" +     // this should not happen,
+      " return statement without function declaration") // the parser should never allow this
+  }
   /**
    * Checks a ClassDecl for correct inheritance.
    * @param c the class declaration to check
