@@ -482,10 +482,16 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = base match {
       case Some(e) => e.typeof(scope)
       case None =>
+        val myargstype: List[Type] = this.args.map(_.typeof(scope))
         if(scope.table.chainContains(field.name)) {
-          TypeAnnotation t = scope.table.get(field.name).get
+          val t = scope.table.get(field.name).get
+          t match {
+            case MethodAnnotation(rtype, args, _) => if(args == myargstype) rtype else new ErrorType(" *** ??? ", pos) //TODO: Error string?
+            case _ => new ErrorType(" *** ??? ",pos) //TODO: Error string?
+          }
+        } else {
+          new ErrorType(" *** ??? ",pos) //TODO: Error string?
         }
-        NullType(pos)
     }
   }
 
