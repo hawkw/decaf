@@ -17,7 +17,7 @@ import scala.collection.{mutable, DefaultMap, AbstractMap}
 
     override def get(key: K): Option[V] = if (whiteouts contains key) {
       None
-    } else if (parent != null && (parent contains key)) {
+    } else if (parent != null && (parent chainContains key)) {
       parent get key
     } else {
       back get key
