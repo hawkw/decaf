@@ -278,9 +278,6 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class ASTOperator(loc: Position, token: String) extends ASTNode(loc) {
     override def getName = "Operator: "
 
-    //TODO: Is this even correct?
-    //override def typeof(scope: ScopeNode): Type = ???
-
     def stringifyChildren(indentLevel: Int): String = token
   }
 
@@ -361,9 +358,10 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
     override def typeof(scope: ScopeNode): Type = lhs match {
         case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
-        case (e: ErrorType, _) => e //TODO: Stub
+        case (e: ErrorType, _) => e
         case (_, e: ErrorType) => e
-        case (_, _) => NullType(l)
+        case (l: BoolType, r: BoolType) => BoolType(pos)
+        case (l, r) => new ErrorType(s" *** Incompatible operand: ${l.typeName} ${o.token} ${r.typeName}", pos)
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
@@ -371,7 +369,6 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         case r => new ErrorType(s" *** Incompatible operand: ! ${r.typeName}", pos)
       }
     }
-
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
@@ -411,7 +408,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       base.stringify(indentLevel + 1) +
         subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
+      case e: ErrorType => e
+      case a: ArrayType => a.elemType //TODO: Is this right?
+      case _ => new ErrorType(" *** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
+    }
   }
 
   case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
@@ -430,6 +431,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         field.stringify(indentLevel + 1)
     }
     override def typeof(scope: ScopeNode): Type = base match {
+        //TODO: Verify me
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table.get(name.name).get match {
@@ -477,7 +479,14 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = base match {
+      case Some(e) => e.typeof(scope)
+      case None =>
+        if(scope.table.chainContains(field.name)) {
+          TypeAnnotation t = scope.table.get(field.name).get
+        }
+        NullType(pos)
+    }
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
