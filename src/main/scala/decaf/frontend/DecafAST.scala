@@ -411,7 +411,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
       case e: ErrorType => e
       case a: ArrayType => a.elemType //TODO: Is this right?
-      case _ => new ErrorType(" *** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
+      case _ => new ErrorType("*** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
     }
   }
 
@@ -498,24 +498,39 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
     cType.parent = this
     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = {
+      if(scope.table.chainContains(cType.name.name)) {
+        cType
+      } else {
+        new ErrorType("*** ??? ", pos) //TODO:String?
+      }
+    }
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(loc) {
     size.parent = this
     elemType.parent = this
     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = elemType match {
+      case a: ArrayType => new ArrayType(pos, a)
+      case n: NamedType => if(scope.table.chainContains(n.name.name)) {
+        new ArrayType(pos, n)
+      } else {
+        new ErrorType("*** ???", pos) //TODO:String?
+      }
+      case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => elemType
+      case _ => new ErrorType("*** ???", pos) //TODO: String?
+    }
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = IntType(pos)
   }
 
   case class ReadLineExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = StringType(pos)
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
