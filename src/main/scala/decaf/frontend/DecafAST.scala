@@ -491,10 +491,18 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
           t match {
             case MethodAnnotation(rtype, args, _) =>
               var result: Type = rtype
-              for (i <- 0 until args.length) {
-                if (args(i) != myargstype(i)) // Unfortunately, JJ wants the position and types of the bad arguments
-                  result = new ErrorType(s" *** Incompatible argument $i :" +
-                    s" ${args(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
+              if (myargstype.length != args.length) {
+                result = new ErrorType(s" *** Function ‘${field.name}’ expects ${args.length}" +
+                  s" arguments but ${myargstype.length} given", pos)
+              } else {
+                // Unfortunately, JJ wants the position and types of the bad arguments
+                // I wish there was a more functional way of doing this, but meh.
+                //      ~ Hawk, 11/12/14
+                for (i <- 0 until args.length) {
+                  if (args(i) != myargstype(i))
+                    result = new ErrorType(s" *** Incompatible argument $i :" +
+                      s" ${args(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
+                }
               }
               result
             case _ => new ErrorType(" *** ??? ",pos) //TODO: Error string?
