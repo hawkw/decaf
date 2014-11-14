@@ -12,7 +12,7 @@ object Compiler extends App {
   val parser = new DecafSyntactical
   val source: String = args match {
     case Array() =>
-      Source.fromInputStream(System.in).takeWhile(_ != null).mkString
+      Source.fromInputStream(System.in).mkString
     case Array(path: String, _*) =>
       Source.fromFile(path).mkString
   }

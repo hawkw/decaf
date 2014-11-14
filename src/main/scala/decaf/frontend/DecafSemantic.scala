@@ -425,7 +425,8 @@ object DecafSemantic {
       case ClassDecl(_, ext, impl, mems) =>
         ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
           impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) /*:::
-          checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */ // 11/7/14: Moved to thirdPass() ~ Hawk
+          checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */
+      // 11/7/14: Moved to thirdPass() ~ Hawk
 
       case InterfaceDecl(_, members) => members.flatMap(checkTypes(_))
 
@@ -438,7 +439,7 @@ object DecafSemantic {
       case IfStmt(test, ifbody, elsebody) =>
         val t: List[Exception] = test.typeof(scope) match {
           case BoolType(_) => Nil
-          case e: ErrorType =>  e :: new InvalidTestException(ast.pos) :: Nil
+          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
           case _ => new InvalidTestException(ast.pos) :: Nil
         }
         t ::: checkTypes(ifbody) ::: elsebody.map(checkTypes(_)).getOrElse(Nil)
@@ -462,7 +463,7 @@ object DecafSemantic {
       case SwitchStmt(what, cases, default, _) =>
         what.map(checkTypes(_)).getOrElse(Nil) ::: cases.flatMap(checkTypes(_)) ::: default.map(checkTypes(_)).getOrElse(Nil)
 
-      case CaseStmt(value,body,_) => body.flatMap(checkTypes(_))
+      case CaseStmt(value, body, _) => body.flatMap(checkTypes(_))
       case ReturnStmt(_, Some(exp)) =>
         val state: ScopeNode = ast.state.orNull
         if (state == null) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
@@ -471,11 +472,15 @@ object DecafSemantic {
             if (m.matches(MethodAnnotation(exp.typeof(state), m.formals, m.pos))) {
               Nil
             } else {
-              new IncompatibleReturnException(exp.typeof(state).typeName,m.returnType.typeName,ast.pos) :: Nil
+              new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil
             }
-          case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" +     // this should not happen,
+          case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" + // this should not happen,
             " return statement without function declaration") // the parser should never allow this
         }
+      case a: AssignExpr => a.typeof(scope) match {
+        case e: ErrorType => List[Exception](e)
+        case VoidType(_) => Nil
+      }
     }
   }
 
