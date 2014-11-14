@@ -445,10 +445,13 @@ import scala.util.parsing.input.{Positional, Position}
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table.get(name.name).get match {
-            case VariableAnnotation(_,where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", where)
-            case MethodAnnotation(_, _, where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", where)
+            case VariableAnnotation(what,where) =>
+              new ErrorType(s"*** ${what.typeName} has no such field '${field.name}'", where)
+            case MethodAnnotation(_, _, where) =>
+              throw new IllegalArgumentException(
+                s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
+                  s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+                  s"\n***, code:\n${loc.longString}")
             case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t, _) => t
@@ -463,8 +466,10 @@ import scala.util.parsing.input.{Positional, Position}
         }
         // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
         // something that should be impossible for it to generate.
-        case _ => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-          "\n*** please contact the decaf implementors and I am sorry", loc)
+        case _ => throw new IllegalArgumentException(
+          s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
+            s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+            s"\n***, code:\n${loc.longString}")
       }
 
       case None => if (scope.table chainContains field.name) {

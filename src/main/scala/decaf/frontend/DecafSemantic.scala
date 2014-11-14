@@ -501,8 +501,10 @@ object DecafSemantic {
             } else {
               new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil
             }
-          case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" + // this should not happen,
-            " return statement without function declaration") // the parser should never allow this
+          case _ => throw new IllegalArgumentException(
+            s"\n*** EXTREMELY BAD PROBLEM occurs on line ${ast.pos.line}" + // this should not happen
+              s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+              s"\n***, code:\n${ast.pos.longString}") // the parser should never allow this
         }
       case ex: Expr => ex.typeof(scope) match {
         case e: ErrorType => List[Exception](e)
@@ -520,8 +522,10 @@ object DecafSemantic {
   def findReturnType(node: ASTNode): String = node match {
     case FnDecl(ident, _, _, _) => ident.name
     case n: ASTNode => findReturnType(n.parent)
-    case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" +     // this should not happen,
-      " return statement without function declaration") // the parser should never allow this
+    case _ => throw new IllegalArgumentException(
+      s"\n*** EXTREMELY BAD PROBLEM occurs on line ${node.pos.line}" + // this should not happen
+        s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+        s"\n***, code:\n${node.pos.longString}") // the parser should never allow this
   }
   /**
    * Checks a ClassDecl for correct inheritance.
