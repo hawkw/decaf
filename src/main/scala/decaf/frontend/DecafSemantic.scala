@@ -2,10 +2,6 @@ package decaf.frontend
 
 import scala.util.parsing.input.Position
 
-
-/**
- * Contains the Semantic Analysis stuff
- */
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
   lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
 
@@ -123,7 +119,28 @@ case class ScopeNode(table: DecafSemantic.ScopeTable,
   }
 
 }
-
+/**
+ * Contains the Semantic Analysis stuff
+ *
+ * ==Design Decisions==
+ * While we have attempted to follow the Decaf specification faithfully, there are some cases
+ * in which our implementation's output differs from the sample output provided by
+ * Dr. Jumadinova, due to differing interpretations of the specification and/or cases in which
+ * we thought the specified behaviour was not conducive to effective programming in Decaf.
+ *
+ *  + Since the Decaf specification states that "Decaf does not support encapsulation", we chose
+ *    not to implement the `*** Crayon field 'color' only accessible within class scope` error
+ *    that is present in some of the sample output for this assignment. We instead chose to make
+ *    all names globally visible, rather than making all variables private and all methods public,
+ *    as we determined that the latter option sounds dangerously close to encapsulation.
+ *  + Although the Decaf spec does not support type lifting, we chose to implement type lifting
+ *    from Integer to Double. This is because Decaf has no casting mechanism, and therefore, there
+ *    is no way to ever perform operations on mixed numeric operands. Therefore, we do not generate
+ *    the `*** Incompatible operands: double / int` that is present in some sample output.
+ *
+ * @author Hawk Weisman [[mailto://hawk@meteorcodelabs.com hawk@meteorcodelabs.com]]
+ * @author Max Clive [[mailto://mattrulz127@gmail.com mattrulz127@gmail.com]]
+ */
 object DecafSemantic {
   type ScopeTable = ForkTable[String, TypeAnnotation]
   implicit def errorType2TypeError(e: ErrorType): Exception = new TypeErrorException(e.message, e.pos)
