@@ -477,9 +477,9 @@ object DecafSemantic {
           case _ => throw new IllegalArgumentException("EXTREMELY BAD PROBLEM OCCURS:" + // this should not happen,
             " return statement without function declaration") // the parser should never allow this
         }
-      case a: AssignExpr => a.typeof(scope) match {
+      case ex: Expr => ex.typeof(scope) match {
         case e: ErrorType => List[Exception](e)
-        case VoidType(_) => Nil
+        case _ => Nil
       }
     }
   }
