@@ -379,10 +379,12 @@ import scala.util.parsing.input.{Positional, Position}
       })
     }
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l) // should this maybe be void rather than null?
-    }                           //    ~ Hawk, 11/12/14
+      case (lf,rf) =>
+        if(lf == rf) VoidType(pos)
+        else new ErrorType(s"*** Incompatible operands: ${lf.typeName} = ${rf.typeName}", pos)
+    }
   }
 
   abstract class LValue(loc: Position) extends Expr(loc)
@@ -415,7 +417,7 @@ import scala.util.parsing.input.{Positional, Position}
           a.elemType
         else
           new ErrorType("*** Array subscript must be an integer", pos)
-      case _ => new ErrorType("*** [ ] can only be applied to arrays", pos) //TODO: What string goes here?
+      case _ => new ErrorType("*** [ ] can only be applied to arrays", pos)
         // Pretty sure it should throw an exception here?
         //    ~ Hawk, 11/12/14
         // > No, it should TypeError (there exists a string for this, just can't remember
@@ -494,10 +496,10 @@ import scala.util.parsing.input.{Positional, Position}
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
           t match {
-            case MethodAnnotation(rtype, args, _) =>
+            case MethodAnnotation(rtype, nargs, _) =>
               var result: Type = rtype
-              if (myargstype.length != args.length) {
-                result = new ErrorType(s" *** Function ‘${field.name}’ expects ${args.length}" +
+              if (myargstype.length != nargs.length) {
+                result = new ErrorType(s" *** Function ‘${field.name}’ expects ${nargs.length}" +
                   s" arguments but ${myargstype.length} given", pos)
               } else {
                 // Unfortunately, JJ wants the position and types of the bad arguments
@@ -509,13 +511,13 @@ import scala.util.parsing.input.{Positional, Position}
                 // > Although, this works just fine, and it's not functional.
                 // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
-                  if (args(i) != myargstype(i))
+                  if (nargs(i) != myargstype(i))
                     result = new ErrorType(s" *** Incompatible argument $i :" +
-                      s" ${args(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
+                      s" ${nargs(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
                 }
               }
               result
-            case q => new ErrorType(s" *** Attempt to call on a non-method identifier ${field.name}, which is of type ${q}",pos)
+            case q => new ErrorType(s" *** Attempt to call on non-method ${field.name}, which is of type $q",pos)
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
