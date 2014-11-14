@@ -410,8 +410,12 @@ import scala.util.parsing.input.{Positional, Position}
     }
     override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
       case e: ErrorType => e
-      case a: ArrayType => a.elemType
-      case _ => new ErrorType("*** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
+      case a: ArrayType =>
+        if(this.subscript.typeof(scope).isInstanceOf[IntType])
+          a.elemType
+        else
+          new ErrorType("*** Array subscript must be an integer", pos)
+      case _ => new ErrorType("*** [ ] can only be applied to arrays", pos) //TODO: What string goes here?
         // Pretty sure it should throw an exception here?
         //    ~ Hawk, 11/12/14
         // > No, it should TypeError (there exists a string for this, just can't remember
@@ -511,7 +515,7 @@ import scala.util.parsing.input.{Positional, Position}
                 }
               }
               result
-            case _ => new ErrorType(" *** ??? ",pos) //TODO: Error string?
+            case q => new ErrorType(s" *** Attempt to call on a non-method identifier ${field.name}, which is of type ${q}",pos)
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
@@ -549,22 +553,27 @@ import scala.util.parsing.input.{Positional, Position}
     size.parent = this
     elemType.parent = this
     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = elemType match {
-      case a: ArrayType => new ArrayType(pos, a)
-      case n: NamedType => if(scope.table.chainContains(n.name.name)) {
-        new ArrayType(pos, n)
+    override def typeof(scope: ScopeNode): Type =
+      if(size.typeof(scope).isInstanceOf[IntType]) {
+        elemType match {
+          case a: ArrayType => new ArrayType(pos, a)
+          case n: NamedType => if (scope.table.chainContains(n.name.name)) {
+            new ArrayType(pos, n)
+          } else {
+            new ErrorType(s" *** No declaration for class ‘${n.name.name}’ found", pos)
+          }
+          case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => elemType
+          case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
+          // Yet again, this one is probably not ErrorType but
+          // InvalidStateException (or w/e).
+          //      ~ Hawk, 11/12/14
+          // > Not really, we need it to errortype because of dumb expressions
+          // > like null[6].
+          // >    ~ Xyzzy, 11/13/14
+        }
       } else {
-        new ErrorType(s" *** No declaration for class ‘${n.name.name}’ found", pos)
+        new ErrorType("*** Size for NewArray must be an integer", pos)
       }
-      case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => elemType
-      case _ => new ErrorType("*** ???", pos) //TODO: String?
-        // Yet again, this one is probably not ErrorType but
-        // InvalidStateException (or w/e).
-        //      ~ Hawk, 11/12/14
-        // > Not really, we need it to errortype because of dumb expressions
-        // > like null[6].
-        // >    ~ Xyzzy, 11/13/14
-    }
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(loc) {
