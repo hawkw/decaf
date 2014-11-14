@@ -682,7 +682,7 @@ import scala.util.parsing.input.{Positional, Position}
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
   }
 
-  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + " Array", locat) {
+  case class ArrayType(locat: Position, elemType: Type) extends Type (elemType.typeName + " Array", locat) {
     override val printLine = true
     override def getName = "ArrayType:"
     elemType.parent = this
