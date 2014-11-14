@@ -16,6 +16,11 @@ Rave Reviews
 >
 > ~ Max Clive
 
+
+> I've seen other languages with support for recursive descent parsing, for instance, but for the shear, nightmare glory of an LALR parser, nothing more than superficially more elegant (sic) than Flex/Bison.
+> 
+> ~ Andrew Thall, Ph.D
+
 Using Decaf
 -----------
 
