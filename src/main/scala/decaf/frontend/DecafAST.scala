@@ -381,8 +381,8 @@ import scala.util.parsing.input.{Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e //TODO: Stub
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l)
-    }
+      case (_,_) => NullType(l) // should this maybe be void rather than null?
+    }                           //    ~ Hawk, 11/12/14
   }
 
   abstract class LValue(loc: Position) extends Expr(loc)
@@ -411,7 +411,10 @@ import scala.util.parsing.input.{Positional, Position}
     override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
       case e: ErrorType => e
       case a: ArrayType => a.elemType //TODO: Is this right?
+                                      // Yes. ~ Hawk, 11/12/14
       case _ => new ErrorType("*** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
+        // Pretty sure it should throw an exception here?
+        //    ~ Hawk, 11/12/14
     }
   }
 
@@ -486,11 +489,33 @@ import scala.util.parsing.input.{Positional, Position}
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
           t match {
-            case MethodAnnotation(rtype, nargs, _) => if(nargs == myargstype) rtype else new ErrorType(" *** ??? ", pos) //TODO: Error string?
+            case MethodAnnotation(rtype, args, _) =>
+              var result: Type = rtype
+              if (myargstype.length != args.length) {
+                result = new ErrorType(s" *** Function ‘${field.name}’ expects ${args.length}" +
+                  s" arguments but ${myargstype.length} given", pos)
+              } else {
+                // Unfortunately, JJ wants the position and types of the bad arguments
+                // I wish there was a more functional way of doing this, but meh.
+                //      ~ Hawk, 11/12/14
+                for (i <- 0 until args.length) {
+                  if (args(i) != myargstype(i))
+                    result = new ErrorType(s" *** Incompatible argument $i :" +
+                      s" ${args(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
+                }
+              }
+              result
             case _ => new ErrorType(" *** ??? ",pos) //TODO: Error string?
+            // Not actually sure if this one is ErrorType - it might be an
+            // invalid state and we might want to throw an exception here.
+            // Are there any valid situations in which we would have an
+            // a value bound to the name of a method that is not a
+            // MethodAnnotation and we have gotten this far in the
+            // semantic analysis process?
+            //      ~ Hawk, 11/12/14
           }
         } else {
-          new ErrorType(" *** ??? ",pos) //TODO: Error string?
+          new ErrorType(s" *** No declaration for function ‘${field.name}’ found ",pos)
         }
     }
   }
@@ -501,8 +526,8 @@ import scala.util.parsing.input.{Positional, Position}
     override def typeof(scope: ScopeNode): Type = {
       if(scope.table.chainContains(cType.name.name)) {
         cType
-      } else {
-        new ErrorType("*** ??? ", pos) //TODO:String?
+      } else {  // we can assume class here because NamedType == class/interface in Decaf
+        new ErrorType(s" *** No declaration for class ‘${cType.name.name}’ found", pos)
       }
     }
   }
@@ -516,10 +541,13 @@ import scala.util.parsing.input.{Positional, Position}
       case n: NamedType => if(scope.table.chainContains(n.name.name)) {
         new ArrayType(pos, n)
       } else {
-        new ErrorType("*** ???", pos) //TODO:String?
+        new ErrorType(s" *** No declaration for class ‘${n.name.name}’ found", pos)
       }
       case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => elemType
       case _ => new ErrorType("*** ???", pos) //TODO: String?
+        // Yet again, this one is probably not ErrorType but
+        // InvalidStateException (or w/e).
+        //      ~ Hawk, 11/12/14
     }
   }
 
