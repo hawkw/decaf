@@ -121,7 +121,7 @@ import scala.util.parsing.input.{Positional, Position}
     }
   }
 
-  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(testExpr.pos){
+  abstract class ConditionalStmt(val testExpr: Expr, val body: Stmt) extends Stmt(testExpr.pos){
     override val printLine = false
     testExpr.parent = this
     body.parent = this
