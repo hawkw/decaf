@@ -10,10 +10,10 @@ import scala.io.Source
  */
 object Compiler extends App {
   val parser = new DecafSyntactical
-  args.length match {
-    case 0 => println("Please enter a Decaf source code file to compile.")
-    case 1 =>
-      val source = Source.fromFile(args(0)).mkString
+  args match {
+    case Array() => println("Please enter a Decaf source code file to compile.")
+    case Array("-f", path) =>
+      val source = Source.fromFile(path).mkString
       val ast = parser.parse(source)
       val (scopes, errors) = DecafSemantic.analyze(ast)
       errors.foreach(System.err.println(_))
