@@ -398,7 +398,7 @@ import scala.util.parsing.input.{Positional, Position}
         case _ => new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
       }
     } else {
-      new ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
+      new ErrorType("*** 'this' is only valid within class scope", loc)
     }
   }
 
