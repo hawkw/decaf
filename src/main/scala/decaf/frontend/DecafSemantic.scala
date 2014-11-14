@@ -188,13 +188,21 @@ object DecafSemantic {
         }
       case i: IfStmt =>
         i.state = Some(scope)
+        decorateScope(i.test, scope)
         decorateScope(i.testBody, scope.child("Test body", i.testBody))
         i.elseBody.foreach{
           case s: StmtBlock => decorateScope(s, scope.child("Else body", s) )
         }
-      case l: LoopStmt =>
-        l.state = Some(scope)
-        decorateScope(l.body, scope.child("Loop body", l.body))
+      case f: ForStmt =>
+        f.state = Some(scope)
+        f.init.foreach(decorateScope(_, scope))
+        f.step.foreach(decorateScope(_, scope))
+        decorateScope(f.test, scope)
+        decorateScope( f.body, scope.child("Loop body", f.body) )
+      case w: WhileStmt =>
+        w.state = Some(scope)
+        decorateScope( w.loopBody, scope.child("Loop body", w.loopBody) )
+        decorateScope(w.test, scope)
       case e: CompoundExpr =>
         e.state = Some(scope)
         e.left.foreach(decorateScope(_, scope))
