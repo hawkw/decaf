@@ -558,13 +558,13 @@ import scala.util.parsing.input.{Positional, Position}
     override def typeof(scope: ScopeNode): Type =
       if(size.typeof(scope).isInstanceOf[IntType]) {
         elemType match {
-          case a: ArrayType => new ArrayType(pos, a)
+          case a: ArrayType => ArrayType(pos, a)
           case n: NamedType => if (scope.table.chainContains(n.name.name)) {
             new ArrayType(pos, n)
           } else {
             new ErrorType(s" *** No declaration for class ‘${n.name.name}’ found", pos)
           }
-          case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => elemType
+          case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => ArrayType(pos, elemType)
           case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
           // Yet again, this one is probably not ErrorType but
           // InvalidStateException (or w/e).
