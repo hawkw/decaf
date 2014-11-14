@@ -410,11 +410,13 @@ import scala.util.parsing.input.{Positional, Position}
     }
     override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
       case e: ErrorType => e
-      case a: ArrayType => a.elemType //TODO: Is this right?
-                                      // Yes. ~ Hawk, 11/12/14
+      case a: ArrayType => a.elemType
       case _ => new ErrorType("*** TypeError from ArrayAccess: ???", pos) //TODO: What string goes here?
         // Pretty sure it should throw an exception here?
         //    ~ Hawk, 11/12/14
+        // > No, it should TypeError (there exists a string for this, just can't remember
+        // > which one.
+        // >  ~ Xyzzy 11/13/14
     }
   }
 
@@ -434,7 +436,6 @@ import scala.util.parsing.input.{Positional, Position}
         field.stringify(indentLevel + 1)
     }
     override def typeof(scope: ScopeNode): Type = base match {
-        //TODO: Verify me
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table.get(name.name).get match {
@@ -498,6 +499,11 @@ import scala.util.parsing.input.{Positional, Position}
                 // Unfortunately, JJ wants the position and types of the bad arguments
                 // I wish there was a more functional way of doing this, but meh.
                 //      ~ Hawk, 11/12/14
+                // > Can't we accumulate/fold this value, passing the correct type
+                // > on successive matches, and a TypeError if not?
+                // > That'd be your functional way of doing this.
+                // > Although, this works just fine, and it's not functional.
+                // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
                   if (args(i) != myargstype(i))
                     result = new ErrorType(s" *** Incompatible argument $i :" +
@@ -513,6 +519,13 @@ import scala.util.parsing.input.{Positional, Position}
             // MethodAnnotation and we have gotten this far in the
             // semantic analysis process?
             //      ~ Hawk, 11/12/14
+            // > This is totally an error that could happen: If I remember correctly,
+            // > the passes we have done thus far do not extend all the way into exprs -
+            // > they only pertain to definitions and types. You could, for instance,
+            // > attempt the expression "int foo = foo();" which we don't check for yet.
+            // > This typeerror would then be the first time we check the validity of such
+            // > a construct, and therefore it's kind of important.
+            // >   ~ Xyzzy, 11/13/14
           }
         } else {
           new ErrorType(s" *** No declaration for function ‘${field.name}’ found ",pos)
@@ -548,6 +561,9 @@ import scala.util.parsing.input.{Positional, Position}
         // Yet again, this one is probably not ErrorType but
         // InvalidStateException (or w/e).
         //      ~ Hawk, 11/12/14
+        // > Not really, we need it to errortype because of dumb expressions
+        // > like null[6].
+        // >    ~ Xyzzy, 11/13/14
     }
   }
 
