@@ -9,6 +9,13 @@ Implemented by Hawk Weisman (@hawkw) and Max Clive (@ArcticLight) for Professor 
 
 This Scala implementation of the Decaf compiler (`dcc`) is based on the C++/Flex/Bison reference implementation provided by Professor Jumadinova.
 
+Rave Reviews
+-----------
+
+> ... [I]mmense sadness that the first thought that ran through my mind after typing "^this" was "*** this used in incorrect context", demonstrating that clearly I have spent FAR too much time on this project.
+>
+> ~ Max Clive
+
 Using Decaf
 -----------
 
