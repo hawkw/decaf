@@ -282,9 +282,9 @@ import scala.util.parsing.input.{Positional, Position}
   }
 
   abstract class CompoundExpr(loc: Position,
-                              protected val left: Option[Expr],
-                              protected val op: ASTOperator,
-                              protected val right: Expr) extends Expr(loc) {
+                              val left: Option[Expr],
+                              val op: ASTOperator,
+                              val right: Expr) extends Expr(loc) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)

@@ -195,6 +195,10 @@ object DecafSemantic {
       case l: LoopStmt =>
         l.state = Some(scope)
         decorateScope(l.body, scope.child("Loop body", l.body))
+      case e: CompoundExpr =>
+        e.state = Some(scope)
+        e.left.foreach(decorateScope(_, scope))
+        decorateScope(e.right, scope)
       case n: ASTNode => n.state = Some(scope)
     }
   }
