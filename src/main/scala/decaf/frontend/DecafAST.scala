@@ -451,7 +451,7 @@ import scala.util.parsing.input.{Positional, Position}
               throw new IllegalArgumentException(
                 s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
                   s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
-                  s"\n***, code:\n${loc.longString}")
+                  s"\n*** code:\n${loc.longString}")
             case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t, _) => t
@@ -464,12 +464,13 @@ import scala.util.parsing.input.{Positional, Position}
         } else {
           UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
         }
+        case t: Type => new ErrorType(s"*** ${t.typeName} has no such field '${field.name}'", loc)
         // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
         // something that should be impossible for it to generate.
         case _ => throw new IllegalArgumentException(
           s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
             s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
-            s"\n***, code:\n${loc.longString}")
+            s"\n** code:\n${loc.longString}")
       }
 
       case None => if (scope.table chainContains field.name) {

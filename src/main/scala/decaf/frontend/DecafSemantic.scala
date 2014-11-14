@@ -504,7 +504,7 @@ object DecafSemantic {
           case _ => throw new IllegalArgumentException(
             s"\n*** EXTREMELY BAD PROBLEM occurs on line ${ast.pos.line}" + // this should not happen
               s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
-              s"\n***, code:\n${ast.pos.longString}") // the parser should never allow this
+              s"\n*** code:\n${ast.pos.longString}") // the parser should never allow this
         }
       case ex: Expr => ex.typeof(scope) match {
         case e: ErrorType => List[Exception](e)
@@ -525,7 +525,7 @@ object DecafSemantic {
     case _ => throw new IllegalArgumentException(
       s"\n*** EXTREMELY BAD PROBLEM occurs on line ${node.pos.line}" + // this should not happen
         s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
-        s"\n***, code:\n${node.pos.longString}") // the parser should never allow this
+        s"\n*** code:\n${node.pos.longString}") // the parser should never allow this
   }
   /**
    * Checks a ClassDecl for correct inheritance.
