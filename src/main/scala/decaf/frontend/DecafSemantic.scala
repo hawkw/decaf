@@ -9,7 +9,7 @@ import scala.util.parsing.input.Position
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
   lazy val lineOfCode = pos.longString.replaceAll("\n\n", "\n")
 
-  override def toString: String = s"$lineOfCode\n$message\n"
+  override def toString: String = s"*** Error line ${pos.line}.\n$lineOfCode\n$message\n"
 
 }
 
