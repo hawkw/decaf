@@ -135,7 +135,7 @@ object DecafSemantic {
    * that corresponds to a scope with its' own scope node.
    *
    * This method should be called on the tree before the actual semantic analysis methods
-   * ([[pullDeclsToScope()]], [[checkTypes()]], [[thirdPass()]]); if the semantic analysis
+   * ([[pullDeclsToScope()]], [[checkTypes()]], [[checkClasses()]]); if the semantic analysis
    * methods are called on an un-decorated tree, Everything Will Go Wrong.
    *
    * @param tree the [[ASTNode]] to walk
@@ -498,7 +498,7 @@ object DecafSemantic {
    * @param c the class declaration to check
    * @return a list of [[Exception]]s generated during the check
    */
-  def checkClassIntegrity(c: ClassDecl): List[Exception] = {
+  def checkInheritance(c: ClassDecl): List[Exception] = {
     val classState = c.state.getOrElse(throw new IllegalArgumentException("Tree does not contain scope for " + c))
     val extErr = for {
       t <- c.extnds
@@ -526,17 +526,17 @@ object DecafSemantic {
 
   /**
    * Performs the third walk across the AST, doing all semantic checks that require a complete symbol table.
-   * Currently, this is limited to class integrity checking ([[checkClassIntegrity()]]).
+   * Currently, this is limited to class integrity checking ([[checkInheritance()]]).
    * @param ast the ASTNode over which to walk
    * @return a list of errors that were generated during the walk
    */
-  def thirdPass(ast: ASTNode): List[Exception] = if (!ast.isInstanceOf[Program] && ast.state.isEmpty)
+  def checkClasses(ast: ASTNode): List[Exception] = if (!ast.isInstanceOf[Program] && ast.state.isEmpty)
     throw new IllegalArgumentException("Tree does not contain scope for " + ast)
   else {
     val scope = ast.state.get
     ast match {
-      case Program(declarations, _) => declarations.flatMap(thirdPass(_))
-      case c: ClassDecl => checkClassIntegrity(c) /* :::
+      case Program(declarations, _) => declarations.flatMap(checkClasses(_))
+      case c: ClassDecl => checkInheritance(c) /* :::
         c.extnds.map(thirdPass(_)).getOrElse(Nil) :::
         c.members.flatMap(thirdPass(_))           :::
         c.implements.flatMap(thirdPass(_))        ::: Nil */ //currently we don't need to do this but we might later
@@ -551,7 +551,7 @@ object DecafSemantic {
    * and then calling the three semantic analysis methods in order:
    *  1. [[pullDeclsToScope()]]
    *  2. [[checkTypes()]]
-   *  3. [[thirdPass()]]
+   *  3. [[checkClasses()]]
    *
    * All errors generated during these three analysis passes are consed together
    * into a List[Exception] that is then returned by this method at the end of
@@ -564,7 +564,7 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: checkTypes(top) ::: thirdPass(top)
+    val problems = pullDeclsToScope(top) ::: checkTypes(top) ::: checkClasses(top)
     (top.state.get, problems)
   }
 
