@@ -663,7 +663,11 @@ import scala.util.parsing.input.{Positional, Position}
   abstract class Type(val typeName: String, loc: Position) extends ASTNode(loc) {
     override val printLine = false
     override def getName = "Type: "
-     def stringifyChildren(indentLevel: Int): String = typeName
+    override def stringifyChildren(indentLevel: Int): String = typeName
+    override def equals(o: Any) = o match {
+      case that: Type => that.typeName == this.typeName
+      case _ => false
+    }
   }
   // builtin classes for primitive types
   case class IntType(loc: Position) extends Type("int", loc)
