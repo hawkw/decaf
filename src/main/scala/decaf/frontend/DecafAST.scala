@@ -1,5 +1,5 @@
 package decaf.frontend
-import scala.util.parsing.input.{NoPosition, Positional, Position}
+import scala.util.parsing.input.{Positional, Position}
 
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
@@ -326,7 +326,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       case (IntType(_), DoubleType(_)) => BoolType(pos)
       case (DoubleType(_), IntType(_)) => BoolType(pos)
       case (DoubleType(_), DoubleType(_)) => BoolType(pos)
-      case (l, r) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (lf, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
     }
   }
 
@@ -334,8 +334,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
-      case (l: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
-      case (l, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${l.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (lf: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (lf, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
       case (_,_) => BoolType(pos)
     }
   }
@@ -360,8 +360,8 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
         case (e: ErrorType, _) => e
         case (_, e: ErrorType) => e
-        case (l: BoolType, r: BoolType) => BoolType(pos)
-        case (l, r) => new ErrorType(s" *** Incompatible operand: ${l.typeName} ${o.token} ${r.typeName}", pos)
+        case (lf: BoolType, r: BoolType) => BoolType(pos)
+        case (lf, r) => new ErrorType(s" *** Incompatible operand: ${lf.typeName} ${o.token} ${r.typeName}", pos)
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
@@ -486,7 +486,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
           t match {
-            case MethodAnnotation(rtype, args, _) => if(args == myargstype) rtype else new ErrorType(" *** ??? ", pos) //TODO: Error string?
+            case MethodAnnotation(rtype, nargs, _) => if(nargs == myargstype) rtype else new ErrorType(" *** ??? ", pos) //TODO: Error string?
             case _ => new ErrorType(" *** ??? ",pos) //TODO: Error string?
           }
         } else {
