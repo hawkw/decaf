@@ -1,5 +1,9 @@
 package decaf.frontend
 
+import com.meteorcode.common.ForkTable
+import decaf.AST._
+import decaf.AST.annotations._
+
 import scala.util.parsing.input.Position
 
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
@@ -43,59 +47,15 @@ class IncompatibleReturnException(got: String,
                                   where: Position)
   extends SemanticException(s"*** Incompatible return : $got given, $expected expected", where)
 
-abstract class TypeAnnotation(where: Position) {
-  def matches(that: TypeAnnotation): Boolean
-}
-case class MethodAnnotation(returnType: Type,
-                            formals: List[Type],
-                            pos: Position) extends TypeAnnotation(pos) {
-  override def matches(that: TypeAnnotation): Boolean = that match {
-    case MethodAnnotation(rt, f, _) => rt == returnType && f == formals
-    case _ => false
-  }
-  override def toString = s"Method: ${returnType.typeName} -> (" +
-    formals.map(_.typeName).mkString(",") + ")"
-}
-case class ClassAnnotation(name: NamedType,
-                           ext: Option[NamedType],
-                           implements: List[NamedType],
-                           classScope: DecafSemantic.ScopeTable,
-                           pos: Position) extends TypeAnnotation(pos) {
-  override def matches(that: TypeAnnotation): Boolean = that match {
-    // matches if the that is equal to this
-    // WARNING WARNING WARNING
-    // Had to remove superclass checking from
-    // this function for Type reasons.
-    // Will have to implement the superclass
-    // check somewhere else, based on ScopeNode
-    // rather than by chaining ClassAnnotations.
-    // WARNING WARNING WARNING
-    case ClassAnnotation(_, e,i,m, _) => this == that
-    case _ => false
-  }
-  override def toString = s"Class: ${name.name.name}"
-}
 
-case class InterfaceAnnotation(name: NamedType,
-                               interfaceScope: DecafSemantic.ScopeTable,
-                               pos: Position) extends TypeAnnotation(pos) {
-  override def matches(that: TypeAnnotation): Boolean = that match {
-    case InterfaceAnnotation(_, _, _) => this == that
-    case _ => false
-  }
 
-  override def toString = s"Interface: ${name.name.name}"
-}
 
-case class VariableAnnotation(t: Type, pos: Position) extends TypeAnnotation(pos) {
-  override def matches(that: TypeAnnotation): Boolean = that match {
-    case VariableAnnotation(typ, _) => typ == t
-    case _ => false
-  }
-  override def toString = s"Variable of ${t.typeName}"
-}
 
-case class ScopeNode(table: DecafSemantic.ScopeTable,
+
+
+
+
+case class ScopeNode(table: ScopeTable,
                      boundName: String,
                      parent: Option[ScopeNode] = None,
                      statement: ASTNode) {
@@ -138,12 +98,10 @@ case class ScopeNode(table: DecafSemantic.ScopeTable,
  *    is no way to ever perform operations on mixed numeric operands. Therefore, we do not generate
  *    the `*** Incompatible operands: double / int` that is present in some sample output.
  *
- * @author Hawk Weisman [[mailto://hawk@meteorcodelabs.com hawk@meteorcodelabs.com]]
- * @author Max Clive [[mailto://mattrulz127@gmail.com mattrulz127@gmail.com]]
+ * @author Hawk Weisman
+ * @author Max Clive
  */
 object DecafSemantic {
-  type ScopeTable = ForkTable[String, TypeAnnotation]
-  implicit def errorType2TypeError(e: ErrorType): Exception = new TypeErrorException(e.message, e.pos)
 
   /**
    * Walks an [[ASTNode abstract syntax tree]] and decorates each statement in the tree
@@ -422,7 +380,7 @@ object DecafSemantic {
    * Check that all inheritance cycles are legal
    * @param scope The scope at which to conduct checks
    * @param seen a list of all the names we've seen so far
-   * @param c the [[decaf.frontend.NamedType]] ({class | interface}) to check
+   * @param c the [[NamedType]] ({class | interface}) to check
    * @param p the position
    * @return a [[List]] of [[Exception]]s for each error generated during the check
    */
@@ -453,7 +411,7 @@ object DecafSemantic {
   /**
    * Second walk over the AST. Most typechecking happens here.
    * //TODO: explain this better
-   * @param ast the [[decaf.frontend.ASTNode]] over which to walk
+   * @param ast the [[decaf.AST.ASTNode]] over which to walk
    * @return
    */
   def checkTypes(ast: ASTNode): List[Exception] = {

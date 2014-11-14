@@ -1,5 +1,10 @@
-package decaf.frontend
-import scala.util.parsing.input.{Positional, Position}
+package decaf.AST
+
+import decaf.frontend.ScopeNode
+import decaf.AST.annotations._
+import com.meteorcode.common.ForkTable
+
+import scala.util.parsing.input.{Position, Positional}
 
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
@@ -452,7 +457,7 @@ import scala.util.parsing.input.{Positional, Position}
                 s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
                   s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
                   s"\n*** code:\n${loc.longString}")
-            case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
+            case ClassAnnotation(_, _, _, classScope, where) => classScope.get(field.name) match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t, _) => t
                 case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)

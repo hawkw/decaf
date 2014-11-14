@@ -1,6 +1,6 @@
-package decaf.frontend
+package com.meteorcode.common
 
-import scala.collection.{mutable, DefaultMap, AbstractMap}
+import scala.collection.{AbstractMap, DefaultMap, mutable}
 
   /**
    * Scala re-implementation of Max's ClobberTable˚
