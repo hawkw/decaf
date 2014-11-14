@@ -1,7 +1,5 @@
 package decaf.frontend
 
-import scala.collection.mutable
-
 import scala.util.parsing.input.Position
 
 
