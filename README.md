@@ -13,14 +13,19 @@ Rave Reviews
 -----------
 
 > ... [I]mmense sadness that the first thought that ran through my mind after typing "^this" was "*** this used in incorrect context", demonstrating that clearly I have spent FAR too much time on this project.
->
-> ~ Max Clive
+
+~ Max Clive
 
 
 
 > I've seen other languages with support for recursive descent parsing, for instance, but for the shear, nightmare glory of an LALR parser, nothing more than superficially more elegant (sic) than Flex/Bison.
-> 
-> ~ Andrew Thall, Ph.D
+
+~ Andrew Thall, Ph.D
+
+
+> You're making a compiler named after coffee? That's so dorky.
+
+~ Cara Brosius
 
 Using Decaf
 -----------
