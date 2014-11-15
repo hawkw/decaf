@@ -1,6 +1,6 @@
 package decaf.AST
 
-import decaf.frontend.ScopeNode
+import decaf.frontend.{TypeErrorException, ScopeNode}
 import decaf.AST.annotations._
 import com.meteorcode.common.ForkTable
 
@@ -687,7 +687,16 @@ import scala.util.parsing.input.{Position, Positional}
   case class VoidType(loc: Position) extends Type("void", loc)
   case class NullType(loc: Position) extends Type("null", loc)
   case class StringType(loc: Position) extends Type("string", loc)
-  class ErrorType(val message: String, where: Position) extends Type("error", where)
+  class ErrorType(val message: String, where: Position) extends Type("error", where) {
+    def unpack(): List[Exception] = {
+      List[Exception](new TypeErrorException(message, where))
+    }
+  }
+  class MultiError(val y: ErrorType, val x: ErrorType) extends ErrorType(y.message, y.pos) {
+    override def unpack(): List[Exception] = {
+      x.unpack() ::: y.unpack()
+    }
+  }
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
