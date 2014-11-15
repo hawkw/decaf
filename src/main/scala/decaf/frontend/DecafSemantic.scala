@@ -468,6 +468,10 @@ object DecafSemantic {
         what.map(checkTypes(_)).getOrElse(Nil) ::: cases.flatMap(checkTypes(_)) ::: default.map(checkTypes(_)).getOrElse(Nil)
 
       case CaseStmt(value, body, _) => body.flatMap(checkTypes(_))
+      case BreakStmt(_) => scope.boundName match {
+        case "Loop body" => Nil //todo: also allow case statements?
+        case _ => new SemanticException("*** break is only allowed inside a loop", ast.pos) :: Nil
+      }
       case ReturnStmt(_, Some(exp)) =>
         val state: ScopeNode = ast.state.orNull
         if (state == null) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
