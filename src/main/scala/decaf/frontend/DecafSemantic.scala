@@ -505,6 +505,13 @@ object DecafSemantic {
               s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
               s"\n*** code:\n${ast.pos.longString}") // the parser should never allow this
         }
+      case PrintStmt(args, _) => (for { i <- (0 until args.length).toList }
+        yield args(i).typeof(scope) match {
+          case e: ErrorType => e.unpack
+          case IntType(_) | BoolType(_) | StringType(_) => Nil
+          case t: Type => new SemanticException(s" *** Incompatible argument ${i+1}:" +
+        s" ${t.typeName} given, int/bool/string expected  ", ast.pos) :: Nil
+        }).flatten
       case ex: Expr => ex.typeof(scope) match {
         case e: ErrorType => e
         case _ => Nil
