@@ -4,6 +4,7 @@ import com.meteorcode.common.ForkTable
 import decaf.AST._
 import decaf.AST.annotations._
 
+import scala.util.control.Breaks
 import scala.util.parsing.input.Position
 
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
@@ -401,9 +402,6 @@ object DecafSemantic {
     if(seen.contains(c.name.name)) {
       new IllegalClassInheritanceCycle(seen.head, p) :: Nil
     } else if(!scope.table.chainContains(c.name.name)) {
-      //Exception is silent in this case; since we will report it during general typechecking elsewhere.
-      //Unless we actually want to typecheck on this a billion times?
-      // 11/7/14: This now happens in thirdPass() ~ Hawk
       Nil
     } else {
       val t = scope.table.get(c.name.name).get
@@ -538,14 +536,7 @@ object DecafSemantic {
       // TODO: we should do additional checking here
     }).getOrElse(Nil)
 
-    if(c.extnds.isDefined && extErr.length == 0) {
-      val nstate = classState.table.get(c.extnds.get.name.name)
-      if(nstate.isEmpty) {
-        throw new Exception("EVERYTHING IS ON FIRE")
-      } else {
-        classState.reparent(nstate.get.asInstanceOf[ClassAnnotation].classScope)
-      }
-    }
+    //scopes mangling moved OUT of this method
 
     (for {
       i: NamedType <- c.implements
@@ -584,6 +575,73 @@ object DecafSemantic {
       case _ => Nil
     }
   }
+
+  def locateAnywhere(node: ScopeNode, className: String): Option[ScopeNode] = {
+    //scala doesn't have anonymous recursive functions, so these get shitty names
+    //x zooms to the top node of a ScopeTree
+    def x(p:ScopeNode):ScopeNode = p.parent match {
+      case None => p
+      case Some(z) => x(z)
+    }
+    //c finds the first declaration of a class anywhere in the scope tree
+    def c(p:ScopeNode):Option[ScopeNode] = {
+      p.table.get(className) match {
+        case Some(x: ClassAnnotation) => Some(x.classScope)
+        case None =>
+          var r: Option[ScopeNode] = None
+          Breaks.breakable {
+            for (l <- p.children) {
+              l.table.get(className) match {
+                case None =>
+                case Some(x: ClassAnnotation) =>
+                  r = Some(x.classScope)
+                  Breaks.break()
+              }
+            }
+          }
+          r
+      }
+    }
+    //get the top of the tree for the later descent match
+    //then descend and find declaration
+    c(x(node))
+  }
+
+  def scopedInheritance(ast: ASTNode): List[Exception] = {
+    var ret = List[Exception]()
+    if(ast.state.isEmpty) {
+      throw new IllegalArgumentException("Tree does not contain scope for " + ast)
+    } else {
+      val scope = ast.state.get
+      ast match {
+        case Program(declarations, _) => declarations.flatMap(scopedInheritance(_))
+        case c: ClassDecl =>
+          if (c.extnds.isDefined) {
+            //we are in the middle of rewriting ScopeTree, declarations are in flux
+            //and thus we need to locate a potential class everywhere in the tree.
+            //
+            //This is only important if we ever support inner classes, however,
+            //writing it this way NOW enables us to correctly scope even if we ever do
+            //instead of having to rewrite things.
+            locateAnywhere(scope, c.extnds.get.name.name) match {
+              case None => //throw new Exception("EVERYTHING IS ON FIRE")
+              //funny enough, classes don't seem to contain their own scopeNodes correctly?
+              //therefore we locate it again.
+              case Some(x) => locateAnywhere(scope, c.name.name) match {
+                case None => //throw new Exception("EVERYTHING IS ON FIRE")
+                case Some(y) =>
+                  //mount extendING class under the extendED class, so that its decls happen in the scope chain
+                  y.reparent(x)
+              }
+            }
+          }
+          //potentially support inner classes
+          c.members.flatMap(scopedInheritance(_))
+      }
+    }
+    ret
+  }
+
   /**
    * Performs the complete semantic analysis
    *
@@ -604,7 +662,7 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: checkClasses(top) ::: checkTypes(top)
+    val problems = pullDeclsToScope(top) ::: scopedInheritance(top) ::: checkTypes(top)
     (top.state.get, problems)
   }
 
@@ -622,6 +680,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("class A { } class B extends A { }").toString)
+    println(compileToSemantic("class A { } class B extends A { } class C extends B {} ").toString)
   }
 }
