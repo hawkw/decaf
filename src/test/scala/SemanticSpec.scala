@@ -1,6 +1,8 @@
 import decaf.frontend._
 import org.scalatest.{FlatSpec, Matchers}
 
+import language.postfixOps
+
 import scala.io.Source
 
 /**
@@ -125,6 +127,14 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(2).getMessage should include ("Incompatible operand: ! int")
     errs(3).getMessage should include ("Test expression must have boolean type")
     errs(4).getMessage should include ("Incompatible return : int given, void expected")
+  }
+
+  it should "detect the errors in bad7.decaf" in {
+    val (scopes, errs) = analyze("bad7.decaf")
+    errs should have length 3 // we are skipping the last error due to type lifting
+    errs(0).getMessage should include ("Incompatible argument 3: int given, bool expected")
+    errs(1).getMessage should include ("Function 'Binky' expects 3 arguments but 1 given")
+    errs(2).getMessage should include ("Incompatible operands: double = int")
   }
 
 }
