@@ -142,7 +142,8 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(0).getMessage should include ("Honda has no such field 'horn'")
     errs(1).getMessage should include ("Honda has no such field 'Honk'")
     errs(2).getMessage should include ("Incompatible operands: Boat < Honda")
-    errs(2).getMessage should include ("Incompatible operands: Honda = bool")
+    errs(3).getMessage should include ("Incompatible operands: Honda = bool")
   }
+
 
 }
