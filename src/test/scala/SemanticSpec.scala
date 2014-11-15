@@ -117,4 +117,14 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(6).getMessage should include ("Club has no such field 'Meeting'")
   }
 
+  it should "detect the errors in bad6.decaf" in {
+    val (scopes, errs) = analyze("bad6.decaf")
+    errs should have length 5
+    errs(0).getMessage should include ("Incompatible operands: bool && int")
+    errs(1).getMessage should include ("break is only allowed inside a loop")
+    errs(2).getMessage should include ("Incompatible operand: ! int")
+    errs(3).getMessage should include ("Test expression must have boolean type")
+    errs(4).getMessage should include ("Incompatible return: int given, void expected")
+  }
+
 }
