@@ -507,6 +507,7 @@ import scala.util.parsing.input.{Position, Positional}
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
     override def typeof(scope: ScopeNode): Type = {
         val myargstype: List[Type] = this.args.map(_.typeof(scope))
+
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
           t match {
@@ -699,6 +700,9 @@ import scala.util.parsing.input.{Position, Positional}
     override def unpack(): List[Exception] = {
       x.unpack() ::: y.unpack()
     }
+  }
+  class ListError (val errors: List[ErrorType]) extends ErrorType(errors.last.message, errors.last.pos) {
+    override def unpack(): List[Exception] = errors.flatMap(_.unpack)
   }
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
