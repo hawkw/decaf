@@ -443,7 +443,7 @@ object DecafSemantic {
       case IfStmt(test, ifbody, elsebody) =>
         val t: List[Exception] = test.typeof(scope) match {
           case BoolType(_) => Nil
-          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
+          case e: ErrorType => e :: Nil
           case _ => new InvalidTestException(ast.pos) :: Nil
         }
         t ::: checkTypes(ifbody) ::: elsebody.map(checkTypes(_)).getOrElse(Nil)
