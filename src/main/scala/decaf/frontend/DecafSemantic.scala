@@ -308,7 +308,7 @@ object DecafSemantic {
                    new ClassAnnotation(new NamedType(c.name),
                    c.extnds,
                    c.implements,
-                   cscope.table,
+                   cscope,
                    c.pos))
 
       }
@@ -539,11 +539,11 @@ object DecafSemantic {
     }).getOrElse(Nil)
 
     if(c.extnds.isDefined && extErr.length == 0) {
-      val nstate = c.extnds.get.state
+      val nstate = classState.table.get(c.extnds.get.name.name)
       if(nstate.isEmpty) {
         throw new Exception("EVERYTHING IS ON FIRE")
       } else {
-        classState.reparent(nstate.get)
+        classState.reparent(nstate.get.asInstanceOf[ClassAnnotation].classScope)
       }
     }
 

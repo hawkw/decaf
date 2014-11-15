@@ -1,6 +1,7 @@
 package decaf.AST.annotations
 
 import decaf.AST.{ScopeTable, NamedType}
+import decaf.frontend.ScopeNode
 
 import scala.util.parsing.input.Position
 
@@ -10,7 +11,7 @@ import scala.util.parsing.input.Position
 case class ClassAnnotation(name: NamedType,
                            ext: Option[NamedType],
                            implements: List[NamedType],
-                           classScope: ScopeTable,
+                           classScope: ScopeNode,
                            pos: Position) extends TypeAnnotation(pos) {
   override def matches(that: TypeAnnotation): Boolean = that match {
     // matches if the that is equal to this
