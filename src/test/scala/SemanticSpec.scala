@@ -144,6 +144,45 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(2).getMessage should include ("Incompatible operands: Boat < Honda")
     errs(3).getMessage should include ("Incompatible operands: Honda = bool")
   }
+  it should "detect the errors in bad9.decaf" in {
+    val (scopes, errs) = analyze("bad9.decaf")
+    errs should have length 5
+    errs(0).getMessage should include ("Incompatible operands: int = string")
+    errs(1).getMessage should include ("Incompatible argument 1: double given, int/bool/string expected")
+    errs(2).getMessage should include ("Incompatible argument 3: double given, int/bool/string expected")
+    errs(3).getMessage should include ("No declaration found for variable 'main'")
+    errs(4).getMessage should include ("int has no such field 'length'")
+  }
+  it should "detect the errors in bad10.decaf" in {
+    val (scopes, errs) = analyze("bad10.decaf")
+    errs should have length 3
+    errs(0).getMessage should include("No declaration found for type 'Unknown'")
+    errs(1).getMessage should include("No declaration found for variable 'var'")
+    errs(2).getMessage should include("No declaration found for class 'Missing'")
+  }
+  it should "detect the errors in bad11.decaf" in {
+    val (scopes, errs) = analyze("bad11.decaf")
+    errs should have length 3
+    errs(0).getMessage should include("Method 'ToString' must match inherited type signature")
+    errs(1).getMessage should include("Class 'Number' does not implement entire interface 'Printable'")
+    errs(2).getMessage should include("Incompatible operands: Number = Printable")
+  }
+  it should "detect the errors in bad12.decaf" in {
+    val (scopes, errs) = analyze("bad12.decaf")
+    errs should have length 8
+    errs(0).getMessage should include ("No declaration found for class 'Animal'")
+    errs(1).getMessage should include ("No declaration found for interface 'Trick'")
+    errs(2).getMessage should include ("No declaration found for interface 'Halloween'")
+    errs(3).getMessage should include ("No declaration found for type 'B'")
+    errs(4).getMessage should include ("No declaration found for type 'Trick'")
+    errs(5).getMessage should include ("No declaration found for class 'A'")
+    errs(6).getMessage should include ("No declaration found for class 'Treat'")
+    errs(7).getMessage should include ("No declaration found for type 'Trick'")
+  }
+  it should "detect the error in bad13.decaf" in {
+    val (scopes, errs) = analyze("bad13.decaf")
+    errs should have length 1
+    errs(0).getMessage should include ("Incompatible operands: void == void")
 
-
+  }
 }
