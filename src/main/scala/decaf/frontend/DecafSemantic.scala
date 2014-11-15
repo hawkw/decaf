@@ -48,13 +48,6 @@ class IncompatibleReturnException(got: String,
   extends SemanticException(s"*** Incompatible return : $got given, $expected expected", where)
 
 
-
-
-
-
-
-
-
 case class ScopeNode(table: ScopeTable,
                      boundName: String,
                      parent: Option[ScopeNode] = None,

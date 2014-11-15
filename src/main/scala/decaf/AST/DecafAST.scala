@@ -337,8 +337,10 @@ import scala.util.parsing.input.{Position, Positional}
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e
-      case (_,e: ErrorType) => e
+      case (e: ErrorType, _) =>
+        e
+      case (_,e: ErrorType) =>
+        e
       case (lf: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
       case (lf, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
       case (_,_) => BoolType(pos)
@@ -692,10 +694,8 @@ import scala.util.parsing.input.{Position, Positional}
       List[Exception](new TypeErrorException(message, where))
     }
   }
-  class MultiError(val y: ErrorType, val x: ErrorType) extends ErrorType(y.message, y.pos) {
-    override def unpack(): List[Exception] = {
-      x.unpack() ::: y.unpack()
-    }
+  class MultiError(them: List[ErrorType]) extends ErrorType(them.head.message, them.head.pos) {
+    override def unpack(): List[Exception] = them.flatMap(_.unpack)
   }
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
