@@ -642,6 +642,7 @@ object DecafSemantic {
           }
           //potentially support inner classes
           ret = c.members.flatMap(scopedInheritance(_)) ::: ret
+        case _ =>
       }
     }
     ret
