@@ -216,7 +216,7 @@ object DecafSemantic {
   }
 
   def annotateFunction(fn: FnDecl): List[Exception] = {
-    var ident = fn.name
+    val ident = fn.name
     var errors = List[Exception]()
     val rettype = fn.returnType
     val formals = fn.formals
