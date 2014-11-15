@@ -60,7 +60,7 @@ case class ScopeNode(table: ScopeTable,
   }
 
   private def removeChild(other:ScopeNode): Unit = {
-    this.children = children.filter({z => other != z})
+    this.children = children.filter({z => other == z})
   }
 
   private def addChild(other:ScopeNode): Unit = {
