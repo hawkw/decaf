@@ -12,5 +12,5 @@ import decaf.frontend.TypeErrorException
  */
 package object AST {
   type ScopeTable = ForkTable[String, TypeAnnotation]
-  implicit def errorType2TypeError(e: ErrorType): Exception = new TypeErrorException(e.message, e.pos)
+  implicit def errorType2TypeError(e: ErrorType): List[Exception] = e.unpack()
 }

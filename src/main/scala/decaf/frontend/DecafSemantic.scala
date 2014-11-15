@@ -443,7 +443,7 @@ object DecafSemantic {
       case IfStmt(test, ifbody, elsebody) =>
         val t: List[Exception] = test.typeof(scope) match {
           case BoolType(_) => Nil
-          case e: ErrorType => e :: Nil
+          case e: ErrorType => e ::: Nil
           case _ => new InvalidTestException(ast.pos) :: Nil
         }
         t ::: checkTypes(ifbody) ::: elsebody.map(checkTypes(_)).getOrElse(Nil)
@@ -451,7 +451,7 @@ object DecafSemantic {
       case ForStmt(init, test, step, body) =>
         val t: List[Exception] = test.typeof(scope) match {
           case BoolType(_) => Nil
-          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
+          case e: ErrorType => e ::: new InvalidTestException(ast.pos) :: Nil
           case _ => new InvalidTestException(ast.pos) :: Nil
         }
         t ::: init.map(checkTypes(_)).getOrElse(Nil) ::: step.map(checkTypes(_)).getOrElse(Nil) ::: checkTypes(body)
@@ -459,7 +459,7 @@ object DecafSemantic {
       case WhileStmt(test, body) =>
         val t: List[Exception] = test.typeof(scope) match {
           case BoolType(_) => Nil
-          case e: ErrorType => e :: new InvalidTestException(ast.pos) :: Nil
+          case e: ErrorType => e ::: new InvalidTestException(ast.pos) :: Nil
           case _ => new InvalidTestException(ast.pos) :: Nil
         }
         t ::: checkTypes(body) ::: checkTypes(test)
@@ -488,7 +488,7 @@ object DecafSemantic {
               s"\n*** code:\n${ast.pos.longString}") // the parser should never allow this
         }
       case ex: Expr => ex.typeof(scope) match {
-        case e: ErrorType => List[Exception](e)
+        case e: ErrorType => e
         case _ => Nil
       }
     }
