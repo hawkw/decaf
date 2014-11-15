@@ -1,5 +1,7 @@
 package decaf
 
+import language.implicitConversions
+
 import com.meteorcode.common.ForkTable
 import decaf.AST.annotations.TypeAnnotation
 import decaf.frontend.TypeErrorException
