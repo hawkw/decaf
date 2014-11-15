@@ -61,20 +61,24 @@ case class ScopeNode(table: ScopeTable,
   }
 
   private def removeChild(other:ScopeNode): Unit = {
-    this.children = children.filter({z => other == z})
+    this.children = children.filter({z => other != z})
   }
 
   private def addChild(other:ScopeNode): Unit = {
     this.children = this.children :+ other
   }
 
-  def reparent(nParent: ScopeNode): Unit = {
-    if(this.parent.isDefined) {
-      val oldParent = this.parent.get
-      oldParent.removeChild(nParent)
+  def reparent(nParent: ScopeNode): List[Exception] = {
+    if(nParent == this) List(new IllegalArgumentException("ERROR: Scope attempted to mount itself as parent!"))
+    else {
+      if (this.parent.isDefined) {
+        val oldParent = this.parent.get
+        oldParent.removeChild(this)
+      }
+      nParent.addChild(this)
+      this.table.reparent(nParent.table)
+      Nil
     }
-    nParent.addChild(this)
-    this.table.reparent(nParent.table)
   }
 
   override def toString = stringify(0)
@@ -391,24 +395,24 @@ object DecafSemantic {
   }
 
   /**
-   * Check that all inheritance cycles are legal
+   * Check that all inheritance declarations are not cyclic
    * @param scope The scope at which to conduct checks
    * @param seen a list of all the names we've seen so far
-   * @param c the [[NamedType]] ({class | interface}) to check
+   * @param c the class to check
    * @param p the position
    * @return a [[List]] of [[Exception]]s for each error generated during the check
    */
-  def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position): List[Exception] = {
-    if(seen.contains(c.name.name)) {
+  def verifyClassChain(scope: ScopeNode, seen: List[String], c: String, p: Position): List[Exception] = {
+    if(seen.contains(c)) {
       new IllegalClassInheritanceCycle(seen.head, p) :: Nil
-    } else if(!scope.table.chainContains(c.name.name)) {
+    } else if(!scope.table.chainContains(c)) {
       Nil
     } else {
-      val t = scope.table.get(c.name.name).get
+      val t = scope.table.get(c).get
       t match {
-        case otherc: ClassAnnotation =>
-          if(otherc.ext.isDefined) {
-            verifyClassChain(scope, seen ::: c.name.name :: Nil, otherc.name, p)
+        case myc: ClassAnnotation =>
+          if(myc.ext.isDefined) {
+            verifyClassChain(scope, (seen :+ c), myc.ext.get.name.name, p)
           } else {
             //we've found a class which goes to ground, do we want to do anything here?
             //I think no.
@@ -441,7 +445,7 @@ object DecafSemantic {
         checkTypeExists(ast.state.get, typ.pos, typ)
 
       case ClassDecl(_, ext, impl, mems) =>
-        ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
+        ext.map({x => verifyClassChain(scope, List[String](), ast.asInstanceOf[ClassDecl].name.name, ast.pos)}).getOrElse(Nil) :::
           impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) /*:::
           checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */
       // 11/7/14: Moved to thirdPass() ~ Hawk
@@ -615,7 +619,7 @@ object DecafSemantic {
     } else {
       val scope = ast.state.get
       ast match {
-        case Program(declarations, _) => declarations.flatMap(scopedInheritance(_))
+        case Program(declarations, _) => ret = declarations.flatMap(scopedInheritance(_)) ::: ret
         case c: ClassDecl =>
           if (c.extnds.isDefined) {
             //we are in the middle of rewriting ScopeTree, declarations are in flux
@@ -632,18 +636,19 @@ object DecafSemantic {
                 case None => //throw new Exception("EVERYTHING IS ON FIRE")
                 case Some(y) =>
                   //mount extendING class under the extendED class, so that its decls happen in the scope chain
-                  y.reparent(x)
+                  ret = y.reparent(x) ::: ret
               }
             }
           }
           //potentially support inner classes
-          c.members.flatMap(scopedInheritance(_))
+          ret = c.members.flatMap(scopedInheritance(_)) ::: ret
       }
     }
     ret
   }
 
   /**
+   *
    * Performs the complete semantic analysis
    *
    * This works by [[decorateScope() decorating]] the tree with [[ScopeNode]]s
@@ -669,8 +674,8 @@ object DecafSemantic {
 
   /**
    * Helper method for testing
-   * @param progn
-   * @return
+   * @param progn The program to compile
+   * @return The result of compiling the program, printing any errors that happened
    */
   def compileToSemantic(progn: String): ScopeNode = {
     val r = new DecafSyntactical().parse(progn)
@@ -681,6 +686,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("class A { } class B extends A { } class C extends B {} ").toString)
+    println(compileToSemantic("class A { } class B extends A { } class C extends B {} class D extends A {} class Q extends Q {} class R extends Q {}").toString)
   }
 }
