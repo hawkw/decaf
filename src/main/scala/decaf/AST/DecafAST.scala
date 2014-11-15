@@ -505,9 +505,7 @@ import scala.util.parsing.input.{Position, Positional}
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
-    override def typeof(scope: ScopeNode): Type = base match {
-      case Some(e) => e.typeof(scope)
-      case None =>
+    override def typeof(scope: ScopeNode): Type = {
         val myargstype: List[Type] = this.args.map(_.typeof(scope))
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
@@ -516,7 +514,7 @@ import scala.util.parsing.input.{Position, Positional}
               var result: Type = rtype
               if (myargstype.length != nargs.length) {
                 result = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
-                  s" arguments but ${myargstype.length} given", pos)
+                  s" arguments but ${myargstype.length} given", field.pos)
               } else {
                 // Unfortunately, JJ wants the position and types of the bad arguments
                 // I wish there was a more functional way of doing this, but meh.
@@ -529,11 +527,11 @@ import scala.util.parsing.input.{Position, Positional}
                 for (i <- 0 until args.length) {
                   if (nargs(i) != myargstype(i))
                     result = new ErrorType(s" *** Incompatible argument ${i+1}:" +
-                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", pos)
+                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos)
                 }
               }
               result
-            case q => new ErrorType(s" *** Attempt to call on non-method ${field.name}, which is of type $q",pos)
+            case q => new ErrorType(s" *** Attempt to call on non-method ${field.name}, which is of type $q",field.pos)
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
@@ -550,7 +548,7 @@ import scala.util.parsing.input.{Position, Positional}
             // >   ~ Xyzzy, 11/13/14
           }
         } else {
-          new ErrorType(s" *** No declaration for function '${field.name}' found ",pos)
+          new ErrorType(s" *** No declaration for function '${field.name}' found ",field.pos)
         }
     }
   }
