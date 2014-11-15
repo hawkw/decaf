@@ -406,6 +406,11 @@ object DecafSemantic {
   /**
    * Second walk over the AST. Most typechecking happens here.
    * //TODO: explain this better
+   * 
+   * "Because...types are supposed to make it safe...the program, and when it 
+   * makes Object then it isn't safe."
+   *    ~ Gary Bernhardt, "Useing You're Type's Good"
+   * 
    * @param ast the [[decaf.AST.ASTNode]] over which to walk
    * @return
    */
