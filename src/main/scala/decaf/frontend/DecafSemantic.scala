@@ -50,7 +50,7 @@ class IncompatibleReturnException(got: String,
 
 case class ScopeNode(table: ScopeTable,
                      boundName: String,
-                     parent: Option[ScopeNode] = None,
+                     var parent: Option[ScopeNode] = None,
                      statement: ASTNode) {
   var children = List[ScopeNode]()
   def child(boundName: String, stmt: ASTNode): ScopeNode = {
@@ -58,6 +58,24 @@ case class ScopeNode(table: ScopeTable,
     children = children :+ c
     c
   }
+
+  private def removeChild(other:ScopeNode): Unit = {
+    this.children = children.filter({z => other != z})
+  }
+
+  private def addChild(other:ScopeNode): Unit = {
+    this.children = this.children :+ other
+  }
+
+  def reparent(nParent: ScopeNode): Unit = {
+    if(this.parent.isDefined) {
+      val oldParent = this.parent.get
+      oldParent.removeChild(nParent)
+    }
+    nParent.addChild(this)
+    this.table.reparent(nParent.table)
+  }
+
   override def toString = stringify(0)
   def stringify(indentLevel: Int): String = {
     val s = new StringBuilder
