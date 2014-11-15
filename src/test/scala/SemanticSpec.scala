@@ -33,7 +33,7 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
     errs(0) shouldBe a [ConflictingDeclException]
     errs(0).getMessage should include ("Declaration of 'Rutabaga' here conflicts")
   }
-
+/*
   it should "detect the undeclared types in bad3.decaf" in {
     val source = Source fromFile "build/resources/test/lab3-samples/samples-checkpoint/bad3.decaf" mkString
     val (scopes, errs) = target analyze (parser parse source)
@@ -43,7 +43,7 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
     errs(2) shouldBe an [UnimplementedInterfaceException]
     errs(3) shouldBe an [UndeclaredTypeException]
   }
-
+*/
 }
 
 /**
