@@ -318,7 +318,7 @@ import scala.util.parsing.input.{Position, Positional}
       case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(pos)
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
         new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, pos)
-      case (y: ErrorType, _, x: ErrorType) => new MultiError(y,x)
+      case (x: ErrorType, _, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
       case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
@@ -326,7 +326,7 @@ import scala.util.parsing.input.{Position, Positional}
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (y: ErrorType, x: ErrorType) => new MultiError(y,x)
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
       case (IntType(_), IntType(_)) => BoolType(pos)
@@ -339,7 +339,7 @@ import scala.util.parsing.input.{Position, Positional}
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (y: ErrorType, x: ErrorType) => new MultiError(y,x)
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
       case (lf: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
@@ -366,7 +366,7 @@ import scala.util.parsing.input.{Position, Positional}
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
     override def typeof(scope: ScopeNode): Type = lhs match {
       case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
-        case (y: ErrorType, x: ErrorType) => new MultiError(y,x)
+        case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
         case (e: ErrorType, _) => e
         case (_, e: ErrorType) => e
         case (lf: BoolType, r: BoolType) => BoolType(pos)
@@ -388,7 +388,7 @@ import scala.util.parsing.input.{Position, Positional}
       })
     }
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (y: ErrorType, x: ErrorType) => new MultiError(y,x)
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
       case (lf,rf) =>
