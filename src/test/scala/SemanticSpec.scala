@@ -136,5 +136,13 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(1).getMessage should include ("Function 'Binky' expects 3 arguments but 1 given")
     errs(2).getMessage should include ("Incompatible operands: double = int")
   }
+  it should "detect the errors in bad8.decaf" in {
+    val (scopes, errs) = analyze("bad8.decaf")
+    errs should have length 4 // we are skipping the first error due to encapsulation
+    errs(0).getMessage should include ("Honda has no such field 'horn'")
+    errs(1).getMessage should include ("Honda has no such field 'Honk'")
+    errs(2).getMessage should include ("Incompatible operands: Boat < Honda")
+    errs(2).getMessage should include ("Incompatible operands: Honda = bool")
+  }
 
 }
