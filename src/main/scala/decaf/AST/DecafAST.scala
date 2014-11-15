@@ -523,8 +523,8 @@ import scala.util.parsing.input.{Position, Positional}
                 // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
                   if (nargs(i) != myargstype(i))
-                    result = new ErrorType(s" *** Incompatible argument $i :" +
-                      s" ${nargs(i).typeName} given, ${myargstype(i).typeName} expected  ", pos)
+                    result = new ErrorType(s" *** Incompatible argument ${i+1}:" +
+                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", pos)
                 }
               }
               result
