@@ -145,11 +145,9 @@ object DecafSemantic {
           f.body.get.state = Some(fs)
           decls.foreach { decorateScope(_, fs) }
           stmts.foreach {
-            _ match {
-              case block: StmtBlock => decorateScope(block, fs.child("Subblock", block))
-              case con: ConditionalStmt => decorateScope(con, fs.child(con.getName, con))
-              case stmt: Stmt => stmt.state = Some(fs)
-            }
+            case block: StmtBlock => decorateScope(block, fs.child("Subblock", block))
+            case con: ConditionalStmt => decorateScope(con, fs.child(con.getName, con))
+            case stmt: Stmt => stmt.state = Some(fs)
           }
            // s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) else s.state = Some(fs)
           //}
@@ -158,15 +156,19 @@ object DecafSemantic {
         decls.foreach {
           decorateScope(_, scope)
         }
-        stmts.foreach { s =>
-          if(s.isInstanceOf[StmtBlock]) decorateScope(s, scope.child("Subblock", s)) else s.state = Some(scope)
+        stmts.foreach {
+          case block: StmtBlock => decorateScope(block, scope.child("Subblock", block))
+          case con: ConditionalStmt => decorateScope(con, scope.child(con.getName, con))
+          case stmt: Stmt => stmt.state = Some(scope)
         }
       case i: IfStmt =>
         i.state = Some(scope)
         decorateScope(i.test, scope)
         decorateScope(i.testBody, scope.child("Test body", i.testBody))
         i.elseBody.foreach{
-          case s: StmtBlock => decorateScope(s, scope.child("Else body", s) )
+          case block: StmtBlock => decorateScope(block, scope.child("Subblock", block))
+          case con: ConditionalStmt => decorateScope(con, scope.child(con.getName, con))
+          case stmt: Stmt => stmt.state = Some(scope)
         }
       case f: ForStmt =>
         f.state = Some(scope)
