@@ -468,11 +468,11 @@ import scala.util.parsing.input.{Position, Positional}
                 case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
                 case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
               }
-              case None => UndeclaredType("*** No declaration for variable '" + field.name + "' found.", where)
+              case None => UndeclaredType("*** No declaration found for variable '" + field.name + "'.", where)
             }
           }
         } else {
-          UndeclaredType("*** No declaration for class '" + name.name + "' found", loc)
+          UndeclaredType("*** No declaration found for class '" + name.name + "'.", loc)
         }
         case t: Type => new ErrorType(s"*** ${t.typeName} has no such field '${field.name}'", loc)
         // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
@@ -490,7 +490,7 @@ import scala.util.parsing.input.{Position, Positional}
           case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
         }
       } else {
-        UndeclaredType("*** No declaration for variable '" + field.name + "' found.", loc)
+        UndeclaredType("*** No declaration found for variable '" + field.name + "'.", loc)
       }
     }
   }
@@ -507,15 +507,14 @@ import scala.util.parsing.input.{Position, Positional}
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
     override def typeof(scope: ScopeNode): Type = {
         val myargstype: List[Type] = this.args.map(_.typeof(scope))
-
+        var errors: List[ErrorType] = Nil
         if(scope.table.chainContains(field.name)) {
           val t = scope.table.get(field.name).get
           t match {
             case MethodAnnotation(rtype, nargs, _) =>
-              var result: Type = rtype
               if (myargstype.length != nargs.length) {
-                result = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
-                  s" arguments but ${myargstype.length} given", field.pos)
+               errors = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
+                  s" arguments but ${myargstype.length} given", field.pos) :: errors
               } else {
                 // Unfortunately, JJ wants the position and types of the bad arguments
                 // I wish there was a more functional way of doing this, but meh.
@@ -527,12 +526,21 @@ import scala.util.parsing.input.{Position, Positional}
                 // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
                   if (nargs(i) != myargstype(i))
-                    result = new ErrorType(s" *** Incompatible argument ${i+1}:" +
-                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos)
+                    errors = new ErrorType(s" *** Incompatible argument ${i+1}:" +
+                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos) :: errors
                 }
+                errors = args.flatMap(a => a.typeof(scope) match {
+                  case e: ErrorType => e :: Nil
+                  case _ => Nil
+                }
+                ) ::: errors
+                if (errors.length > 0)
+                  return new ListError(errors)
+                else
+                  return rtype
               }
-              result
-            case q => new ErrorType(s" *** Attempt to call on non-method ${field.name}, which is of type $q",field.pos)
+            case q => errors = new ErrorType(s" *** Attempt to call on non-method ${field.name}," +
+              s" which is of type $q",field.pos) :: errors
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
@@ -540,6 +548,7 @@ import scala.util.parsing.input.{Position, Positional}
             // MethodAnnotation and we have gotten this far in the
             // semantic analysis process?
             //      ~ Hawk, 11/12/14
+
             // > This is totally an error that could happen: If I remember correctly,
             // > the passes we have done thus far do not extend all the way into exprs -
             // > they only pertain to definitions and types. You could, for instance,
@@ -549,8 +558,17 @@ import scala.util.parsing.input.{Position, Positional}
             // >   ~ Xyzzy, 11/13/14
           }
         } else {
-          new ErrorType(s" *** No declaration for function '${field.name}' found ",field.pos)
+          errors = (if (base.isDefined)
+            new ErrorType(s"*** ${base.get.typeof(scope).typeName} has no such field '${field.name}'", pos)
+          else
+            new ErrorType(s"*** No declaration found for function '${field.name}'.",field.pos)
+            ) :: errors
         }
+      errors = args.flatMap(a => a.typeof(scope) match {
+        case e: ErrorType => e :: Nil
+        case _ => Nil
+      }) ::: errors
+      new ListError(errors)
     }
   }
 
@@ -561,7 +579,7 @@ import scala.util.parsing.input.{Position, Positional}
       if(scope.table.chainContains(cType.name.name)) {
         cType
       } else {  // we can assume class here because NamedType == class/interface in Decaf
-        new ErrorType(s" *** No declaration for class '${cType.name.name}' found", pos)
+        new ErrorType(s" *** No declaration found for class '${cType.name.name}'.", pos)
       }
     }
   }
@@ -577,7 +595,7 @@ import scala.util.parsing.input.{Position, Positional}
           case n: NamedType => if (scope.table.chainContains(n.name.name)) {
             new ArrayType(pos, n)
           } else {
-            new ErrorType(s" *** No declaration for class '${n.name.name}' found", pos)
+            new ErrorType(s" *** No declaration found for class '${n.name.name}'.", pos)
           }
           case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => ArrayType(pos, elemType)
           case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
