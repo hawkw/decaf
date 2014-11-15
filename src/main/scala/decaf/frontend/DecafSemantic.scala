@@ -567,11 +567,12 @@ object DecafSemantic {
     val scope = ast.state.get
     ast match {
       case Program(declarations, _) => declarations.flatMap(checkClasses(_))
-      case c: ClassDecl => checkInheritance(c) /* :::
+      case c: ClassDecl => checkInheritance(c) ::: c.members.flatMap(checkClasses(_)) /*
         c.extnds.map(thirdPass(_)).getOrElse(Nil) :::
         c.members.flatMap(thirdPass(_))           :::
         c.implements.flatMap(thirdPass(_))        ::: Nil */ //currently we don't need to do this but we might later
-        //todo: insert inner classes here?
+
+        //TODO: Finish checks
       case _ => Nil
     }
   }
@@ -662,7 +663,7 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: scopedInheritance(top) ::: checkTypes(top)
+    val problems = pullDeclsToScope(top) ::: scopedInheritance(top) ::: checkClasses(top) ::: checkTypes(top)
     (top.state.get, problems)
   }
 
