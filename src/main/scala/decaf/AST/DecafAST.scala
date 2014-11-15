@@ -714,6 +714,13 @@ import scala.util.parsing.input.{Position, Positional}
       List[Exception](new TypeErrorException(message, where))
     }
   }
+
+  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + "[]", locat) {
+    override val printLine = true
+    override def getName = "ArrayType:"
+    elemType.parent = this
+    override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
+  }
   class MultiError(val y: ErrorType, val x: ErrorType) extends ErrorType(y.message, y.pos) {
     override def unpack(): List[Exception] = {
       x.unpack() ::: y.unpack()
@@ -729,11 +736,4 @@ import scala.util.parsing.input.{Position, Positional}
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
-  }
-
-  case class ArrayType(locat: Position, elemType: Type) extends Type (elemType.typeName + "[]", locat) {
-    override val printLine = true
-    override def getName = "ArrayType:"
-    elemType.parent = this
-    override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }
