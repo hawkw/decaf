@@ -21,10 +21,12 @@ import scala.collection.{AbstractMap, DefaultMap, mutable}
 
     override def get(key: K): Option[V] = if (whiteouts contains key) {
       None
-    } else if (parent != null && (parent chainContains key)) {
+    } else if (this.contains(key)) {
+      back get key
+    } else if(parent != null && (parent chainContains key)) {
       parent get key
     } else {
-      back get key
+      None
     }
 
     def remove(key: K): Option[V] = {
