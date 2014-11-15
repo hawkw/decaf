@@ -538,7 +538,14 @@ object DecafSemantic {
       // TODO: we should do additional checking here
     }).getOrElse(Nil)
 
-    if(c.extnds.isDefined && extErr.length == 0) classState.reparent(c.extnds.get.state.get)
+    if(c.extnds.isDefined && extErr.length == 0) {
+      val nstate = c.extnds.get.state
+      if(nstate.isEmpty) {
+        throw new Exception("EVERYTHING IS ON FIRE")
+      } else {
+        classState.reparent(nstate.get)
+      }
+    }
 
     (for {
       i: NamedType <- c.implements
@@ -615,6 +622,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("int A; moo A;").toString)
+    println(compileToSemantic("class A { } class B extends A { }").toString)
   }
 }
