@@ -87,22 +87,34 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     val (scopes, errs) = analyze("bad3.decaf")
     errs should have length 4
     errs(0) shouldBe a [TypeErrorException]
-    errs(0).getMessage should include("[ ] can only be applied to arrays")
+    errs(0).getMessage should include ("[ ] can only be applied to arrays")
     errs(1) shouldBe a [TypeErrorException]
-    errs(1).getMessage should include("Incompatible operands: double[] = Binky[]")
+    errs(1).getMessage should include ("Incompatible operands: double[] = Binky[]")
     errs(2) shouldBe a [TypeErrorException]
-    errs(2).getMessage should include("Array subscript must be an integer")
+    errs(2).getMessage should include ("Array subscript must be an integer")
     errs(3) shouldBe a [TypeErrorException]
-    errs(3).getMessage should include("Size for NewArray must be an integer")
+    errs(3).getMessage should include ("Size for NewArray must be an integer")
   }
 
   it should "detect the errors in bad4.decaf" in {
     val (scopes, errs) = analyze("bad4.decaf")
     errs should have length 2 // we are skipping the encapsulation one since we don't do that
     errs(0) shouldBe a [TypeErrorException]
-    errs(0).getMessage should include("*** 'this' is only valid within class scope")
+    errs(0).getMessage should include ("*** 'this' is only valid within class scope")
     errs(1) shouldBe a [TypeErrorException]
-    errs(1).getMessage should include("*** int[] has no such field 'color'")
+    errs(1).getMessage should include ("*** int[] has no such field 'color'")
+  }
+
+  it should "detect the errors in bad5.decaf" in {
+    val (scopes, errs) = analyze("bad5.decaf")
+    errs should have length 7
+    errs(0).getMessage should include ("No declaration found for function 'FindTime'")
+    errs(1).getMessage should include ("No declaration found for variable 'nico'")
+    errs(2).getMessage should include ("No declaration found for variable 'trish'")
+    errs(3).getMessage should include ("No declaration found for variable 'katie'")
+    errs(4).getMessage should include ("No declaration found for function 'cheryl'")
+    errs(5).getMessage should include ("No declaration found for variable 'caroline'")
+    errs(6).getMessage should include ("Club has no such field 'Meeting'")
   }
 
 }
