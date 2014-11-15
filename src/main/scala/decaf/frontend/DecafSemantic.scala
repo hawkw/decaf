@@ -29,14 +29,14 @@ class UndeclaredTypeException(name: String, where: Position, what: String="class
   extends SemanticException(s"*** No declaration found for $what '$name'", where)
 
 class TypeSignatureException(name: String, where: Position)
-  extends SemanticException(s"** Method ’$name’ must match inherited type signature", where)
+  extends SemanticException(s"** Method '$name' must match inherited type signature", where)
 
 class InvalidTestException(where: Position)
   extends SemanticException("*** Test expression must have boolean type", where)
 
 class UnimplementedInterfaceException(which: String, interface: String, where: Position)
   extends SemanticException(
-    s"*** Class ‘$which’ does not implement entire interface ’$interface’",
+    s"*** Class '$which' does not implement entire interface '$interface'",
     where
   )
 

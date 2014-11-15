@@ -463,11 +463,11 @@ import scala.util.parsing.input.{Position, Positional}
                 case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
                 case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
               }
-              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", where)
+              case None => UndeclaredType("*** No declaration for variable '" + field.name + "' found.", where)
             }
           }
         } else {
-          UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
+          UndeclaredType("*** No declaration for class '" + name.name + "' found", loc)
         }
         case t: Type => new ErrorType(s"*** ${t.typeName} has no such field '${field.name}'", loc)
         // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
@@ -485,7 +485,7 @@ import scala.util.parsing.input.{Position, Positional}
           case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
         }
       } else {
-        UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+        UndeclaredType("*** No declaration for variable '" + field.name + "' found.", loc)
       }
     }
   }
@@ -510,7 +510,7 @@ import scala.util.parsing.input.{Position, Positional}
             case MethodAnnotation(rtype, nargs, _) =>
               var result: Type = rtype
               if (myargstype.length != nargs.length) {
-                result = new ErrorType(s" *** Function ‘${field.name}’ expects ${nargs.length}" +
+                result = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
                   s" arguments but ${myargstype.length} given", pos)
               } else {
                 // Unfortunately, JJ wants the position and types of the bad arguments
@@ -545,7 +545,7 @@ import scala.util.parsing.input.{Position, Positional}
             // >   ~ Xyzzy, 11/13/14
           }
         } else {
-          new ErrorType(s" *** No declaration for function ‘${field.name}’ found ",pos)
+          new ErrorType(s" *** No declaration for function '${field.name}' found ",pos)
         }
     }
   }
@@ -557,7 +557,7 @@ import scala.util.parsing.input.{Position, Positional}
       if(scope.table.chainContains(cType.name.name)) {
         cType
       } else {  // we can assume class here because NamedType == class/interface in Decaf
-        new ErrorType(s" *** No declaration for class ‘${cType.name.name}’ found", pos)
+        new ErrorType(s" *** No declaration for class '${cType.name.name}' found", pos)
       }
     }
   }
@@ -573,7 +573,7 @@ import scala.util.parsing.input.{Position, Positional}
           case n: NamedType => if (scope.table.chainContains(n.name.name)) {
             new ArrayType(pos, n)
           } else {
-            new ErrorType(s" *** No declaration for class ‘${n.name.name}’ found", pos)
+            new ErrorType(s" *** No declaration for class '${n.name.name}' found", pos)
           }
           case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => ArrayType(pos, elemType)
           case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
