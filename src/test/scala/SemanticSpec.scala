@@ -155,10 +155,12 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
   }
   it should "detect the errors in bad10.decaf" in {
     val (scopes, errs) = analyze("bad10.decaf")
-    errs should have length 3
+    errs should have length 4
     errs(0).getMessage should include("No declaration found for type 'Unknown'")
     errs(1).getMessage should include("No declaration found for variable 'var'")
     errs(2).getMessage should include("No declaration found for class 'Missing'")
+    // seems to me that it's correct to make this error here
+    errs(3).getMessage should include("Unknown has no such field 'GetColor'")
   }
   it should "detect the errors in bad11.decaf" in {
     val (scopes, errs) = analyze("bad11.decaf")
