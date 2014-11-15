@@ -717,7 +717,7 @@ import scala.util.parsing.input.{Position, Positional}
 
   case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + "[]", locat) {
     override val printLine = true
-    override def getName = "ArrayType:"
+    override def getName: String = "ArrayType:"
     elemType.parent = this
     override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }

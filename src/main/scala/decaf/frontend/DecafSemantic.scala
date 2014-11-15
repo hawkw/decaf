@@ -531,12 +531,14 @@ object DecafSemantic {
    */
   def checkInheritance(c: ClassDecl): List[Exception] = {
     val classState = c.state.getOrElse(throw new IllegalArgumentException("Tree does not contain scope for " + c))
-    val extErr = for {
+    val extErr: List[Exception] = (for {
       t <- c.extnds
     } yield {
       checkTypeExists(classState, t.pos, t) // can't extend something that doesn't exist
       // TODO: we should do additional checking here
-    }
+    }).getOrElse(Nil)
+
+    if(c.extnds.isDefined && extErr.length == 0) classState.reparent(c.extnds.get.state.get)
 
     (for {
       i: NamedType <- c.implements
@@ -552,7 +554,7 @@ object DecafSemantic {
         case None => //is this the right thing to throw if i has no state? Or is it UndeclaredType?
           new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
-    }).flatten ::: extErr.getOrElse(Nil)
+    }).flatten ::: extErr
   }
 
   /**
@@ -595,7 +597,7 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: checkTypes(top) ::: checkClasses(top)
+    val problems = pullDeclsToScope(top) ::: checkClasses(top) ::: checkTypes(top)
     (top.state.get, problems)
   }
 
