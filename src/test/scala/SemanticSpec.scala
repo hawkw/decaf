@@ -152,7 +152,11 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs(0).getMessage should include ("Incompatible operands: int = string")
     errs(1).getMessage should include ("Incompatible argument 1: double given, int/bool/string expected")
     errs(2).getMessage should include ("Incompatible argument 3: double given, int/bool/string expected")
-    errs(3).getMessage should include ("No declaration found for variable 'main'")
+    // we are generating a different error than the one in the samples here.
+    // the samples call for a "no declaration for identifier" error, which
+    // is incorrect since the identifier is declared in that scope, it just
+    // doesn't correspond to a field that can be accessed
+    errs(3).getMessage should include ("Attempt to field access a method")
     errs(4).getMessage should include ("int has no such field 'length'")
   }
   it should "detect the errors in bad10.decaf" in {

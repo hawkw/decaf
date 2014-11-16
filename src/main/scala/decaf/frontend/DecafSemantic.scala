@@ -117,6 +117,11 @@ case class ScopeNode(table: ScopeTable,
  *    when one or both operands is a TypeError. We've decided that this is wrong and inconsistent
  *    with the way TypeErrors are propagated elsewhere in Decaf. Therefore, `LogicalExpr.typeof()`
  *    forwards TypeError just as every other `Expr` does.
+ *  + The samples call for a "*** No declaration for identifier" error to be generated when a program
+ *    attempts to treat a method as though it were a field that can be accessed. We think that
+ *    the semantics of this error message isn't very helpful, since the identifier IS declared,
+ *    it just isn't bound to something that can be accessed. Therefore, we make an error message
+ *    saying "*** Attempt to field access a method" instead.
  *
  * @author Hawk Weisman
  * @author Max Clive
