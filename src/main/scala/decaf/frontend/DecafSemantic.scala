@@ -26,7 +26,7 @@ class ConflictingDeclException(name: String, where: Position)
     where
   )
 
-class UndeclaredTypeException(name: String, where: Position, what: String="class")
+class UndeclaredTypeException(name: String, where: Position, what: String="type")
   extends SemanticException(s"*** No declaration found for $what '$name'", where)
 
 class TypeSignatureException(name: String, where: Position)
