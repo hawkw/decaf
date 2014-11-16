@@ -191,6 +191,9 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     val (scopes, errs) = analyze("bad13.decaf")
     errs should have length 1
     errs(0).getMessage should include ("Incompatible operands: void == void")
-
+  }
+  it should "Complete analysis of matrix.decaf" in {
+    val (scopes, errs) = analyze("matrix.decaf")
+    errs should have length 0
   }
 }
