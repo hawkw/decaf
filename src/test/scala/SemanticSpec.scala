@@ -138,11 +138,13 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
   }
   it should "detect the errors in bad8.decaf" in {
     val (scopes, errs) = analyze("bad8.decaf")
-    errs should have length 4 // we are skipping the first error due to encapsulation
+    errs should have length 3 // we are skipping the first error due to encapsulation
     errs(0).getMessage should include ("Honda has no such field 'horn'")
     errs(1).getMessage should include ("Honda has no such field 'Honk'")
     errs(2).getMessage should include ("Incompatible operands: Boat < Honda")
-    errs(3).getMessage should include ("Incompatible operands: Honda = bool")
+    // We are ignoring this error due to TypeError forwarding as discussed in
+    // the ScalaDoc for DecafSemantic
+    //errs(3).getMessage should include ("Incompatible operands: Honda = bool")
   }
   it should "detect the errors in bad9.decaf" in {
     val (scopes, errs) = analyze("bad9.decaf")

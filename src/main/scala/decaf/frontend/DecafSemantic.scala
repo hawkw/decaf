@@ -113,6 +113,10 @@ case class ScopeNode(table: ScopeTable,
  *    from Integer to Double. This is because Decaf has no casting mechanism, and therefore, there
  *    is no way to ever perform operations on mixed numeric operands. Therefore, we do not generate
  *    the `*** Incompatible operands: double / int` that is present in some sample output.
+ *  + The samples provided call for the type of a logical expression to always be logical, even
+ *    when one or both operands is a TypeError. We've decided that this is wrong and inconsistent
+ *    with the way TypeErrors are propagated elsewhere in Decaf. Therefore, `LogicalExpr.typeof()`
+ *    forwards TypeError just as every other `Expr` does.
  *
  * @author Hawk Weisman
  * @author Max Clive
