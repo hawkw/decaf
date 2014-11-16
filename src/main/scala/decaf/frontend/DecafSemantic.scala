@@ -4,6 +4,7 @@ import com.meteorcode.common.ForkTable
 import decaf.AST._
 import decaf.AST.annotations._
 
+import scala.util.control.Breaks
 import scala.util.parsing.input.Position
 
 case class SemanticException(message: String, pos: Position) extends Exception(message) {
@@ -25,7 +26,7 @@ class ConflictingDeclException(name: String, where: Position)
     where
   )
 
-class UndeclaredTypeException(name: String, where: Position, what: String="class")
+class UndeclaredTypeException(name: String, where: Position, what: String="type")
   extends SemanticException(s"*** No declaration found for $what '$name'", where)
 
 class TypeSignatureException(name: String, where: Position)
@@ -67,13 +68,17 @@ case class ScopeNode(table: ScopeTable,
     this.children = this.children :+ other
   }
 
-  def reparent(nParent: ScopeNode): Unit = {
-    if(this.parent.isDefined) {
-      val oldParent = this.parent.get
-      oldParent.removeChild(nParent)
+  def reparent(nParent: ScopeNode): List[Exception] = {
+    if(nParent == this) List(new IllegalArgumentException("ERROR: Scope attempted to mount itself as parent!"))
+    else {
+      if (this.parent.isDefined) {
+        val oldParent = this.parent.get
+        oldParent.removeChild(this)
+      }
+      nParent.addChild(this)
+      this.table.reparent(nParent.table)
+      Nil
     }
-    nParent.addChild(this)
-    this.table.reparent(nParent.table)
   }
 
   override def toString = stringify(0)
@@ -108,6 +113,15 @@ case class ScopeNode(table: ScopeTable,
  *    from Integer to Double. This is because Decaf has no casting mechanism, and therefore, there
  *    is no way to ever perform operations on mixed numeric operands. Therefore, we do not generate
  *    the `*** Incompatible operands: double / int` that is present in some sample output.
+ *  + The samples provided call for the type of a logical expression to always be logical, even
+ *    when one or both operands is a TypeError. We've decided that this is wrong and inconsistent
+ *    with the way TypeErrors are propagated elsewhere in Decaf. Therefore, `LogicalExpr.typeof()`
+ *    forwards TypeError just as every other `Expr` does.
+ *  + The samples call for a "*** No declaration for identifier" error to be generated when a program
+ *    attempts to treat a method as though it were a field that can be accessed. We think that
+ *    the semantics of this error message isn't very helpful, since the identifier IS declared,
+ *    it just isn't bound to something that can be accessed. Therefore, we make an error message
+ *    saying "*** Attempt to field access a method" instead.
  *
  * @author Hawk Weisman
  * @author Max Clive
@@ -221,7 +235,7 @@ object DecafSemantic {
     if (state.table.contains(ident.name)) {
       new ConflictingDeclException(ident.name, ident.pos) :: Nil
     } else {
-      state.table.put(ident.name, new VariableAnnotation(typ, ident.pos))
+      state.table.put(ident.name, new VariableAnnotation(ident.name, typ, ident.pos))
       Nil
     }
   }
@@ -242,7 +256,7 @@ object DecafSemantic {
       errors = new ConflictingDeclException(ident.name, ident.pos) :: errors
       return errors
     } else {
-      state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t), fn.pos))
+      state.table.put(ident.name, new MethodAnnotation(ident.name, rettype, formals.map(_.t), fn.pos))
     }
     for (formal <- formals) {
       if(formal.state.isEmpty) {
@@ -286,7 +300,7 @@ object DecafSemantic {
         "keyword \'this\' already (accidentally?) bound for class scope in "
         + c.toString)
     } else {
-      cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
+      cscope.table.put("this", new VariableAnnotation("this",NamedType(c.name),c.pos))
     }
 
     errors = errors ::: c.members.map {
@@ -308,7 +322,7 @@ object DecafSemantic {
                    new ClassAnnotation(new NamedType(c.name),
                    c.extnds,
                    c.implements,
-                   cscope.table,
+                   cscope,
                    c.pos))
 
       }
@@ -377,12 +391,13 @@ object DecafSemantic {
    * @param value the [[Type]] to check
    * @return a [[List]] of [[Exception]]s for each error generated during the check
    */
-  def checkTypeExists(node: ScopeNode,pos: Position, value: Type): List[Exception] = {
+  def checkTypeExists(node: ScopeNode,pos: Position, value: Type, kind: String ="type"): List[Exception] = {
     value match {
       case n: NamedType =>
-        if(!node.table.chainContains(n.name.name)) {
-          new UndeclaredTypeException(n.name.name, pos) :: Nil
-        } else Nil
+        node.table.get(n.name.name) match {
+          case Some(ClassAnnotation(_,_,_,_,_)) | Some(InterfaceAnnotation(_,_,_)) => Nil
+          case _ => new UndeclaredTypeException(n.name.name, pos, kind) :: Nil
+        }
       case ArrayType(_, t) => checkTypeExists(node, pos, t)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) => Nil
       case UndeclaredType(_,_) | _ => new SemanticException(s"Unexpected type '${value.typeName}'!", pos) :: Nil
@@ -390,27 +405,24 @@ object DecafSemantic {
   }
 
   /**
-   * Check that all inheritance cycles are legal
+   * Check that all inheritance declarations are not cyclic
    * @param scope The scope at which to conduct checks
    * @param seen a list of all the names we've seen so far
-   * @param c the [[NamedType]] ({class | interface}) to check
+   * @param c the class to check
    * @param p the position
    * @return a [[List]] of [[Exception]]s for each error generated during the check
    */
-  def verifyClassChain(scope: ScopeNode, seen: List[String], c: NamedType, p: Position): List[Exception] = {
-    if(seen.contains(c.name.name)) {
+  def verifyClassChain(scope: ScopeNode, seen: List[String], c: String, p: Position): List[Exception] = {
+    if(seen.contains(c)) {
       new IllegalClassInheritanceCycle(seen.head, p) :: Nil
-    } else if(!scope.table.chainContains(c.name.name)) {
-      //Exception is silent in this case; since we will report it during general typechecking elsewhere.
-      //Unless we actually want to typecheck on this a billion times?
-      // 11/7/14: This now happens in thirdPass() ~ Hawk
+    } else if(!scope.table.chainContains(c)) {
       Nil
     } else {
-      val t = scope.table.get(c.name.name).get
+      val t = scope.table.get(c).get
       t match {
-        case otherc: ClassAnnotation =>
-          if(otherc.ext.isDefined) {
-            verifyClassChain(scope, seen ::: c.name.name :: Nil, otherc.name, p)
+        case myc: ClassAnnotation =>
+          if(myc.ext.isDefined) {
+            verifyClassChain(scope, (seen :+ c), myc.ext.get.name.name, p)
           } else {
             //we've found a class which goes to ground, do we want to do anything here?
             //I think no.
@@ -443,8 +455,8 @@ object DecafSemantic {
         checkTypeExists(ast.state.get, typ.pos, typ)
 
       case ClassDecl(_, ext, impl, mems) =>
-        ext.map(verifyClassChain(scope, List[String](), _, ast.pos)).getOrElse(Nil) :::
-          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) /*:::
+        ext.map({x => verifyClassChain(scope, List[String](), ast.asInstanceOf[ClassDecl].name.name, ast.pos)}).getOrElse(Nil) :::
+          impl.flatMap(checkTypeExists(scope, ast.pos, _, "interface")) ::: mems.flatMap(checkTypes(_)) /*:::
           checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */
       // 11/7/14: Moved to thirdPass() ~ Hawk
 
@@ -493,7 +505,7 @@ object DecafSemantic {
         if (state == null) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
         state.table.get(findReturnType(ast)) match {
           case Some(m: MethodAnnotation) =>
-            if (m.matches(MethodAnnotation(exp.typeof(state), m.formals, m.pos))) {
+            if (m.matches(MethodAnnotation("", exp.typeof(state), m.formals, m.pos))) {
               Nil
             } else {
               new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil
@@ -503,6 +515,13 @@ object DecafSemantic {
               s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
               s"\n*** code:\n${ast.pos.longString}") // the parser should never allow this
         }
+      case PrintStmt(args, _) => (for { i <- (0 until args.length).toList }
+        yield args(i).typeof(scope) match {
+          case e: ErrorType => e.unpack
+          case IntType(_) | BoolType(_) | StringType(_) => Nil
+          case t: Type => new SemanticException(s" *** Incompatible argument ${i+1}:" +
+        s" ${t.typeName} given, int/bool/string expected  ", ast.pos) :: Nil
+        }).flatten
       case ex: Expr => ex.typeof(scope) match {
         case e: ErrorType => e
         case _ => Nil
@@ -534,34 +553,41 @@ object DecafSemantic {
     val extErr: List[Exception] = (for {
       t <- c.extnds
     } yield {
-      checkTypeExists(classState, t.pos, t) // can't extend something that doesn't exist
+      checkTypeExists(classState, t.pos, t, "class") // can't extend something that doesn't exist
       // TODO: we should do additional checking here
     }).getOrElse(Nil)
 
-    if(c.extnds.isDefined && extErr.length == 0) {
-      val nstate = c.extnds.get.state
-      if(nstate.isEmpty) {
-        throw new Exception("EVERYTHING IS ON FIRE")
-      } else {
-        classState.reparent(nstate.get)
-      }
-    }
+    //scopes mangling moved OUT of this method
 
     (for {
       i: NamedType <- c.implements
       } yield {
-      i.state match {
-        case Some(state) => for {
-          (name: String, annotation: TypeAnnotation) <- state.table
-          if annotation.isInstanceOf[MethodAnnotation]
-          if annotation matches classState.table(name)
-        } yield {
-          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
-        }
-        case None => //is this the right thing to throw if i has no state? Or is it UndeclaredType?
-          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
+      classState.table.get(i.name.name) match {
+        case Some(s: InterfaceAnnotation) => (for {
+          (name: String, annotation: TypeAnnotation) <- s.interfaceScope
+          } yield {
+          classState.table.get(name) match {
+            case Some(that) => if (annotation matches that) {
+              Nil
+            } else {
+              List[Exception](
+                new SemanticException(s"*** Method '$name' must match inherited type signature",
+                  classState.table.get(name).get.where),
+                new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
+              )
+            }
+            case _ => Nil
+          }
+        }).flatten
+        case _ => Nil //is this the right thing to throw if i has no state? Or is it UndeclaredType?
+          //new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
-    }).flatten ::: extErr
+    }).flatten ::: (for {
+      thing <- classState.table.keys.toList if thing != "this"
+      inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)
+    } yield {
+      new SemanticException(s"*** Method '$thing' must match inherited type signature",classState.table.get(thing).get.where)
+    } ) ::: extErr
   }
 
   /**
@@ -576,15 +602,85 @@ object DecafSemantic {
     val scope = ast.state.get
     ast match {
       case Program(declarations, _) => declarations.flatMap(checkClasses(_))
-      case c: ClassDecl => checkInheritance(c) /* :::
+      case c: ClassDecl => checkInheritance(c) ::: c.members.flatMap(checkClasses(_)) /*
         c.extnds.map(thirdPass(_)).getOrElse(Nil) :::
         c.members.flatMap(thirdPass(_))           :::
         c.implements.flatMap(thirdPass(_))        ::: Nil */ //currently we don't need to do this but we might later
-        //todo: insert inner classes here?
+
+        //TODO: Finish checks
       case _ => Nil
     }
   }
+
+  def locateAnywhere(node: ScopeNode, className: String): Option[ScopeNode] = {
+    //scala doesn't have anonymous recursive functions, so these get shitty names
+    //x zooms to the top node of a ScopeTree
+    def x(p:ScopeNode):ScopeNode = p.parent match {
+      case None => p
+      case Some(z) => x(z)
+    }
+    //c finds the first declaration of a class anywhere in the scope tree
+    def c(p:ScopeNode):Option[ScopeNode] = {
+      p.table.get(className) match {
+        case Some(x: ClassAnnotation) => Some(x.classScope)
+        case None =>
+          var r: Option[ScopeNode] = None
+          Breaks.breakable {
+            for (l <- p.children) {
+              l.table.get(className) match {
+                case None =>
+                case Some(x: ClassAnnotation) =>
+                  r = Some(x.classScope)
+                  Breaks.break()
+              }
+            }
+          }
+          r
+      }
+    }
+    //get the top of the tree for the later descent match
+    //then descend and find declaration
+    c(x(node))
+  }
+
+  def scopedInheritance(ast: ASTNode): List[Exception] = {
+    var ret = List[Exception]()
+    if(ast.state.isEmpty) {
+      throw new IllegalArgumentException("Tree does not contain scope for " + ast)
+    } else {
+      val scope = ast.state.get
+      ast match {
+        case Program(declarations, _) => ret = declarations.flatMap(scopedInheritance(_)) ::: ret
+        case c: ClassDecl =>
+          if (c.extnds.isDefined) {
+            //we are in the middle of rewriting ScopeTree, declarations are in flux
+            //and thus we need to locate a potential class everywhere in the tree.
+            //
+            //This is only important if we ever support inner classes, however,
+            //writing it this way NOW enables us to correctly scope even if we ever do
+            //instead of having to rewrite things.
+            locateAnywhere(scope, c.extnds.get.name.name) match {
+              case None => //throw new Exception("EVERYTHING IS ON FIRE")
+              //funny enough, classes don't seem to contain their own scopeNodes correctly?
+              //therefore we locate it again.
+              case Some(x) => locateAnywhere(scope, c.name.name) match {
+                case None => //throw new Exception("EVERYTHING IS ON FIRE")
+                case Some(y) =>
+                  //mount extendING class under the extendED class, so that its decls happen in the scope chain
+                  ret = y.reparent(x) ::: ret
+              }
+            }
+          }
+          //potentially support inner classes
+          ret = c.members.flatMap(scopedInheritance(_)) ::: ret
+        case _ =>
+      }
+    }
+    ret
+  }
+
   /**
+   *
    * Performs the complete semantic analysis
    *
    * This works by [[decorateScope() decorating]] the tree with [[ScopeNode]]s
@@ -604,14 +700,14 @@ object DecafSemantic {
   def analyze(top: Program): (ScopeNode, List[Exception]) = {
     val tree: ScopeNode = new ScopeNode(new ScopeTable, "Global", None, top)
     decorateScope(top, tree)
-    val problems = pullDeclsToScope(top) ::: checkClasses(top) ::: checkTypes(top)
+    val problems = pullDeclsToScope(top) ::: scopedInheritance(top) ::: checkClasses(top) ::: checkTypes(top)
     (top.state.get, problems)
   }
 
   /**
    * Helper method for testing
-   * @param progn
-   * @return
+   * @param progn The program to compile
+   * @return The result of compiling the program, printing any errors that happened
    */
   def compileToSemantic(progn: String): ScopeNode = {
     val r = new DecafSyntactical().parse(progn)
@@ -622,6 +718,6 @@ object DecafSemantic {
   }
 
   def main(args: Array[String]): Unit = {
-    println(compileToSemantic("class A { } class B extends A { }").toString)
+    println(compileToSemantic("class A { } class B extends A { } class C extends B {} class D extends A {} class Q extends Q {} class R extends Q {}").toString)
   }
 }
