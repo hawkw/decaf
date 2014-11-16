@@ -394,9 +394,10 @@ object DecafSemantic {
   def checkTypeExists(node: ScopeNode,pos: Position, value: Type): List[Exception] = {
     value match {
       case n: NamedType =>
-        if(!node.table.chainContains(n.name.name)) {
-          new UndeclaredTypeException(n.name.name, pos) :: Nil
-        } else Nil
+        node.table.get(n.name.name) match {
+          case Some(ClassAnnotation(_,_,_,_,_)) | Some(InterfaceAnnotation(_,_,_)) => Nil
+          case _ => new UndeclaredTypeException(n.name.name, pos) :: Nil
+        }
       case ArrayType(_, t) => checkTypeExists(node, pos, t)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) => Nil
       case UndeclaredType(_,_) | _ => new SemanticException(s"Unexpected type '${value.typeName}'!", pos) :: Nil
