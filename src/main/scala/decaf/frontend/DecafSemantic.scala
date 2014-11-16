@@ -235,7 +235,7 @@ object DecafSemantic {
     if (state.table.contains(ident.name)) {
       new ConflictingDeclException(ident.name, ident.pos) :: Nil
     } else {
-      state.table.put(ident.name, new VariableAnnotation(typ, ident.pos))
+      state.table.put(ident.name, new VariableAnnotation(ident.name, typ, ident.pos))
       Nil
     }
   }
@@ -256,7 +256,7 @@ object DecafSemantic {
       errors = new ConflictingDeclException(ident.name, ident.pos) :: errors
       return errors
     } else {
-      state.table.put(ident.name, new MethodAnnotation(rettype, formals.map(_.t), fn.pos))
+      state.table.put(ident.name, new MethodAnnotation(ident.name, rettype, formals.map(_.t), fn.pos))
     }
     for (formal <- formals) {
       if(formal.state.isEmpty) {
@@ -300,7 +300,7 @@ object DecafSemantic {
         "keyword \'this\' already (accidentally?) bound for class scope in "
         + c.toString)
     } else {
-      cscope.table.put("this", new VariableAnnotation(NamedType(c.name),c.pos))
+      cscope.table.put("this", new VariableAnnotation("this",NamedType(c.name),c.pos))
     }
 
     errors = errors ::: c.members.map {
@@ -504,7 +504,7 @@ object DecafSemantic {
         if (state == null) throw new IllegalArgumentException("Tree does not contain scope for " + ast)
         state.table.get(findReturnType(ast)) match {
           case Some(m: MethodAnnotation) =>
-            if (m.matches(MethodAnnotation(exp.typeof(state), m.formals, m.pos))) {
+            if (m.matches(MethodAnnotation("", exp.typeof(state), m.formals, m.pos))) {
               Nil
             } else {
               new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil

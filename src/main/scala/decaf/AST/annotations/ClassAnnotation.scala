@@ -25,5 +25,6 @@ case class ClassAnnotation(name: NamedType,
     case ClassAnnotation(_, e,i,m, _) => this == that
     case _ => false
   }
+  override def getName = name.name.name
   override def toString = s"Class: ${name.name.name}"
 }

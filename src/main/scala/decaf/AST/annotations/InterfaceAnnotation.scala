@@ -14,6 +14,6 @@ case class InterfaceAnnotation(name: NamedType,
     case InterfaceAnnotation(_, _, _) => this == that
     case _ => false
   }
-
+  override def getName = name.name.name
   override def toString = s"Interface: ${name.name.name}"
 }

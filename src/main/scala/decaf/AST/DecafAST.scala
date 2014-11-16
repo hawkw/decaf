@@ -460,17 +460,17 @@ import scala.util.parsing.input.{Position, Positional}
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table.get(name.name).get match {
-            case VariableAnnotation(what,where) =>
+            case VariableAnnotation(_, what,where) =>
               new ErrorType(s"*** ${what.typeName} has no such field '${field.name}'", where)
-            case MethodAnnotation(_, _, where) =>
+            case MethodAnnotation(_, _, _, where) =>
               throw new IllegalArgumentException(
                 s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
                   s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
                   s"\n*** code:\n${loc.longString}")
             case ClassAnnotation(what, _, _, classScope, _) => classScope.table.get(field.name) match {
               case Some(thing) => thing match {
-                case VariableAnnotation(t, _) => t
-                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", pos)
+                case VariableAnnotation(_, t, _) => t
+                case MethodAnnotation(_, _, _, _) => new ErrorType("*** Attempt to field access a method", pos)
                 case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", pos)
               }
               case None => UndeclaredType(s"*** ${what.typeName} has no such field '${field.name}'", pos)
@@ -490,8 +490,8 @@ import scala.util.parsing.input.{Position, Positional}
 
       case None => if (scope.table chainContains field.name) {
         scope.table.get(field.name).get match {
-          case VariableAnnotation(t, _) => t
-          case MethodAnnotation(_,_,_) => new ErrorType("*** Attempt to field access a method", pos)
+          case VariableAnnotation(_, t, _) => t
+          case MethodAnnotation(_, _,_,_) => new ErrorType("*** Attempt to field access a method", pos)
           case ClassAnnotation(_,_,_,_,_) => new ErrorType("*** Attempt to field access a class", pos)
         }
       } else {
@@ -518,8 +518,7 @@ import scala.util.parsing.input.{Position, Positional}
         case Some(x) => x.typeof(scope) match {
           case NamedType(n) => scope.table.get(n.name) match {
             case Some(c: ClassAnnotation) => c.classScope
-            case _ => return new ErrorType(s" *** Attempt to call on non-method ${field.name}," +
-              s" which is of type ${n.name}", field.pos)
+            case _ => return new ErrorType(s" *** ${n.name} has no such field '${field.name}'", field.pos)
           }
           case e: ErrorType => return e
           case t: Type =>
@@ -532,7 +531,7 @@ import scala.util.parsing.input.{Position, Positional}
       if (cscope.table.chainContains(field.name)) {
           val t = cscope.table.get(field.name).get
           t match {
-            case MethodAnnotation(rtype, nargs, _) =>
+            case MethodAnnotation(_,rtype, nargs, _) =>
               if (myargstype.length != nargs.length) {
                 errors = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
                   s" arguments but ${myargstype.length} given", field.pos) :: errors
@@ -560,8 +559,7 @@ import scala.util.parsing.input.{Position, Positional}
                 else
                   return rtype
               }
-            case q => errors = new ErrorType(s" *** Attempt to call on non-method ${field.getName}," +
-              s" which is of type $q", field.pos) :: errors
+            case q => errors = new ErrorType(s" *** ${q.getName} has no such field '${field.name}'", field.pos) :: errors
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
