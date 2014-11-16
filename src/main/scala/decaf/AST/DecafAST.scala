@@ -596,10 +596,9 @@ import scala.util.parsing.input.{Position, Positional}
     cType.parent = this
     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
     override def typeof(scope: ScopeNode): Type = {
-      if(scope.table.chainContains(cType.name.name)) {
-        cType
-      } else {  // we can assume class here because NamedType == class/interface in Decaf
-        new ErrorType(s" *** No declaration found for class '${cType.name.name}'.", pos)
+      scope.table.get(cType.name.name) match {
+        case Some(ClassAnnotation(_,_,_,_,_))  => cType
+        case _ => new ErrorType(s" *** No declaration found for class '${cType.name.name}'.", pos)
       }
     }
   }

@@ -579,8 +579,8 @@ object DecafSemantic {
             case _ => Nil
           }
         }).flatten
-        case _ => //is this the right thing to throw if i has no state? Or is it UndeclaredType?
-          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
+        case _ => Nil //is this the right thing to throw if i has no state? Or is it UndeclaredType?
+          //new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
     }).flatten ::: (for {
       thing <- classState.table.keys.toList if thing != "this"
