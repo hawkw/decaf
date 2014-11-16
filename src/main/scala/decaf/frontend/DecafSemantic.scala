@@ -68,6 +68,8 @@ case class ScopeNode(table: ScopeTable,
     this.children = this.children :+ other
   }
 
+  def insideLoop: Boolean = if (this.boundName == "Loop body"){ true } else { parent.exists(_.insideLoop) }
+
   def reparent(nParent: ScopeNode): List[Exception] = {
     if(nParent == this) List(new IllegalArgumentException("ERROR: Scope attempted to mount itself as parent!"))
     else {
@@ -496,9 +498,9 @@ object DecafSemantic {
         what.map(checkTypes(_)).getOrElse(Nil) ::: cases.flatMap(checkTypes(_)) ::: default.map(checkTypes(_)).getOrElse(Nil)
 
       case CaseStmt(value, body, _) => body.flatMap(checkTypes(_))
-      case BreakStmt(_) => scope.boundName match {
-        case "Loop body" => Nil //todo: also allow case statements?
-        case _ => new SemanticException("*** break is only allowed inside a loop", ast.pos) :: Nil
+      case BreakStmt(_) => scope.insideLoop match {
+        case true => Nil //todo: also allow case statements?
+        case false => new SemanticException("*** break is only allowed inside a loop", ast.pos) :: Nil
       }
       case ReturnStmt(_, Some(exp)) =>
         val state: ScopeNode = ast.state.orNull
