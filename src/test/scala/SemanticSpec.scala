@@ -228,4 +228,43 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     val(scopes, errs) = analyze("t2.decaf")
     errs should have length 0
   }
+
+  it should "Detect no errors in t3.decaf" in {
+    val(scopes, errs) = analyze("t3.decaf")
+    errs should have length 0
+  }
+
+  it should "Detect no errors in t4.decaf" in {
+    val(scopes, errs) = analyze("t4.decaf")
+    errs should have length 0
+  }
+
+  it should "Detect no errors in t5.decaf" in {
+    val(scopes, errs) = analyze("t5.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t6.decaf" in {
+    val(scopes, errs) = analyze("t6.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t7.decaf" in {
+    val(scopes, errs) = analyze("t7.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t9.decaf" in {
+    val(scopes, errs) = analyze("t9.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t10.decaf" in {
+    val(scopes, errs) = analyze("t10.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t12.decaf" in {
+    val(scopes, errs) = analyze("t12.decaf")
+    errs should have length 0
+  }
+  it should "Detect no errors in t13.decaf" in {
+    val(scopes, errs) = analyze("t13.decaf")
+    errs should have length 0
+  }
 }
