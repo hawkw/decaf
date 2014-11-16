@@ -525,8 +525,8 @@ import scala.util.parsing.input.{Position, Positional}
           case t: Type =>
             if(t.isInstanceOf[ArrayType] && field.name == "length") return new IntType(pos)
             else
-            return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
-            s" which is of type ${t.typeName}", field.pos)
+            return new ErrorType(s" *** ${t.typeName} has no such field " +
+            s"'${field.name}'", field.pos)
         }
       }
       if (cscope.table.chainContains(field.name)) {
