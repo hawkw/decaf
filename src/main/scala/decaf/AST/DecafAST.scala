@@ -612,10 +612,9 @@ import scala.util.parsing.input.{Position, Positional}
       if(size.typeof(scope).isInstanceOf[IntType]) {
         elemType match {
           case a: ArrayType => ArrayType(pos, a)
-          case n: NamedType => if (scope.table.chainContains(n.name.name)) {
-            new ArrayType(pos, n)
-          } else {
-            new ErrorType(s" *** No declaration found for class '${n.name.name}'.", pos)
+          case n: NamedType => scope.table.get(n.name.name) match {
+            case Some(ClassAnnotation(_,_,_,_,_)) => new ArrayType(pos, n)
+            case _ => new UndeclaredType(s" *** No declaration found for type '${n.name.name}'.", pos)
           }
           case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => ArrayType(pos, elemType)
           case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
