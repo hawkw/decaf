@@ -566,7 +566,7 @@ import scala.util.parsing.input.{Position, Positional}
                 // > Although, this works just fine, and it's not functional.
                 // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
-                  if (nargs(i) != myargstype(i))
+                  if (nargs(i) != myargstype(i) && !myargstype(i).isInstanceOf[NullType])
                     errors = new ErrorType(s" *** Incompatible argument ${i + 1}:" +
                       s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos) :: errors
                 }
