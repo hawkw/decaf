@@ -518,7 +518,7 @@ import scala.util.parsing.input.{Position, Positional}
         case Some(x) => x.typeof(scope) match {
           case NamedType(n) => scope.table.get(n.name) match {
             case Some(c: ClassAnnotation) => c.classScope
-            case _ => return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
+            case _ => return new ErrorType(s" *** Attempt to call on non-method ${field.name}," +
               s" which is of type ${n.name}", field.pos)
           }
           case e: ErrorType => return e
@@ -560,7 +560,7 @@ import scala.util.parsing.input.{Position, Positional}
                 else
                   return rtype
               }
-            case q => errors = new ErrorType(s" *** Attempt to call on non-method ${field.name}," +
+            case q => errors = new ErrorType(s" *** Attempt to call on non-method ${field.getName}," +
               s" which is of type $q", field.pos) :: errors
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
