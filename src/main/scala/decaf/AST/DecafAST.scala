@@ -360,11 +360,16 @@ import scala.util.parsing.input.{Position, Positional}
     }
   }
 
+
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
+
     override def typeof(scope: ScopeNode): Type = lhs match {
+        // The spec calls for this to always be logical even when part of the expression
+        // is a TypeError. We've decided that this is wrong and inconsistent with
+        // the way Decaf forwards TypeErrors elsewhere.
       case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
         case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
         case (e: ErrorType, _) => e
@@ -506,14 +511,27 @@ import scala.util.parsing.input.{Position, Positional}
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
     override def typeof(scope: ScopeNode): Type = {
-        val myargstype: List[Type] = this.args.map(_.typeof(scope))
-        var errors: List[ErrorType] = Nil
-        if(scope.table.chainContains(field.name)) {
-          val t = scope.table.get(field.name).get
+      val myargstype: List[Type] = this.args.map(_.typeof(scope))
+      var errors: List[ErrorType] = Nil
+      val cscope: ScopeNode = base match {
+        case None => scope
+        case Some(x) => x.typeof(scope) match {
+          case NamedType(n) => scope.table.get(n.name) match {
+            case Some(c: ClassAnnotation) => c.classScope
+            case _ => return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
+              s" which is of type ${n.name}", field.pos)
+          }
+          case e: ErrorType => return e
+          case t: Type => return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
+            s" which is of type ${t.typeName}", field.pos)
+        }
+      }
+      if (cscope.table.chainContains(field.name)) {
+          val t = cscope.table.get(field.name).get
           t match {
             case MethodAnnotation(rtype, nargs, _) =>
               if (myargstype.length != nargs.length) {
-               errors = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
+                errors = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
                   s" arguments but ${myargstype.length} given", field.pos) :: errors
               } else {
                 // Unfortunately, JJ wants the position and types of the bad arguments
@@ -526,10 +544,10 @@ import scala.util.parsing.input.{Position, Positional}
                 // >    ~ Xyzzy, 11/13/14
                 for (i <- 0 until args.length) {
                   if (nargs(i) != myargstype(i))
-                    errors = new ErrorType(s" *** Incompatible argument ${i+1}:" +
+                    errors = new ErrorType(s" *** Incompatible argument ${i + 1}:" +
                       s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos) :: errors
                 }
-                errors = args.flatMap(a => a.typeof(scope) match {
+                errors = args.flatMap(a => a.typeof(cscope) match {
                   case e: ErrorType => e :: Nil
                   case _ => Nil
                 }
@@ -540,7 +558,7 @@ import scala.util.parsing.input.{Position, Positional}
                   return rtype
               }
             case q => errors = new ErrorType(s" *** Attempt to call on non-method ${field.name}," +
-              s" which is of type $q",field.pos) :: errors
+              s" which is of type $q", field.pos) :: errors
             // Not actually sure if this one is ErrorType - it might be an
             // invalid state and we might want to throw an exception here.
             // Are there any valid situations in which we would have an
@@ -561,15 +579,15 @@ import scala.util.parsing.input.{Position, Positional}
           errors = (if (base.isDefined)
             new ErrorType(s"*** ${base.get.typeof(scope).typeName} has no such field '${field.name}'", pos)
           else
-            new ErrorType(s"*** No declaration found for function '${field.name}'.",field.pos)
+            new ErrorType(s"*** No declaration found for function '${field.name}'.", field.pos)
             ) :: errors
         }
-      errors = args.flatMap(a => a.typeof(scope) match {
-        case e: ErrorType => e :: Nil
-        case _ => Nil
-      }) ::: errors
-      new ListError(errors)
-    }
+        errors = args.flatMap(a => a.typeof(cscope) match {
+          case e: ErrorType => e :: Nil
+          case _ => Nil
+        }) ::: errors
+        new ListError(errors)
+      }
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
