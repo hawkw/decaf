@@ -561,18 +561,32 @@ object DecafSemantic {
     (for {
       i: NamedType <- c.implements
       } yield {
-      i.state match {
-        case Some(state) => for {
-          (name: String, annotation: TypeAnnotation) <- state.table
-          if annotation.isInstanceOf[MethodAnnotation]
-          if annotation matches classState.table(name)
-        } yield {
-          new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
-        }
+      classState.table.get(i.name.name) match {
+        case Some(s: InterfaceAnnotation) => (for {
+          (name: String, annotation: TypeAnnotation) <- s.interfaceScope
+          } yield {
+          classState.table.get(name) match {
+            case Some(that) => if (annotation matches that) {
+              Nil
+            } else {
+              List[Exception](
+                new SemanticException(s"*** Method '$name' must match inherited type signature",
+                  classState.table.get(name).get.where),
+                new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos)
+              )
+            }
+            case None => {Nil}
+          }
+        }).flatten
         case None => //is this the right thing to throw if i has no state? Or is it UndeclaredType?
           new UnimplementedInterfaceException(c.name.name, i.name.name, c.pos) :: Nil
       }
-    }).flatten ::: extErr
+    }).flatten ::: (for {
+      thing <- classState.table.keys.toList if thing != "this"
+      inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)
+    } yield {
+      new SemanticException(s"*** Method '$thing' must match inherited type signature",classState.table.get(thing).get.where)
+    } ) ::: extErr
   }
 
   /**
