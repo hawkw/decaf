@@ -399,15 +399,22 @@ import scala.util.parsing.input.{Position, Positional}
       val y = scope.table.get(b.asInstanceOf[NamedType].name.name)
       if(x == None || y == None) return false
       x match {
+          //get the class that we're concerned with
         case Some(classA: ClassAnnotation) =>
           y match {
+              //get the class we're matching
             case Some(classB: ClassAnnotation) =>
+              //If the class we're trying to match extends anything
               classB.ext match {
-                case Some(ext) => classLiftable(scope, classA.name, ext)
+                //find if they're equal, or if not, find if a superclass matches
+                case Some(ext) => (classA.name == classB.name) || classLiftable(scope, classA.name, ext)
+                  //if the class we're matching has no supertype, then they have to be equal or else we're not working.
                 case None => classA.name == classB.name
               }
+              //if it's not a class, we're unconcerned
             case _ => false
           }
+          //if its not a class, we're unconcerned
         case _ => false
       }
     }
