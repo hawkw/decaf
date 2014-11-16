@@ -467,13 +467,13 @@ import scala.util.parsing.input.{Position, Positional}
                 s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
                   s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
                   s"\n*** code:\n${loc.longString}")
-            case ClassAnnotation(what, _, _, classScope, where) => classScope.table.get(field.name) match {
+            case ClassAnnotation(what, _, _, classScope, _) => classScope.table.get(field.name) match {
               case Some(thing) => thing match {
                 case VariableAnnotation(t, _) => t
-                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
-                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
+                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", pos)
+                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", pos)
               }
-              case None => UndeclaredType(s"*** ${what.typeName} has no such field '${field.name}'", where)
+              case None => UndeclaredType(s"*** ${what.typeName} has no such field '${field.name}'", pos)
             }
           }
         } else {
@@ -491,8 +491,8 @@ import scala.util.parsing.input.{Position, Positional}
       case None => if (scope.table chainContains field.name) {
         scope.table.get(field.name).get match {
           case VariableAnnotation(t, _) => t
-          case MethodAnnotation(_,_,where) => new ErrorType("*** Attempt to field access a method", where)
-          case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
+          case MethodAnnotation(_,_,_) => new ErrorType("*** Attempt to field access a method", pos)
+          case ClassAnnotation(_,_,_,_,_) => new ErrorType("*** Attempt to field access a class", pos)
         }
       } else {
         UndeclaredType("*** No declaration found for variable '" + field.name + "'.", loc)
