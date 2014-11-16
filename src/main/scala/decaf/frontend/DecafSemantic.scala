@@ -508,7 +508,8 @@ object DecafSemantic {
             if (m.matches(MethodAnnotation("", exp.typeof(state), m.formals, m.pos))) {
               Nil
             } else {
-              new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil
+              if(exp.typeof(state).isInstanceOf[NullType]) Nil
+              else new IncompatibleReturnException(exp.typeof(state).typeName, m.returnType.typeName, ast.pos) :: Nil
             }
           case _ => throw new IllegalArgumentException(
             s"\n*** EXTREMELY BAD PROBLEM occurs on line ${ast.pos.line}" + // this should not happen

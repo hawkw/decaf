@@ -392,12 +392,33 @@ import scala.util.parsing.input.{Position, Positional}
         ""
       })
     }
+
+    def classLiftable(scope: ScopeNode, a: Type, b: Type): Boolean = {
+      if(!a.isInstanceOf[NamedType] || !b.isInstanceOf[NamedType]) return false
+      val x = scope.table.get(a.asInstanceOf[NamedType].name.name)
+      val y = scope.table.get(b.asInstanceOf[NamedType].name.name)
+      if(x == None || y == None) return false
+      x match {
+        case Some(classA: ClassAnnotation) =>
+          y match {
+            case Some(classB: ClassAnnotation) =>
+              classB.ext match {
+                case Some(ext) => classLiftable(scope, classA.name, ext)
+                case None => classA.name == classB.name
+              }
+            case _ => false
+          }
+        case _ => false
+      }
+    }
+
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
       case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
+      case (lf,rf: NullType) => VoidType(pos)
       case (lf,rf) =>
-        if(lf == rf) VoidType(pos)
+        if(lf == rf || classLiftable(scope, lf, rf)) VoidType(pos)
         else new ErrorType(s"*** Incompatible operands: ${lf.typeName} = ${rf.typeName}", pos)
     }
   }
@@ -409,8 +430,8 @@ import scala.util.parsing.input.{Position, Positional}
     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
       val t = scope.table.get("this").get
       t match {
-        case c: ClassAnnotation => c.name
-        case _ => new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+        case v: VariableAnnotation => v.t
+        case _ => new ErrorType("*** Keyword `this` expected variable declaration, got something else.", loc)
       }
     } else {
       new ErrorType("*** 'this' is only valid within class scope", loc)
@@ -549,7 +570,7 @@ import scala.util.parsing.input.{Position, Positional}
                     errors = new ErrorType(s" *** Incompatible argument ${i + 1}:" +
                       s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos) :: errors
                 }
-                errors = args.flatMap(a => a.typeof(cscope) match {
+                errors = args.flatMap(a => a.typeof(scope) match {
                   case e: ErrorType => e :: Nil
                   case _ => Nil
                 }

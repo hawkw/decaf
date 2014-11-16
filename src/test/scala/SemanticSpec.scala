@@ -196,4 +196,36 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     val (scopes, errs) = analyze("matrix.decaf")
     errs should have length 0
   }
+  it should "Detect all errors in new.decaf" in {
+    val (scopes, errs) = analyze("new.decaf")
+    errs should have length 9
+    errs(0).getMessage should include ("Incompatible argument 1: double given, int expected")
+    errs(1).getMessage should include ("Size for NewArray must be an integer")
+    errs(2).getMessage should include ("Test expression must have boolean type")
+    errs(3).getMessage should include ("Test expression must have boolean type")
+    errs(4).getMessage should include ("Test expression must have boolean type")
+    errs(5).getMessage should include ("Test expression must have boolean type")
+    errs(6).getMessage should include ("Test expression must have boolean type")
+    errs(7).getMessage should include ("Array subscript must be an integer")
+    errs(8).getMessage should include ("Array subscript must be an integer")
+  }
+  it should "Detect no errors in queue.decaf" in {
+    val(scopes, errs) = analyze("queue.decaf")
+    errs should have length 0
+  }
+
+  it should "Detect no errors in stack.decaf" in {
+    val(scopes, errs) = analyze("stack.decaf")
+    errs should have length 0
+  }
+
+  it should "Detect no errors in t1.decaf" in {
+    val(scopes, errs) = analyze("t1.decaf")
+    errs should have length 0
+  }
+
+  it should "Detect no errors in t2.decaf" in {
+    val(scopes, errs) = analyze("t2.decaf")
+    errs should have length 0
+  }
 }
