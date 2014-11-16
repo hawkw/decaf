@@ -522,7 +522,10 @@ import scala.util.parsing.input.{Position, Positional}
               s" which is of type ${n.name}", field.pos)
           }
           case e: ErrorType => return e
-          case t: Type => return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
+          case t: Type =>
+            if(t.isInstanceOf[ArrayType] && field.name == "length") return new IntType(pos)
+            else
+            return new ErrorType(s" *** Attempt to call on non-method ${x.getName}," +
             s" which is of type ${t.typeName}", field.pos)
         }
       }
@@ -576,11 +579,12 @@ import scala.util.parsing.input.{Position, Positional}
             // >   ~ Xyzzy, 11/13/14
           }
         } else {
-          errors = (if (base.isDefined)
-            new ErrorType(s"*** ${base.get.typeof(scope).typeName} has no such field '${field.name}'", pos)
-          else
-            new ErrorType(s"*** No declaration found for function '${field.name}'.", field.pos)
-            ) :: errors
+          if (base.isDefined) {
+            if (base.get.typeof(scope).isInstanceOf[ArrayType] && field.name == "length") return new IntType(pos)
+            else errors = new ErrorType(s"*** ${base.get.typeof(scope).typeName} has no such field '${field.name}'", pos) :: errors
+          } else {
+            errors = new ErrorType(s"*** No declaration found for function '${field.name}'.", field.pos) :: errors
+          }
         }
         errors = args.flatMap(a => a.typeof(cscope) match {
           case e: ErrorType => e :: Nil
