@@ -391,12 +391,12 @@ object DecafSemantic {
    * @param value the [[Type]] to check
    * @return a [[List]] of [[Exception]]s for each error generated during the check
    */
-  def checkTypeExists(node: ScopeNode,pos: Position, value: Type): List[Exception] = {
+  def checkTypeExists(node: ScopeNode,pos: Position, value: Type, kind: String ="type"): List[Exception] = {
     value match {
       case n: NamedType =>
         node.table.get(n.name.name) match {
           case Some(ClassAnnotation(_,_,_,_,_)) | Some(InterfaceAnnotation(_,_,_)) => Nil
-          case _ => new UndeclaredTypeException(n.name.name, pos) :: Nil
+          case _ => new UndeclaredTypeException(n.name.name, pos, kind) :: Nil
         }
       case ArrayType(_, t) => checkTypeExists(node, pos, t)
       case VoidType(_) | IntType(_) | DoubleType(_) | BoolType(_) | StringType(_) | NullType(_) => Nil
@@ -456,7 +456,7 @@ object DecafSemantic {
 
       case ClassDecl(_, ext, impl, mems) =>
         ext.map({x => verifyClassChain(scope, List[String](), ast.asInstanceOf[ClassDecl].name.name, ast.pos)}).getOrElse(Nil) :::
-          impl.flatMap(checkTypeExists(scope, ast.pos, _)) ::: mems.flatMap(checkTypes(_)) /*:::
+          impl.flatMap(checkTypeExists(scope, ast.pos, _, "interface")) ::: mems.flatMap(checkTypes(_)) /*:::
           checkClassIntegrity(ast.asInstanceOf[ClassDecl]) ::: */
       // 11/7/14: Moved to thirdPass() ~ Hawk
 
@@ -553,7 +553,7 @@ object DecafSemantic {
     val extErr: List[Exception] = (for {
       t <- c.extnds
     } yield {
-      checkTypeExists(classState, t.pos, t) // can't extend something that doesn't exist
+      checkTypeExists(classState, t.pos, t, "class") // can't extend something that doesn't exist
       // TODO: we should do additional checking here
     }).getOrElse(Nil)
 
