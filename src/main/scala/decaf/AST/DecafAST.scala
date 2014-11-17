@@ -414,6 +414,17 @@ import scala.util.parsing.input.{Position, Positional}
               //if it's not a class, we're unconcerned
             case _ => false
           }
+        case Some(interface: InterfaceAnnotation) =>
+          y match {
+            case Some(classB: ClassAnnotation) =>
+              classB.ext match {
+                case Some(ext) => classB.implements.contains(interface.name) || classLiftable(scope, interface.name, ext)
+                case None => classB.implements.contains(interface.name)
+              }
+            case Some(otherinterface: InterfaceAnnotation) =>
+              interface.name.name == otherinterface.name.name
+            case _ => false
+          }
           //if its not a class, we're unconcerned
         case _ => false
       }
