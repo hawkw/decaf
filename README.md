@@ -27,6 +27,10 @@ Rave Reviews
 
 ~ Cara Brosius
 
+> `inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)`
+
+~ the Decaf codebase
+
 Using Decaf
 -----------
 
