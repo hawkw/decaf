@@ -557,6 +557,7 @@ import scala.util.parsing.input.{Position, Positional}
         case Some(x) => x.typeof(scope) match {
           case NamedType(n) => scope.table.get(n.name) match {
             case Some(c: ClassAnnotation) => c.classScope
+            case Some(i: InterfaceAnnotation) => i.interfaceScope
             case _ => return new ErrorType(s" *** ${n.name} has no such field '${field.name}'", field.pos)
           }
           case e: ErrorType => return e

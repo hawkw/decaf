@@ -358,7 +358,7 @@ object DecafSemantic {
       } else {
         ptable.put(i.name.name,
                    new InterfaceAnnotation(new NamedType(i.name),
-                   iscope.table,
+                   iscope,
                    i.pos))
       }
     }
@@ -567,7 +567,7 @@ object DecafSemantic {
       } yield {
       classState.table.get(i.name.name) match {
         case Some(s: InterfaceAnnotation) => (for {
-          (name: String, annotation: TypeAnnotation) <- s.interfaceScope
+          (name: String, annotation: TypeAnnotation) <- s.interfaceScope.table
           } yield {
           classState.table.get(name) match {
             case Some(that) => if (annotation matches that) {
