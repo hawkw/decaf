@@ -28,7 +28,8 @@ Rave Reviews
 ~ Cara Brosius
 
 > ```scala
-inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)```
+inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)
+```
 
 ~ the Decaf codebase
 
