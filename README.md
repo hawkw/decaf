@@ -3,7 +3,7 @@ decaf
 
 [![Build Status](https://magnum.travis-ci.com/hawkw/decaf.svg?token=CZmphEJzXbknGmxGsxbT&branch=master)](https://magnum.travis-ci.com/hawkw/decaf)
 
-Decaf stands for "Compiler Language with No Pronouncable Acronym". It's kinda like Java but a lot less so.
+Decaf is an alleged programming language. It's kinda like Java but a lot less so.
 
 Implemented by Hawk Weisman (@hawkw) and Max Clive (@ArcticLight) for Professor Janyl Jumadinova's CMPSC420 at Allegheny College.
 
@@ -34,7 +34,7 @@ Using Decaf
 
 You can build the Decaf compiler, `dcc`, using our Gradle build script. Simply type the command `./gradlew dccJar`. This will build Decaf, run our ScalaTest test suite, and then generate the runnable `dcc` jar file. The jar file is output to `build/libs/dcc.jar` relative to the root of the repository, and can be run with `java -jar dcc.jar path/to/source/code/file.decaf`. The Decaf compiler currently takes one argument, a Decaf source code file to compile. If you pass more or less arguments, at this point, the compiler will do nothing and issue a warning.
 
-Note that the Decaf compiler is not currently complete, and will not yet output runnable binaries (as the syntactical analysis and code generation components are not yet implemented). Currently, invoking `dcc` on a Decaf source code file will result in the abstract syntax tree for that program being printed to the console.
+Note that the Decaf compiler is not currently complete, and will not yet output runnable binaries (as the code generation components are not yet implemented). Currently, invoking `dcc` on a Decaf source code file will result in the source code file being parsed and passed through semantic analysis.
 
 ##### Running Tests 
 
