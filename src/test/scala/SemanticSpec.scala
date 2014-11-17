@@ -263,10 +263,15 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     errs should have length 0
   }
   */
+  /*
+  // We are not testing against t12.decaf, since
+  // we have chosen to not allow variables to be
+  // assigned new names in the same scope.
   it should "Detect no errors in t12.decaf" in {
     val(scopes, errs) = analyze("t12.decaf")
     errs should have length 0
   }
+  */
   it should "Detect no errors in t13.decaf" in {
     val(scopes, errs) = analyze("t13.decaf")
     errs should have length 0
