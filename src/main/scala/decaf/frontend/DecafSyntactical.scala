@@ -11,6 +11,8 @@
 
 package decaf.frontend
 
+import decaf.AST._
+
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.Reader
 

@@ -1,5 +1,10 @@
-package decaf.frontend
-import scala.util.parsing.input.{NoPosition, Positional, Position}
+package decaf.AST
+
+import decaf.frontend.{TypeErrorException, ScopeNode}
+import decaf.AST.annotations._
+import com.meteorcode.common.ForkTable
+
+import scala.util.parsing.input.{Position, Positional}
 
 /**
  * Decaf Abstract Syntax Tree, based on the C implementation provided by Professor Jumadinova.
@@ -121,7 +126,7 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     }
   }
 
-  abstract class ConditionalStmt(testExpr: Expr, body: Stmt) extends Stmt(testExpr.pos){
+  abstract class ConditionalStmt(val testExpr: Expr, val body: Stmt) extends Stmt(testExpr.pos){
     override val printLine = false
     testExpr.parent = this
     body.parent = this
@@ -278,16 +283,13 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class ASTOperator(loc: Position, token: String) extends ASTNode(loc) {
     override def getName = "Operator: "
 
-    //TODO: Is this even correct?
-    //override def typeof(scope: ScopeNode): Type = ???
-
     def stringifyChildren(indentLevel: Int): String = token
   }
 
   abstract class CompoundExpr(loc: Position,
-                              protected val left: Option[Expr],
-                              protected val op: ASTOperator,
-                              protected val right: Expr) extends Expr(loc) {
+                              val left: Option[Expr],
+                              val op: ASTOperator,
+                              val right: Expr) extends Expr(loc) {
     def this(loc: Position, right: Expr, op: ASTOperator) = this(loc, None, op, right)
 
     def this(loc: Position, right: Expr, op: ASTOperator, left: Expr) = this(loc, Some(left), op, right)
@@ -307,15 +309,16 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class ArithmeticExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), o, rhs.typeof(scope)) match {
-      case (StringType(_), ASTOperator(_, "+"), _) => StringType(l)
-      case (_, ASTOperator(_, "+"), StringType(l)) => StringType(l)
-      case (IntType(_), _, IntType(_)) => IntType(l)
-      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
+      case (StringType(_), ASTOperator(_, "+"), _) => StringType(pos)
+      case (_, ASTOperator(_, "+"), StringType(_)) => StringType(pos)
+      case (IntType(_), _, IntType(_)) => IntType(pos)
+      case (DoubleType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(pos)
       // type lifting int -> double
-      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(l)
-      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(l)
+      case (IntType(_), ASTOperator(_, oper), DoubleType(_)) if oper != "%" => DoubleType(pos)
+      case (DoubleType(_), ASTOperator(_, oper), IntType(_)) if oper != "%" => DoubleType(pos)
       case (left: Type, op: ASTOperator, right: Type) if !left.isInstanceOf[ErrorType] && !right.isInstanceOf[ErrorType] =>
-        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, l)
+        new ErrorType(" *** Incompatible operands: " + left.typeName + " " + op.token + " "  + right.typeName, pos)
+      case (x: ErrorType, _, y: ErrorType) => new MultiError(y,x)
       case (e: ErrorType,_,_) => e // Most specific error bubbles through
       case (_,_,e: ErrorType) => e // this is not as specified, but is more similar to the behaviour of Real Compilers
     }
@@ -323,17 +326,25 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
 
   case class RelationalExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l) // butts are null
+      case (IntType(_), IntType(_)) => BoolType(pos)
+      case (IntType(_), DoubleType(_)) => BoolType(pos)
+      case (DoubleType(_), IntType(_)) => BoolType(pos)
+      case (DoubleType(_), DoubleType(_)) => BoolType(pos)
+      case (lf, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
     }
   }
 
   case class EqualityExpr(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) extends CompoundExpr(l, Some(lhs), o, rhs) {
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l)
+      case (lf: VoidType, r) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (lf, r: VoidType) => new ErrorType(s" *** Incompatible operands: ${lf.typeName} ${this.o.token} ${r.typeName}", pos)
+      case (_,_) => BoolType(pos)
     }
   }
 
@@ -342,27 +353,36 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       rhs.stringify(indentLevel + 1) + o.stringify(indentLevel + 1)
     }
     override def typeof(scope: ScopeNode): Type = rhs.typeof(scope) match {
-      case e: ErrorType => e //TODO: Stub
+      case e: ErrorType => e
+      case IntType(_) => IntType(pos)
+      case DoubleType(_) => DoubleType(pos)
       case _ => NullType(l)
     }
   }
+
 
   case class LogicalExpr(l: Position, lhs: Option[Expr], o: ASTOperator, rhs: Expr) extends CompoundExpr(l, lhs, o, rhs) {
     def this(l: Position, o: ASTOperator, rhs: Expr) = this(l, None, o, rhs)
 
     def this(l: Position, lhs: Expr, o: ASTOperator, rhs: Expr) = this(l, Some(lhs), o, rhs)
+
     override def typeof(scope: ScopeNode): Type = lhs match {
-        case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
-        case (e: ErrorType, _) => e //TODO: Stub
+        // The spec calls for this to always be logical even when part of the expression
+        // is a TypeError. We've decided that this is wrong and inconsistent with
+        // the way Decaf forwards TypeErrors elsewhere.
+      case Some(leftHand) => (leftHand.typeof(scope), rhs.typeof(scope)) match {
+        case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
+        case (e: ErrorType, _) => e
         case (_, e: ErrorType) => e
-        case (_, _) => NullType(l)
+        case (lf: BoolType, r: BoolType) => BoolType(pos)
+        case (lf, r) => new ErrorType(s" *** Incompatible operand: ${lf.typeName} ${o.token} ${r.typeName}", pos)
       }
       case None => rhs.typeof(scope) match {
         case e: ErrorType => e
-        case _ => NullType(l)
+        case BoolType(_) => BoolType(pos)
+        case r => new ErrorType(s" *** Incompatible operand: ! ${r.typeName}", pos)
       }
     }
-
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
@@ -372,10 +392,52 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
         ""
       })
     }
+
+    def classLiftable(scope: ScopeNode, a: Type, b: Type): Boolean = {
+      if(!a.isInstanceOf[NamedType] || !b.isInstanceOf[NamedType]) return false
+      val x = scope.table.get(a.asInstanceOf[NamedType].name.name)
+      val y = scope.table.get(b.asInstanceOf[NamedType].name.name)
+      if(x == None || y == None) return false
+      x match {
+          //get the class that we're concerned with
+        case Some(classA: ClassAnnotation) =>
+          y match {
+              //get the class we're matching
+            case Some(classB: ClassAnnotation) =>
+              //If the class we're trying to match extends anything
+              classB.ext match {
+                //find if they're equal, or if not, find if a superclass matches
+                case Some(ext) => (classA.name == classB.name) || classLiftable(scope, classA.name, ext)
+                  //if the class we're matching has no supertype, then they have to be equal or else we're not working.
+                case None => classA.name == classB.name
+              }
+              //if it's not a class, we're unconcerned
+            case _ => false
+          }
+        case Some(interface: InterfaceAnnotation) =>
+          y match {
+            case Some(classB: ClassAnnotation) =>
+              classB.ext match {
+                case Some(ext) => classB.implements.contains(interface.name) || classLiftable(scope, interface.name, ext)
+                case None => classB.implements.contains(interface.name)
+              }
+            case Some(otherinterface: InterfaceAnnotation) =>
+              interface.name.name == otherinterface.name.name
+            case _ => false
+          }
+          //if its not a class, we're unconcerned
+        case _ => false
+      }
+    }
+
     override def typeof(scope: ScopeNode): Type = (lhs.typeof(scope), rhs.typeof(scope)) match {
-      case (e: ErrorType, _) => e //TODO: Stub
+      case (x: ErrorType, y: ErrorType) => new MultiError(y,x)
+      case (e: ErrorType, _) => e
       case (_,e: ErrorType) => e
-      case (_,_) => NullType(l)
+      case (lf,rf: NullType) => VoidType(pos)
+      case (lf,rf) =>
+        if(lf == rf || classLiftable(scope, lf, rf)) VoidType(pos)
+        else new ErrorType(s"*** Incompatible operands: ${lf.typeName} = ${rf.typeName}", pos)
     }
   }
 
@@ -386,11 +448,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def typeof(scope: ScopeNode): Type = if (scope.table.chainContains("this")) {
       val t = scope.table.get("this").get
       t match {
-        case c: ClassAnnotation => c.name
-        case _ => new ErrorType("*** Keyword `this` expected class declaration, got variable or function.", loc)
+        case v: VariableAnnotation => v.t
+        case _ => new ErrorType("*** Keyword `this` expected variable declaration, got something else.", loc)
       }
     } else {
-      new ErrorType("*** Keyword `this` used outside of acceptable context.", loc)
+      new ErrorType("*** 'this' is only valid within class scope", loc)
     }
   }
 
@@ -402,7 +464,20 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       base.stringify(indentLevel + 1) +
         subscript.stringify(indentLevel + 1, Some("(subscript)"))
     }
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = this.base.typeof(scope) match {
+      case e: ErrorType => e
+      case a: ArrayType =>
+        if(this.subscript.typeof(scope).isInstanceOf[IntType])
+          a.elemType
+        else
+          new ErrorType("*** Array subscript must be an integer", pos)
+      case _ => new ErrorType("*** [ ] can only be applied to arrays", pos)
+        // Pretty sure it should throw an exception here?
+        //    ~ Hawk, 11/12/14
+        // > No, it should TypeError (there exists a string for this, just can't remember
+        // > which one.
+        // >  ~ Xyzzy 11/13/14
+    }
   }
 
   case class FieldAccess(loc: Position, base: Option[Expr], field: ASTIdentifier) extends LValue(loc) {
@@ -424,36 +499,42 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       case Some(b) => b.typeof(scope) match {
         case NamedType(name) => if (scope.table chainContains name.name) {
           scope.table.get(name.name).get match {
-            case VariableAnnotation(_,where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", where)
-            case MethodAnnotation(_, _, where) => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-              "\n*** please contact the decaf implementors and I am sorry", where)
-            case ClassAnnotation(_, _, _, classScope, where) => classScope get field.name match {
+            case VariableAnnotation(_, what,where) =>
+              new ErrorType(s"*** ${what.typeName} has no such field '${field.name}'", where)
+            case MethodAnnotation(_, _, _, where) =>
+              throw new IllegalArgumentException(
+                s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
+                  s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+                  s"\n*** code:\n${loc.longString}")
+            case ClassAnnotation(what, _, _, classScope, _) => classScope.table.get(field.name) match {
               case Some(thing) => thing match {
-                case VariableAnnotation(t, _) => t
-                case MethodAnnotation(_, _, _) => new ErrorType("*** Attempt to field access a method", where)
-                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", where)
+                case VariableAnnotation(_, t, _) => t
+                case MethodAnnotation(_, _, _, _) => new ErrorType("*** Attempt to field access a method", pos)
+                case ClassAnnotation(_, _, _, _, _) => new ErrorType("*** Attempt to field access a class", pos)
               }
-              case None => UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", where)
+              case None => UndeclaredType(s"*** ${what.typeName} has no such field '${field.name}'", pos)
             }
           }
         } else {
-          UndeclaredType("*** No declaration for class ‘" + name.name + "’ found", loc)
+          UndeclaredType("*** No declaration found for class '" + name.name + "'.", loc)
         }
+        case t: Type => new ErrorType(s"*** ${t.typeName} has no such field '${field.name}'", loc)
         // We expect that "EXTREMELY BAD PROBLEM" should only occur if the parser has generated
         // something that should be impossible for it to generate.
-        case _ => new ErrorType("*** EXTREMELY BAD PROBLEM: this should not happen ever" +
-          "\n*** please contact the decaf implementors and I am sorry", loc)
+        case _ => throw new IllegalArgumentException(
+          s"\n*** EXTREMELY BAD PROBLEM occurs on line ${loc.line}" +
+            s"\n*** this should not happen ever,  please contact the decaf implementors and I am sorry" +
+            s"\n** code:\n${loc.longString}")
       }
 
       case None => if (scope.table chainContains field.name) {
         scope.table.get(field.name).get match {
-          case VariableAnnotation(t, _) => t
-          case MethodAnnotation(_,_,where) => new ErrorType("*** Attempt to field access a method", where)
-          case ClassAnnotation(_,_,_,_,where) => new ErrorType("*** Attempt to field access a class", where)
+          case VariableAnnotation(_, t, _) => t
+          case MethodAnnotation(_, _,_,_) => new ErrorType("*** Attempt to field access a method", pos)
+          case ClassAnnotation(_,_,_,_,_) => new ErrorType("*** Attempt to field access a class", pos)
         }
       } else {
-        UndeclaredType("*** No declaration for variable ‘" + field.name + "’ found.", loc)
+        UndeclaredType("*** No declaration found for variable '" + field.name + "'.", loc)
       }
     }
   }
@@ -468,30 +549,134 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
       ""
     }) +
       field.stringify(indentLevel + 1) + args.foldLeft[String](""){ (acc, expr) => acc + expr.stringify(indentLevel + 1, Some("(actuals)"))}
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = {
+      val myargstype: List[Type] = this.args.map(_.typeof(scope))
+      var errors: List[ErrorType] = Nil
+      val cscope: ScopeNode = base match {
+        case None => scope
+        case Some(x) => x.typeof(scope) match {
+          case NamedType(n) => scope.table.get(n.name) match {
+            case Some(c: ClassAnnotation) => c.classScope
+            case Some(i: InterfaceAnnotation) => i.interfaceScope
+            case _ => return new ErrorType(s" *** ${n.name} has no such field '${field.name}'", field.pos)
+          }
+          case e: ErrorType => return e
+          case t: Type =>
+            if(t.isInstanceOf[ArrayType] && field.name == "length") return new IntType(pos)
+            else
+            return new ErrorType(s" *** ${t.typeName} has no such field " +
+            s"'${field.name}'", field.pos)
+        }
+      }
+      if (cscope.table.chainContains(field.name)) {
+          val t = cscope.table.get(field.name).get
+          t match {
+            case MethodAnnotation(_,rtype, nargs, _) =>
+              if (myargstype.length != nargs.length) {
+                errors = new ErrorType(s" *** Function '${field.name}' expects ${nargs.length}" +
+                  s" arguments but ${myargstype.length} given", field.pos) :: errors
+              } else {
+                // Unfortunately, JJ wants the position and types of the bad arguments
+                // I wish there was a more functional way of doing this, but meh.
+                //      ~ Hawk, 11/12/14
+                // > Can't we accumulate/fold this value, passing the correct type
+                // > on successive matches, and a TypeError if not?
+                // > That'd be your functional way of doing this.
+                // > Although, this works just fine, and it's not functional.
+                // >    ~ Xyzzy, 11/13/14
+                for (i <- 0 until args.length) {
+                  if (nargs(i) != myargstype(i) && !myargstype(i).isInstanceOf[NullType])
+                    errors = new ErrorType(s" *** Incompatible argument ${i + 1}:" +
+                      s" ${myargstype(i).typeName} given, ${nargs(i).typeName} expected  ", field.pos) :: errors
+                }
+                errors = args.flatMap(a => a.typeof(scope) match {
+                  case e: ErrorType => e :: Nil
+                  case _ => Nil
+                }
+                ) ::: errors
+                if (errors.length > 0)
+                  return new ListError(errors)
+                else
+                  return rtype
+              }
+            case q => errors = new ErrorType(s" *** ${q.getName} has no such field '${field.name}'", field.pos) :: errors
+            // Not actually sure if this one is ErrorType - it might be an
+            // invalid state and we might want to throw an exception here.
+            // Are there any valid situations in which we would have an
+            // a value bound to the name of a method that is not a
+            // MethodAnnotation and we have gotten this far in the
+            // semantic analysis process?
+            //      ~ Hawk, 11/12/14
+
+            // > This is totally an error that could happen: If I remember correctly,
+            // > the passes we have done thus far do not extend all the way into exprs -
+            // > they only pertain to definitions and types. You could, for instance,
+            // > attempt the expression "int foo = foo();" which we don't check for yet.
+            // > This typeerror would then be the first time we check the validity of such
+            // > a construct, and therefore it's kind of important.
+            // >   ~ Xyzzy, 11/13/14
+          }
+        } else {
+          if (base.isDefined) {
+            if (base.get.typeof(scope).isInstanceOf[ArrayType] && field.name == "length") return new IntType(pos)
+            else errors = new ErrorType(s"*** ${base.get.typeof(scope).typeName} has no such field '${field.name}'", pos) :: errors
+          } else {
+            errors = new ErrorType(s"*** No declaration found for function '${field.name}'.", field.pos) :: errors
+          }
+        }
+        errors = args.flatMap(a => a.typeof(cscope) match {
+          case e: ErrorType => e :: Nil
+          case _ => Nil
+        }) ::: errors
+        new ListError(errors)
+      }
   }
 
   case class NewExpr(loc: Position, cType: NamedType) extends Expr(loc) {
     cType.parent = this
     def stringifyChildren(indentLevel: Int): String = cType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = {
+      scope.table.get(cType.name.name) match {
+        case Some(ClassAnnotation(_,_,_,_,_))  => cType
+        case _ => new ErrorType(s" *** No declaration found for class '${cType.name.name}'.", pos)
+      }
+    }
   }
 
   case class NewArrayExpr(loc: Position, size: Expr, elemType: Type) extends Expr(loc) {
     size.parent = this
     elemType.parent = this
     def stringifyChildren(indentLevel: Int): String = size.stringify(indentLevel + 1) + elemType.stringify(indentLevel + 1)
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type =
+      if(size.typeof(scope).isInstanceOf[IntType]) {
+        elemType match {
+          case a: ArrayType => ArrayType(pos, a)
+          case n: NamedType => scope.table.get(n.name.name) match {
+            case Some(ClassAnnotation(_,_,_,_,_)) => new ArrayType(pos, n)
+            case _ => new UndeclaredType(s" *** No declaration found for type '${n.name.name}'.", pos)
+          }
+          case IntType(_) | StringType(_) | DoubleType(_) | BoolType(_) => ArrayType(pos, elemType)
+          case _ => new ErrorType("*** Type for NewArray must be primitive, named, or itself Array.", pos)
+          // Yet again, this one is probably not ErrorType but
+          // InvalidStateException (or w/e).
+          //      ~ Hawk, 11/12/14
+          // > Not really, we need it to errortype because of dumb expressions
+          // > like null[6].
+          // >    ~ Xyzzy, 11/13/14
+        }
+      } else {
+        new ErrorType("*** Size for NewArray must be an integer", pos)
+      }
   }
 
   case class ReadIntegerExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = IntType(pos)
   }
 
   case class ReadLineExpr(loc: Position) extends Expr(loc) {
     def stringifyChildren(indentLevel: Int): String = ""
-    override def typeof(scope: ScopeNode): Type = NullType(loc) //TODO: NYI
+    override def typeof(scope: ScopeNode): Type = StringType(pos)
   }
   /*----------------------- Declarations ---------------------------------------------------------------------------*/
   abstract class Decl(id: ASTIdentifier) extends ASTNode(id.loc) {
@@ -569,7 +754,11 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   abstract class Type(val typeName: String, loc: Position) extends ASTNode(loc) {
     override val printLine = false
     override def getName = "Type: "
-     def stringifyChildren(indentLevel: Int): String = typeName
+    override def stringifyChildren(indentLevel: Int): String = typeName
+    override def equals(o: Any) = o match {
+      case that: Type => that.typeName == this.typeName
+      case _ => false
+    }
   }
   // builtin classes for primitive types
   case class IntType(loc: Position) extends Type("int", loc)
@@ -578,7 +767,26 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
   case class VoidType(loc: Position) extends Type("void", loc)
   case class NullType(loc: Position) extends Type("null", loc)
   case class StringType(loc: Position) extends Type("string", loc)
-  class ErrorType(message: String, where: Position) extends Type("error", where)
+  class ErrorType(val message: String, where: Position) extends Type("error", where) {
+    def unpack(): List[Exception] = {
+      List[Exception](new TypeErrorException(message, where))
+    }
+  }
+
+  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + "[]", locat) {
+    override val printLine = true
+    override def getName: String = "ArrayType:"
+    elemType.parent = this
+    override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
+  }
+  class MultiError(val y: ErrorType, val x: ErrorType) extends ErrorType(y.message, y.pos) {
+    override def unpack(): List[Exception] = {
+      x.unpack() ::: y.unpack()
+    }
+  }
+  class ListError (val errors: List[ErrorType]) extends ErrorType(errors.last.message, errors.last.pos) {
+    override def unpack(): List[Exception] = errors.flatMap(_.unpack)
+  }
   case class UndeclaredType(m: String, w: Position) extends ErrorType(m, w)
 
   case class NamedType(name: ASTIdentifier) extends Type(name.name, name.pos) {
@@ -586,11 +794,4 @@ import scala.util.parsing.input.{NoPosition, Positional, Position}
     override def getName = "NamedType:"
     name.parent = this
     override def stringifyChildren(indentLevel: Int) = name.stringify(indentLevel +1)
-  }
-
-  case class ArrayType(locat: Position, elemType: Type) extends Type(elemType.typeName + " Array", locat) {
-    override val printLine = true
-    override def getName = "ArrayType:"
-    elemType.parent = this
-    override def stringifyChildren(indentLevel: Int) = elemType.stringify(indentLevel +1)
   }

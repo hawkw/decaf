@@ -10,14 +10,15 @@ import scala.io.Source
  */
 object Compiler extends App {
   val parser = new DecafSyntactical
-  args.length match {
-    case 0 => println("Please enter a Decaf source code file to compile.")
-    case 1 =>
-      val source = Source.fromFile(args(0)).mkString
-      val ast = parser.parse(source)
-      DecafSemantic.analyze(ast)
-      println(ast)
-    case _ => println("Too many arguments!")
+  val source: String = args match {
+    case Array() =>
+      Source.fromInputStream(System.in).mkString // should detect EOF automagically?
+    case Array(path: String, _*) =>
+      Source.fromFile(path).mkString
   }
+  lazy val ast = parser.parse(source)
+  lazy val (scopes, errors) = DecafSemantic.analyze(ast)
+
+  errors.foreach(System.err.println(_))
 
 }
