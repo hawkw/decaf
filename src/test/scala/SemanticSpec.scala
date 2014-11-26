@@ -33,8 +33,8 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
     errs(0) shouldBe a [ConflictingDeclException]
     errs(0).getMessage should include ("Declaration of 'Rutabaga' here conflicts")
   }
-/*
-  it should "detect the undeclared types in bad3.decaf" in {
+
+  ignore should "detect the undeclared types in bad3.decaf" in {
     val source = Source fromFile "build/resources/test/lab3-samples/samples-checkpoint/bad3.decaf" mkString
     val (scopes, errs) = target analyze (parser parse source)
     errs should have length 4
@@ -43,7 +43,6 @@ class SemanticCheckpointSpec extends FlatSpec with Matchers {
     errs(2) shouldBe an [UnimplementedInterfaceException]
     errs(3) shouldBe an [UndeclaredTypeException]
   }
-*/
 }
 
 /**
@@ -213,12 +212,10 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
   // how to fix because they involve a level of grammar-munging I don't
   // feel comfortable with; if Max wants to try and fix the parser issue,
   // he's welcome to uncomment it, but I'm not going to mess with this.
-  /*
-  it should "Detect no errors in queue.decaf" in {
+  ignore should "Detect no errors in queue.decaf" in {
     val(scopes, errs) = analyze("queue.decaf")
     errs should have length 0
   }
-  */
 
   it should "Detect no errors in stack.decaf" in {
     val(scopes, errs) = analyze("stack.decaf")
@@ -261,23 +258,21 @@ class SemanticFinalSpec extends FlatSpec with Matchers {
     val(scopes, errs) = analyze("t9.decaf")
     errs should have length 0
   }
-  /*
+
   // We are not testing against t10.decaf, as it contains
   // syntax that isn't in the spec & breaks the parser.
-  it should "Detect no errors in t10.decaf" in {
+  ignore should "Detect no errors in t10.decaf" in {
     val(scopes, errs) = analyze("t10.decaf")
     errs should have length 0
   }
-  */
-  /*
+
   // We are not testing against t12.decaf, since
   // we have chosen to not allow variables to be
   // assigned new names in the same scope.
-  it should "Detect no errors in t12.decaf" in {
+  ignore should "Detect no errors in t12.decaf" in {
     val(scopes, errs) = analyze("t12.decaf")
     errs should have length 0
   }
-  */
   it should "Detect no errors in t13.decaf" in {
     val(scopes, errs) = analyze("t13.decaf")
     errs should have length 0
