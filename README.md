@@ -27,11 +27,10 @@ Rave Reviews
 
 ~ Cara Brosius
 
-> ```scala
-inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thing).get.matches(inherited)
+> `No errors and 468 warnings detected.`
 ```
 
-~ the Decaf codebase
+~ IntelliJ IDEA
 
 Using Decaf
 -----------
