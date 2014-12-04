@@ -28,7 +28,6 @@ Rave Reviews
 ~ Cara Brosius
 
 > `No errors and 468 warnings detected.`
-```
 
 ~ IntelliJ IDEA
 
