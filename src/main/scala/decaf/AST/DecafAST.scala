@@ -266,7 +266,6 @@ import scala.util.parsing.input.{Position, Positional}
 
   case class ASTStringConstant(loc: Position, value: String) extends Expr(loc) {
     override def getName = "StringConstant: "
-
     override def typeof(scope: ScopeNode): Type = StringType(loc)
 
     def stringifyChildren(indentLevel: Int): String = value
