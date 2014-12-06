@@ -26,8 +26,9 @@ object JasminBackend {
       // TODO: everthing in between
     case VarDecl(n, t) => last match {
       case Some(_: Program) => s".field public $n ${emit(t, Some(node))}\n"
+      case Some(_: FnDecl) => s".var"
     } // TODO:
-    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(a => emit(a, Some(node)).mkString})\n.line ${name.loc.line}\n"
+    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(a => emit(a, Some(node))).mkString(";")})\n.line ${name.loc.line}\n"
     case FnDecl(name, rt, args, None) => ??? //TODO: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
 
