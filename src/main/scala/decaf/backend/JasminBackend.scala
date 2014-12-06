@@ -21,11 +21,13 @@ object JasminBackend {
     case _ => ??? //TODO: this is where classes would actually happen
   }
 
-  private def emit(node: ASTNode): String = node match {
-    case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl))
+  private def emit(node: ASTNode, last: Option[ASTNode] = None): String = node match {
+    case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl, Some(node)))
       // TODO: everthing in between
-    case VarDecl => ??? // TODO:
-    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${})"
+    case VarDecl(n, t) => last match {
+      case Some(_: Program) => s".field public $n ${emit(t, Some(node))}\n"
+    } // TODO:
+    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(a => emit(a, Some(node)).mkString})\n.line ${name.loc.line}\n"
     case FnDecl(name, rt, args, None) => ??? //TODO: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
 
