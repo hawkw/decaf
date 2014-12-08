@@ -1,7 +1,7 @@
 decaf
 =====
 
-[![Build Status](https://magnum.travis-ci.com/hawkw/decaf.svg?token=CZmphEJzXbknGmxGsxbT&branch=master)](https://magnum.travis-ci.com/hawkw/decaf)
+[![Build Status](https://travis-ci.org/hawkw/decaf.svg)](https://travis-ci.org/hawkw/decaf)
 
 Decaf is an alleged programming language. It's kinda like Java but a lot less so.
 
