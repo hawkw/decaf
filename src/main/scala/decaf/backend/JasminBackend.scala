@@ -21,15 +21,16 @@ object JasminBackend {
     case _ => ??? //TODO: this is where classes would actually happen
   }
 
-  private def emit(node: ASTNode, last: Option[ASTNode] = None): String = node match {
-    case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl, Some(node)))
-      // TODO: everthing in between
-    case VarDecl(n, t) => last match {
-      case Some(_: Program) => s".field public $n ${emit(t, Some(node))}\n"
-      case Some(_: FnDecl) => s".var"
+  private def emit(node: ASTNode): String = node match {
+    case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl))
+    case VarDecl(n, t) => node.parent match {
+      case _: Program => s".field public $n ${emit(t)}\n"
+      case _: FnDecl => s".var"
     } // TODO:
-    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(a => emit(a, Some(node))).mkString(";")})\n.line ${name.loc.line}\n"
-    case FnDecl(name, rt, args, None) => ??? //TODO: interfaces aren't implemented
+    case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(emit(_)).mkString(";")})" +
+      s"\n.line ${name.loc.line}\n${emit(code)}"
+    case StmtBlock(declarations, code, _) => ???
+    case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
 
   }
