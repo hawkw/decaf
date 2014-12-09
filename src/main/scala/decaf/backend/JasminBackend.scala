@@ -29,7 +29,7 @@ object JasminBackend {
   }
   private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2.max + 1
   private def emit(node: ASTNode, localVars: mutable.Map[String, Int] = mutable.Map[String, Int]()): String = node match {
-    case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl))
+    case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
       case _: StmtBlock => val fnName = getFnScope(node)
