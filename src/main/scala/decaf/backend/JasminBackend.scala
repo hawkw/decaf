@@ -2,6 +2,8 @@ package decaf.backend
 
 import decaf.AST._
 
+import scala.collection.mutable
+
 /**
  * Created by hawk on 12/1/14.
  */
@@ -21,15 +23,25 @@ object JasminBackend {
     case _ => ??? //TODO: this is where classes would actually happen
   }
 
-  private def emit(node: ASTNode): String = node match {
+  private def getFnScope(node: ASTNode): String = node match {
+    case _: FnDecl => node.state.get.boundName
+    case _ => getFnScope(node.parent)
+  }
+  private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2.max + 1
+  private def emit(node: ASTNode, localVars: mutable.Map[String, Int] = mutable.Map[String, Int]()): String = node match {
     case Program(decls, _) => decls.reduceLeft((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
-      case _: FnDecl => s".var"
+      case _: StmtBlock => val fnName = getFnScope(node)
+        localVars += (n.name -> getNextVar(localVars))
+        s".var ${getNextVar(localVars)} is $n $t from Begin$fnName to End$fnName"
     } // TODO:
     case FnDecl(name, rt, args, Some(code)) => s".method public static $name(${args.map(emit(_)).mkString(";")})" +
-      s"\n.line ${name.loc.line}\n${emit(code)}"
-    case StmtBlock(declarations, code, _) => ???
+      s"\n.limit locals ${code.decls.length}\n${emit(code)}\nEnd${node.state.get.boundName}\n.end method\n"
+    case StmtBlock(declarations, code, _) => {
+      val vars = mutable.Map[String, Int]() // not very functional but w/e
+      declarations.map(emit(_, vars)).mkString("\n") + code.map(emit(_, vars)).mkString("\n")
+    } // todo: finish
     case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
 
