@@ -50,15 +50,20 @@ object JasminBackend {
         localVars += (n.name -> getNextVar(localVars))
         s".var ${getNextVar(localVars)} is ${n.name} ${t.typeName} from Begin$fnName to End$fnName"
     } // TODO:
-    case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) => s".method public static $name(${args.map(emit(_)).mkString(";")})" +
-      s"\n.limit locals ${code.decls.length}\n" +
-      s"Begin${node.state.get.boundName}\n" +
+    case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) =>
+      s".method public static $name(" +
+        (if (name == "main") "[Ljava/lang/String;" else {args.map(emit(_)).mkString(";")}) +
+        s")${emit(rt,localVars,tabLevel)}\n"+
+      s"\n.limit locals ${code.decls.length + args.length + (if (name == "main") 1 else 0)}\n" +
+      s".limit stack 5\n" + //TODO: dynamically figure out stack sizes
+      s"Begin${node.state.get.boundName}:\n" +
       s"${emit(code, localVars, tabLevel + 1)}\n" +
-      s"End${node.state.get.boundName}\n.end method\n"
+      s"End${node.state.get.boundName}:\n${if (name == "main") "return\n"}.end method\n"
     case StmtBlock(declarations, code, _) =>
       val vars = mutable.Map[String, Int]() // not very functional but w/e
       declarations.map(emit(_, vars, tabLevel)).mkString("\n") + code.map(emit(_, vars, tabLevel)).mkString("\n")
      // todo: finish
+    case ReturnStmt(loc, None) => ("\t" * tabLevel) + s".line ${loc.line}\n" + ("\t" * tabLevel) + "return"
     case e: Expr => e match {
       case ArithmeticExpr(_, left, op, right) =>
         emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) + ("\t" * (tabLevel + 1)) + (op match {
@@ -86,12 +91,22 @@ object JasminBackend {
       case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc 0x${value.toHexString}\n"
     }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
-      case PrintStmt(exprs, _) => (exprs match {
-        case e :: Nil => emit(e, localVars, tabLevel)
+      case PrintStmt(exprs, _) => exprs match {
+        case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic java/lang/System/out Ljava/io/PrintStream;\n" +
+          emit(e, localVars, tabLevel) +
+          ("\t" * (tabLevel + 1)) + s"invokevirtual java/io/PrintStream/println(${emit(e typeof getEnclosingScope(e) )})V\n"
         case _ => exprs.foreach(emit(_, localVars, tabLevel))
       }
-        ) + ("\t" * (tabLevel + 1)) + "invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V\n"
+
     })
+    case t: Type => t match {
+      case _: IntType => "I"
+      case _: DoubleType => "D"
+      case _: VoidType => "V"
+      case _: BoolType => "Z"
+      case _: StringType => "Ljava/lang/String;"
+      case ArrayType(_, elemType) => s"[${emit(elemType)}"
+  }
 
     case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
