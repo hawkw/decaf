@@ -11,6 +11,8 @@ import scala.collection.mutable
  */
 object JasminBackend {
 
+  val rand = new util.Random
+
   def compile(program: Program): String = s"${makeHeader(program.getName)}\n${emit(program)}"
   //todo: shouldn't actually work this way (should fork on each class def)
 
@@ -88,8 +90,57 @@ object JasminBackend {
             case _: DoubleType => "drem\n"
           }
         })
-      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc 0x${value.toHexString}\n"
-    }
+      case EqualityExpr(_, left, op, right) =>
+        emit(left, localVars, tabLevel + 1) +
+          emit(right, localVars, tabLevel + 1) +
+          (op match {
+          case ASTOperator(_,"==") =>
+            emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) +
+              (e.typeof(getEnclosingScope(e)) match {
+                case _: IntType | _: BoolType =>  // the following is a TERRIBLE HACK
+                  val lab = rand.nextInt          // to put a bool on the stack
+                                                  // (hey, that rhymes!)
+                  ("\t" * (tabLevel + 1))   + s"if_icmpeq\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                case _: StringType | _: NamedType =>
+                  val lab = rand.nextInt
+                  ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
+
+              })
+          case ASTOperator(_,"!=") =>
+            emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) +
+              (e.typeof(getEnclosingScope(e)) match {
+                case _: IntType | _: BoolType =>
+                  val lab = rand.nextInt
+                  ("\t" * (tabLevel + 1))   + s"if_icmpne\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                case _: StringType | _: NamedType =>
+                  val lab = rand.nextInt
+                  ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
+              })
+            })
+      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc $value\n"
+     }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic java/lang/System/out Ljava/io/PrintStream;\n" +
