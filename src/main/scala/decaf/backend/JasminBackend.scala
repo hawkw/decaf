@@ -155,7 +155,54 @@ object JasminBackend extends Backend{
                   case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
                 }
             case ASTOperator(_, ">=") =>
-              })
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ??? //todo: implement for doubles
+              }
+            case ASTOperator(_, "<=") =>
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_icmple\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ??? //todo: implement for doubles
+              }
+            case ASTOperator(_, ">") =>
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ??? //todo: implement for doubles
+              }
+            case ASTOperator(_, "<") =>
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ??? //todo: implement for doubles
+              }
+          })
       case LogicalExpr(_, Some(left), op, right) =>
         emit(left, localVars, tabLevel + 1) +
           emit(right, localVars, tabLevel + 1) + (op match {
