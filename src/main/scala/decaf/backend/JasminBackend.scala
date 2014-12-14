@@ -70,7 +70,8 @@ object JasminBackend extends Backend{
   }
   private def emit(node: ASTNode,
                    localVars: mutable.Map[String, Int] = mutable.Map[String, Int](),
-                   tabLevel: Int = 0): String = node match {
+                   tabLevel: Int = 0,
+                   breakable: Option[String] = None): String = node match {
     case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
@@ -80,7 +81,10 @@ object JasminBackend extends Backend{
     } // TODO:
     case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) =>
       s".method public static $name(" +
-        (if (name == "main") "[Ljava/lang/String;" else {args.map(emit(_)).mkString(";")}) +
+        (
+          if (name == "main") "[Ljava/lang/String;"
+          else {args.map(emit(_)).mkString(";")}
+          ) +
         s")${emit(rt,localVars,tabLevel)}\n"+
       s"\n.limit locals ${code.decls.length + args.length + (if (name == "main") 1 else 0)}\n" +
       s".limit stack 5\n" + //TODO: dynamically figure out stack sizes
@@ -89,33 +93,41 @@ object JasminBackend extends Backend{
       s"End${node.state.get.boundName}:\n${if (name == "main") "return\n"}.end method\n"
     case StmtBlock(declarations, code, _) =>
       val vars = mutable.Map[String, Int]() // not very functional but w/e
-      declarations.map(emit(_, vars, tabLevel)).mkString("\n") + code.map(emit(_, vars, tabLevel)).mkString("\n")
-     // todo: finish
-    case ReturnStmt(loc, None) => ("\t" * tabLevel) + s".line ${loc.line}\n" + ("\t" * tabLevel) + "return"
+      declarations
+        .map(emit(_, vars, tabLevel, breakable))
+        .mkString("\n") +
+      code
+        .map(emit(_, vars, tabLevel, breakable))
+        .mkString("\n")
+    case ReturnStmt(loc, None) =>
+      ("\t" * tabLevel) + s".line ${loc.line}\n" +
+      ("\t" * tabLevel) + "return"
     case e: Expr => e match {
       case ArithmeticExpr(_, left, op, right) =>
-        emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) + ("\t" * (tabLevel + 1)) + (op match {
-          case ASTOperator(_, "+") => e.typeof(getEnclosingScope(e)) match {
-            case _: IntType => "iadd\n"
-            case _: DoubleType => "dadd\n"
-          }
-          case ASTOperator(_, "-") => e.typeof(getEnclosingScope(e)) match {
-            case _: IntType => "isub\n"
-            case _: DoubleType => "dsub\n"
-          }
-          case ASTOperator(_, "/") => e.typeof(getEnclosingScope(e)) match {
-            case _: IntType => "idiv\n"
-            case _: DoubleType => "ddiv\n"
-          }
-          case ASTOperator(_, "*") => e.typeof(getEnclosingScope(e)) match {
-            case _: IntType => "imul\n"
-            case _: DoubleType => "dmul\n"
-          }
-          case ASTOperator(_, "%") => e.typeof(getEnclosingScope(e)) match {
-            case _: IntType => "irem\n"
-            case _: DoubleType => "drem\n"
-          }
-        })
+        emit(left, localVars, tabLevel + 1, breakable)    +
+          emit(right, localVars, tabLevel + 1, breakable) +
+          ("\t" * (tabLevel + 1)) + (op match {
+            case ASTOperator(_, "+") => e.typeof(getEnclosingScope(e)) match {
+              case _: IntType => "iadd\n"
+              case _: DoubleType => "dadd\n"
+            }
+            case ASTOperator(_, "-") => e.typeof(getEnclosingScope(e)) match {
+              case _: IntType => "isub\n"
+              case _: DoubleType => "dsub\n"
+            }
+            case ASTOperator(_, "/") => e.typeof(getEnclosingScope(e)) match {
+              case _: IntType => "idiv\n"
+              case _: DoubleType => "ddiv\n"
+            }
+            case ASTOperator(_, "*") => e.typeof(getEnclosingScope(e)) match {
+              case _: IntType => "imul\n"
+              case _: DoubleType => "dmul\n"
+            }
+            case ASTOperator(_, "%") => e.typeof(getEnclosingScope(e)) match {
+              case _: IntType => "irem\n"
+              case _: DoubleType => "drem\n"
+            }
+          })
       case EqualityExpr(_, left, op, right) =>
         emit(left, localVars, tabLevel + 1) +
           emit(right, localVars, tabLevel + 1) +
@@ -253,20 +265,25 @@ object JasminBackend extends Backend{
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
         val label = rand.nextInt()
-        ("\t" * tabLevel) + s"LoopBegin$label:\n" +
-          emit(body, localVars, tabLevel + 1)     +
-          emit(test, localVars, tabLevel + 1)     +
-          ("\t" * tabLevel) + "ldc\t\t0x1\n"      +
-          ("\t" * tabLevel) + s"if_icmpeq\t\tLoopBegin$label\n"
+        ("\t" * tabLevel) + s"LoopBegin$label:\n"                     +
+          emit(body, localVars, tabLevel + 1, Some(label.toString))   +
+          emit(test, localVars, tabLevel + 1, Some(label.toString))   +
+          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
+          ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
+          ("\t" * tabLevel)       + s"End$label:\n"
     }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
           emit(e, localVars, tabLevel) +
           ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
-        case _ => exprs.foreach(emit(_, localVars, tabLevel))
+        case _ => exprs.foreach(emit(_, localVars, tabLevel, breakable))
       }
-
+      case BreakStmt(_) => breakable match {
+        case Some(label) => ("\t" * tabLevel) + s"goto\t\tEnd$label\n"
+        case None => // this shouldn't happen
+          throw new IllegalArgumentException(s"got break statement while not inside loop or switch\n$s")
+      }
     })
     case t: Type => t match {
       case _: IntType => "I"
