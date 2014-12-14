@@ -6,7 +6,9 @@ import scala.io.Source
 /**
  * Quick driver class for command-line invocation of the compiler.
  *
- * @author Hawk Weisman
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ * @author Max Clive <mattrulz127@gmail.com>
+ *
  * Created by hawk on 10/10/14.
  */
 object Compiler extends App {

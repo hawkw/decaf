@@ -8,6 +8,15 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 /**
+ * Backend for generating Java bytecode using the Jasmin assembler.
+ *
+ * Thisbackend generates Java bytecode using the [[http://jasmin.sourceforge.net Jasmin]] assembly language.
+ * Invoking the Decaf compiler (`dcc`) on a Decaf source code file will produce Jasmin assembly files with
+ * the file extension `.j`. In order to produce executable `.class` files, the Jasmin assembler must be
+ * invoked on those `.j` files. You can download an executable Jasmin jarfile
+ * [[http://sourceforge.net/projects/jasmin/files/ here]].
+ *
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
  * Created by hawk on 12/1/14.
  */
 object JasminBackend {

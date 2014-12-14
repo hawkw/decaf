@@ -6,6 +6,8 @@ import decaf.frontend.ScopeNode
 import scala.util.parsing.input.Position
 
 /**
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ *
  * Created by hawk on 11/14/14.
  */
 case class ClassAnnotation(name: NamedType,
