@@ -250,6 +250,15 @@ object JasminBackend extends Backend{
           else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           ) + "\n"
      }
+    case l: LoopStmt => l match {
+      case WhileStmt(test, body) =>
+        val label = rand.nextInt()
+        ("\t" * tabLevel) + s"LoopBegin$label:\n" +
+          emit(body, localVars, tabLevel + 1)     +
+          emit(test, localVars, tabLevel + 1)     +
+          ("\t" * tabLevel) + "ldc\t\t0x1\n"      +
+          ("\t" * tabLevel) + s"if_icmpeq\t\tLoopBegin$label\n"
+    }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
