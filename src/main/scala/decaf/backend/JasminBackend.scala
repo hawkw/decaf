@@ -1,4 +1,13 @@
 package decaf.backend
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
 
 import decaf.AST._
 import decaf.frontend.ScopeNode

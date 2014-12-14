@@ -1,4 +1,15 @@
-package decaf.AST.annotations
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
+
+package decaf.AST
+package annotations
 
 import decaf.AST.{ScopeTable, NamedType}
 import decaf.frontend.ScopeNode

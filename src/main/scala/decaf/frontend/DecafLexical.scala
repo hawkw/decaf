@@ -8,7 +8,8 @@
 **                                        **
 \*                                        */
 
-package decaf.frontend
+package decaf
+package frontend
 
 import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
