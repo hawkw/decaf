@@ -96,8 +96,7 @@ object JasminBackend {
           emit(right, localVars, tabLevel + 1) +
           (op match {
           case ASTOperator(_,"==") =>
-            emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) +
-              (e.typeof(getEnclosingScope(e)) match {
+              e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>  // the following is a TERRIBLE HACK
                   val lab = rand.nextInt()        // to put a bool on the stack
                                                   // (hey, that rhymes!)
@@ -117,10 +116,9 @@ object JasminBackend {
                     ("\t" * tabLevel)       + s"CmpDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
 
-              })
+              }
           case ASTOperator(_,"!=") =>
-            emit(left, localVars, tabLevel + 1) + emit(right, localVars, tabLevel + 1) +
-              (e.typeof(getEnclosingScope(e)) match {
+              e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1))   + s"if_icmpne\tCmp$lab\n" +
@@ -138,7 +136,7 @@ object JasminBackend {
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
                     ("\t" * tabLevel)      + s"CmpDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
-              })
+              }
             })
       case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString}\n"
       case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
