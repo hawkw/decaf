@@ -23,16 +23,24 @@ import scala.io.Source
  */
 object Compiler extends App {
   val parser = new DecafSyntactical
-  val source: String = args match {
+  val (source: String, fileName: Option[String]) = args match {
     case Array() =>
-      Source.fromInputStream(System.in).mkString // should detect EOF automagically?
+      (Source.fromInputStream(System.in).mkString, None)  // should detect EOF automagically?
     case Array(path: String, _*) =>
-      Source.fromFile(path).mkString
+      (Source
+        .fromFile(path)
+        .mkString,
+        Some(path
+          .split('/')
+          .last
+          .split('.')
+          .head)
+        )
   }
   lazy val ast = parser.parse(source)
   lazy val (scopes, errors) = DecafSemantic.analyze(ast)
   errors match {
-    case Nil => println(JasminBackend.compile(ast))
+    case Nil => println(JasminBackend.compile(ast, fileName))
     case errors: List[Exception] => errors.foreach(System.err.println(_))
   }
 

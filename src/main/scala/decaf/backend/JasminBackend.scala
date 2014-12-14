@@ -28,11 +28,11 @@ import scala.collection.mutable
  * @author Hawk Weisman <hawk@meteorcodelabs.com>
  * Created by hawk on 12/1/14.
  */
-object JasminBackend {
+object JasminBackend extends Backend{
 
-  val rand = new util.Random
+  private val rand = new util.Random
 
-  def compile(program: Program): String = s"${makeHeader(program.getName)}\n${emit(program)}"
+  override def compile(program: Program, fileName: Option[String]): String = s"${makeHeader(fileName.getOrElse("Program"))}\n${emit(program)}"
   //todo: shouldn't actually work this way (should fork on each class def)
 
   private def makeHeader(name: String, sup: String="java/lang/Object") = s".class public $name\n.super $sup\n" + makeInitializer(sup)

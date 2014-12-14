@@ -23,5 +23,5 @@ trait Backend {
    * @param program a Program (top-level node in an AST) to compile
    * @return a String containing the assembly output from the AST
    */
-  def compile(program: Program): String
+  def compile(program: Program, fileName: Option[String]): String
 }
