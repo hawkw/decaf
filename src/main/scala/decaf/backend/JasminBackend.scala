@@ -242,6 +242,13 @@ object JasminBackend extends Backend{
               else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
               ) + "\n"
         }
+      case FieldAccess(_, Some(otherClass), ASTIdentifier(_, name)) =>
+        // IDK if this is right
+        val className = emit(otherClass)
+        ("\t" * tabLevel) + (
+          if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+          else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+          ) + "\n"
      }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
