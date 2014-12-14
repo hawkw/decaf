@@ -1,5 +1,6 @@
 package decaf
 import decaf.frontend.{DecafSyntactical, DecafSemantic}
+import decaf.backend.JasminBackend
 import scala.io.Source
 
 /**
@@ -18,7 +19,10 @@ object Compiler extends App {
   }
   lazy val ast = parser.parse(source)
   lazy val (scopes, errors) = DecafSemantic.analyze(ast)
+  errors match {
+    case Nil => println(JasminBackend.compile(ast))
+    case errors: List[Exception] => errors.foreach(System.err.println(_))
+  }
 
-  errors.foreach(System.err.println(_))
 
 }

@@ -1,6 +1,18 @@
 apply plugin: "java"
 apply plugin: "scala"
 apply plugin: "idea"
+//apply plugin: 'cobertura'
+//apply plugin: 'com.github.kt3k.coveralls'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/groups/public" }
+    }
+    dependencies {
+     //   classpath 'org.scoverage:gradle-scoverage:0.6-SNAPSHOT'
+    }
+}
 
 /*
  * Gets the version name from the latest Git tag
@@ -46,6 +58,7 @@ dependencies {
     compile "org.scala-lang:scala-library:2.11.4"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
     testCompile 'org.scalatest:scalatest_2.11:2.2.0'
+    //scoverage 'org.scoverage:scalac-scoverage-plugin_2.11:0.99.5'
 }
 
 test << {

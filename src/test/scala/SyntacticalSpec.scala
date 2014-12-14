@@ -13,9 +13,9 @@ class SyntacticalSpec extends FlatSpec with Matchers {
 
   def ol(source:String) = oluw("void main() { " + source + " }")
 
-  def oluw(source:String) = { //System.out.println(
+  def oluw(source:String) = { System.out.println(
     testOneLiner(source)
-  //)
+  )
   }
 
   def testOneLiner(source: String) = target.parse(source)

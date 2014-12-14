@@ -152,31 +152,33 @@ object DecafSemantic {
       }
       case c: ClassDecl =>
         c.members.foreach {
-            case f: FnDecl => decorateScope(f, scope)
-            case v: VarDecl => decorateScope(v, scope)
-            case _ => //class/interface decls can't be embedded.
-          }
+          case f: FnDecl => decorateScope(f, scope)
+          case v: VarDecl => decorateScope(v, scope)
+          case _ => //class/interface decls can't be embedded.
+        }
       case i: InterfaceDecl => i.members.foreach {
         case f: FnDecl => decorateScope(f, scope)
         case _ => //We shouldn't have any other types of decl in an interface.
-      }           //If we do, then we hae a problem
+      } //If we do, then we hae a problem
       case f: FnDecl =>
         val s = scope.child(s"FnDecl (formals) ${f.name.name}", f)
         f.formals.foreach {
           decorateScope(_, s)
         }
-        if(f.body.isDefined) {
+        if (f.body.isDefined) {
           val decls = f.body.get.decls
           val stmts = f.body.get.stmts
           val fs = s.child(s"FnDecl (body) ${f.name.name}", f.body.get)
           f.body.get.state = Some(fs)
-          decls.foreach { decorateScope(_, fs) }
+          decls.foreach {
+            decorateScope(_, fs)
+          }
           stmts.foreach {
             case block: StmtBlock => decorateScope(block, fs.child("Subblock", block))
             case con: ConditionalStmt => decorateScope(con, fs.child(con.getName, con))
             case stmt: Stmt => stmt.state = Some(fs)
           }
-           // s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) else s.state = Some(fs)
+          // s => if(s.isInstanceOf[StmtBlock]) decorateScope(s, fs.child("Subblock", s)) else s.state = Some(fs)
           //}
         }
       case StmtBlock(decls, stmts, _) =>
@@ -192,7 +194,7 @@ object DecafSemantic {
         i.state = Some(scope)
         decorateScope(i.test, scope)
         decorateScope(i.testBody, scope.child("Test body", i.testBody))
-        i.elseBody.foreach{
+        i.elseBody.foreach {
           case block: StmtBlock => decorateScope(block, scope.child("Subblock", block))
           case con: ConditionalStmt => decorateScope(con, scope.child(con.getName, con))
           case stmt: Stmt => stmt.state = Some(scope)
@@ -202,10 +204,10 @@ object DecafSemantic {
         f.init.foreach(decorateScope(_, scope))
         f.step.foreach(decorateScope(_, scope))
         decorateScope(f.test, scope)
-        decorateScope( f.body, scope.child("Loop body", f.body) )
+        decorateScope(f.body, scope.child("Loop body", f.body))
       case w: WhileStmt =>
         w.state = Some(scope)
-        decorateScope( w.loopBody, scope.child("Loop body", w.loopBody) )
+        decorateScope(w.loopBody, scope.child("Loop body", w.loopBody))
         decorateScope(w.test, scope)
       case e: CompoundExpr =>
         e.state = Some(scope)
@@ -214,6 +216,7 @@ object DecafSemantic {
       case n: ASTNode => n.state = Some(scope)
     }
   }
+
 
   def descent(node: ASTNode): List[ASTNode] = {
     node match {
