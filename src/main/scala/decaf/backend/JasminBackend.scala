@@ -235,7 +235,12 @@ object JasminBackend extends Backend{
                 if (inAssignExpr (e))   "astore"
                 else                    "aload"
             }) + s"\t\t$varNum\n"
-          case None => ??? // it's a field in the class (NYI)
+          case None => // it's a field in the class (NYI)
+            val className = e.state.get.table.get("this").get.getName
+            ("\t" * tabLevel) + (
+              if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+              else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+              ) + "\n"
         }
      }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
