@@ -104,17 +104,17 @@ object JasminBackend {
                   ("\t" * (tabLevel + 1))   + s"if_icmpeq\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
-                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                    ("\t" * tabLevel)       + s"CmpDone$lab:\n:"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
-                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                    ("\t" * tabLevel)       + s"CmpDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
 
               })
@@ -126,17 +126,17 @@ object JasminBackend {
                   ("\t" * (tabLevel + 1))   + s"if_icmpne\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
-                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                    ("\t" * tabLevel)       + s"CmpDone$lab:\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                    ("\t" * tabLevel)       + s"Cmp$lab\n" +
+                    ("\t" * tabLevel)       + s"Cmp$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
-                    ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
+                    ("\t" * tabLevel)      + s"CmpDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               })
             })
