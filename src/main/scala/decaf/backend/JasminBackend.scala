@@ -47,14 +47,14 @@ object JasminBackend extends Backend{
     case _ => ??? //TODO: this is where classes would actually happen
   }
 
-  @tailrec private def getFnName(node: ASTNode): String = node match {
-    case _: FnDecl => node.state.get.boundName
-    case _ => getFnName(node.parent)
+  @tailrec private def getFnDecl(node: ASTNode): FnDecl = node match {
+    case d: FnDecl => d
+    case _ => getFnDecl(node.parent)
   }
 
   @tailrec private def getEnclosingScope(node: ASTNode): ScopeNode = node.state match {
     case Some(st) => st
-    case _ => getEnclosingScope(node.parent)
+    case None if node.parent != null => getEnclosingScope(node.parent)
   }
 
   @tailrec private def inAssignExpr(node: ASTNode): Boolean = node match {
@@ -63,6 +63,8 @@ object JasminBackend extends Backend{
     case Program(_,_) => false
     case _ => inAssignExpr(node.parent)
   }
+
+  private def getFnName(node: ASTNode): String = getFnDecl(node).getName
 
   private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2 match {
     case it if it isEmpty => 1
@@ -75,9 +77,11 @@ object JasminBackend extends Backend{
     case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
-      case _: StmtBlock => val fnName = getFnName(node)
+      case _ =>
+        var fnName = getFnName(node)
         localVars += (n.name -> getNextVar(localVars))
         s".var ${getNextVar(localVars)} is ${n.name} ${t.typeName} from Begin$fnName to End$fnName"
+
     } // TODO:
     case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) =>
       s".method public static $name(" +
@@ -91,13 +95,13 @@ object JasminBackend extends Backend{
       s"Begin${node.state.get.boundName}:\n" +
       s"${emit(code, localVars, tabLevel + 1)}\n" +
       s"End${node.state.get.boundName}:\n${if (name == "main") "return\n"}.end method\n"
+    case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case StmtBlock(declarations, code, _) =>
-      val vars = mutable.Map[String, Int]() // not very functional but w/e
       declarations
-        .map(emit(_, vars, tabLevel, breakable))
+        .map(emit(_, localVars, tabLevel, breakable))
         .mkString("\n") +
       code
-        .map(emit(_, vars, tabLevel, breakable))
+        .map(emit(_, localVars, tabLevel, breakable))
         .mkString("\n")
     case ReturnStmt(loc, None) =>
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
@@ -236,7 +240,7 @@ object JasminBackend extends Backend{
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
         localVars get name match {
           case Some(varNum) => // it's a local var to the function
-            ("\t" * tabLevel) + (e typeof getEnclosingScope(e) match {
+            ("\t" * tabLevel) + (e.typeof(getEnclosingScope(e)) match {
               case _: IntType | _: BoolType =>
                 if (inAssignExpr (e))   "istore"
                 else                    "iload"
@@ -261,6 +265,9 @@ object JasminBackend extends Backend{
           if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           ) + "\n"
+      case AssignExpr(_,left,right) =>
+        emit(left,localVars,tabLevel,breakable) +
+          emit(right,localVars,tabLevel,breakable)
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
@@ -293,8 +300,6 @@ object JasminBackend extends Backend{
       case _: StringType => "Ljava/lang/String;"
       case ArrayType(_, elemType) => s"[${emit(elemType)}"
   }
-
-    case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case _ => println(s"ignored $node"); ""
 
   }
