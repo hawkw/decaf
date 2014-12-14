@@ -101,18 +101,18 @@ object JasminBackend {
                   val lab = rand.nextInt          // to put a bool on the stack
                                                   // (hey, that rhymes!)
                   ("\t" * (tabLevel + 1))   + s"if_icmpeq\tCmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
                     ("\t" * tabLevel)       + s"Cmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
                     ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt
                   ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
                     ("\t" * tabLevel)       + s"Cmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
                     ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
 
@@ -123,23 +123,24 @@ object JasminBackend {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt
                   ("\t" * (tabLevel + 1))   + s"if_icmpne\tCmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
                     ("\t" * tabLevel)       + s"Cmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
                     ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt
                   ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 0\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
                     ("\t" * tabLevel)       + s"Cmp$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"bipush 1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t1\n" +
                     ("\t" * (tabLevel + 1)) + s"CmpDone$lab\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               })
             })
-      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc $value\n"
+      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t$value\n"
+      case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t" + (if (value) 1 else 0) + "\n"
      }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
