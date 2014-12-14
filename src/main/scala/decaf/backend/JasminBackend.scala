@@ -153,7 +153,7 @@ object JasminBackend {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
           emit(e, localVars, tabLevel) +
-          ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/println(${emit(e typeof getEnclosingScope(e) )})V\n"
+          ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
         case _ => exprs.foreach(emit(_, localVars, tabLevel))
       }
 
