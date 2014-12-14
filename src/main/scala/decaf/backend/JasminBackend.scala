@@ -146,7 +146,7 @@ object JasminBackend extends Backend{
                       ("\t" * tabLevel)       + s"CmpDone$lab:\n"
                   case _: StringType | _: NamedType =>
                     val lab = rand.nextInt()
-                    ("\t" * (tabLevel + 1))   + s"if_acmpeq\t\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1))   + s"if_acmpne\t\tCmp$lab\n" +
                       ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                       ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
                       ("\t" * tabLevel)       + s"Cmp$lab:\n" +
@@ -154,6 +154,7 @@ object JasminBackend extends Backend{
                       ("\t" * tabLevel)      + s"CmpDone$lab:\n"
                   case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
                 }
+            case ASTOperator(_, ">=") =>
               })
       case LogicalExpr(_, Some(left), op, right) =>
         emit(left, localVars, tabLevel + 1) +
