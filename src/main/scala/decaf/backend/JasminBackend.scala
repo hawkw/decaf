@@ -57,6 +57,13 @@ object JasminBackend extends Backend{
     case _ => getEnclosingScope(node.parent)
   }
 
+  @tailrec private def inAssignExpr(node: ASTNode): Boolean = node match {
+      // this is a hack and probably could be made much less slow
+    case AssignExpr(_,_,_) => true
+    case Program(_,_) => false
+    case _ => inAssignExpr(node.parent)
+  }
+
   private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2 match {
     case it if it isEmpty => 1
     case it => it.max + 1
@@ -214,6 +221,22 @@ object JasminBackend extends Backend{
         })
       case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString}\n"
       case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
+      case FieldAccess(_, None, ASTIdentifier(_,name)) =>
+        localVars get name match {
+          case Some(varNum) => // it's a local var to the function
+            ("\t" * tabLevel) + (e typeof getEnclosingScope(e) match {
+              case _: IntType | _: BoolType =>
+                if (inAssignExpr (e))   "istore"
+                else                    "iload"
+              case _: DoubleType =>
+                if (inAssignExpr (e))   "dstore"
+                else                    "dload"
+              case _: StringType | _: NamedType =>
+                if (inAssignExpr (e))   "astore"
+                else                    "aload"
+            }) + s"\t\t$varNum\n"
+          case None => ??? // it's a field in the class (NYI)
+        }
      }
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
