@@ -1,4 +1,15 @@
-package decaf.AST.annotations
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
+
+package decaf.AST
+package annotations
 
 import decaf.AST.{ScopeTable, NamedType}
 import decaf.frontend.ScopeNode
@@ -6,6 +17,8 @@ import decaf.frontend.ScopeNode
 import scala.util.parsing.input.Position
 
 /**
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ *
  * Created by hawk on 11/14/14.
  */
 case class ClassAnnotation(name: NamedType,

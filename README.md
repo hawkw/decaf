@@ -40,8 +40,7 @@ Using Decaf
 
 You can build the Decaf compiler, `dcc`, using our Gradle build script. Simply type the command `./gradlew dccJar`. This will build Decaf, run our ScalaTest test suite, and then generate the runnable `dcc` jar file. The jar file is output to `build/libs/dcc.jar` relative to the root of the repository, and can be run with `java -jar dcc.jar path/to/source/code/file.decaf`. The Decaf compiler currently takes one argument, a Decaf source code file to compile. If you pass more or less arguments, at this point, the compiler will do nothing and issue a warning.
 
-Note that the Decaf compiler is not currently complete, and will not yet output runnable binaries (as the code generation components are not yet implemented). Currently, invoking `dcc` on a Decaf source code file will result in the source code file being parsed and passed through semantic analysis.
-
+Decaf's default backend generates Java bytecode using the [Jasmin](http://jasmin.sourceforge.net) assembly language. Invoking the Decaf compiler (`dcc`) on a Decaf source code file will produce Jasmin assembly files with the file extension `.j`. In order to produce executable `.class` files, the Jasmin assembler must be invoked on those `.j` files. You can download an executable Jasmin jarfile [here](http://sourceforge.net/projects/jasmin/files/).
 ##### Running Tests 
 
 Running our test suites is very easy - all you have to do is navigate to this repository's root directory and type `./gradlew test`. 

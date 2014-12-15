@@ -8,7 +8,8 @@
 **                                        **
 \*                                        */
 
-package decaf.frontend
+package decaf
+package frontend
 
 import scala.collection.immutable.HashSet
 import scala.util.parsing.combinator.lexical._
@@ -110,7 +111,9 @@ trait DecafTokens extends Tokens {
 /**
  * Lexical analyzer for Decaf tokens.
  *
- * @author Hawk Weisman
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ * @author Max Clive <mattrulz127@gmail.com>
+ *
  * Created by hawk on 9/27/14.
  */
 

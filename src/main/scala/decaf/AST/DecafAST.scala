@@ -1,4 +1,15 @@
-package decaf.AST
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
+
+package decaf
+package AST
 
 import decaf.frontend.{TypeErrorException, ScopeNode}
 import decaf.AST.annotations._
@@ -17,7 +28,7 @@ import scala.util.parsing.input.{Position, Positional}
  * For example, the constant `1d` should pretty-print as `DoubleConstant: 1.0`, rather than `DoubleConstant: 1`.
  * I've modified the corresponding sample output to make this behaviour correct.
  *
- * @author Hawk Weisman
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
  *
  * Created by hawk on 9/30/14.
  */

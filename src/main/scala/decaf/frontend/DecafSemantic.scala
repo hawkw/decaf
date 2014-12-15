@@ -125,8 +125,8 @@ case class ScopeNode(table: ScopeTable,
  *    it just isn't bound to something that can be accessed. Therefore, we make an error message
  *    saying "*** Attempt to field access a method" instead.
  *
- * @author Hawk Weisman
- * @author Max Clive
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ * @author Max Clive <mattrulz127@gmail.com>
  */
 object DecafSemantic {
 
