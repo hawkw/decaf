@@ -1,0 +1,17 @@
+// This tests setting the stack frame size correctly
+int a;
+int b;
+
+void Recur(int depth)    //11 var = 44 bytes total
+{
+	int c;
+      int d;          // 2 locals
+      if (depth < 0) return;   // 2 temps, 0, <
+	if (depth % 1000 == 0) Print(depth,"\n");  // 5 temps 1000, %, 0, ==, \n
+	Recur(depth -1); // 2 temps 1, -
+}
+
+void main()
+{
+	Recur(20000);
+}

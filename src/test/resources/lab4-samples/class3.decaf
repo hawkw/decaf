@@ -1,0 +1,26 @@
+class Binky {
+  void Method1() {
+    Print(1);
+  }
+
+  void Method2() {
+    this.Method1();
+    Print(2);
+    Method1();
+  }
+
+  void Method3(Binky b)
+  {
+     b.Method1();
+     Print(2);
+     this.Method2();
+  }
+}
+
+void main() {
+  Binky b;
+  Binky c;
+  b = new Binky;
+  c = new Binky;
+  b.Method3(c);
+}

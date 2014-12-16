@@ -1,0 +1,16 @@
+int main()
+{
+  int i;
+  int j;
+ // int[] arr;
+
+  i = 1;
+  j = 2;
+//  arr = NewArray(10, int);
+  i++;
+//  if (i == arr[j]--)
+    j++;
+
+  Print(i, j);
+  return 0;
+}

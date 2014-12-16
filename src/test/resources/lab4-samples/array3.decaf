@@ -1,0 +1,14 @@
+void main() {
+  int [][][]arr;
+   int [] in;
+
+  arr = NewArray(10, int[][]);
+  arr[5] = NewArray(1, int[]);
+  in = NewArray(9, int);
+  arr[5][0] = in;
+ 
+  arr[5][0][8] = 234;
+  arr[5][0][0] = 0;
+
+  Print(arr[4+1][arr[5][0][0]][8], arr[5][0].length(), in.length());
+}

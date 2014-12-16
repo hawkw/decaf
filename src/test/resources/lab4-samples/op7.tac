@@ -1,0 +1,27 @@
+main:
+	BeginFunc 60 ;
+	_tmp0 = 0 ;
+	_tmp1 = 1 ;
+	_tmp2 = _tmp0 < _tmp1 ;
+	_tmp3 = _tmp0 == _tmp1 ;
+	_tmp4 = _tmp2 || _tmp3 ;
+	PushParam _tmp4 ;
+	LCall _PrintBool ;
+	PopParams 4 ;
+	_tmp5 = 0 ;
+	_tmp6 = 0 ;
+	_tmp7 = _tmp5 < _tmp6 ;
+	_tmp8 = _tmp5 == _tmp6 ;
+	_tmp9 = _tmp7 || _tmp8 ;
+	PushParam _tmp9 ;
+	LCall _PrintBool ;
+	PopParams 4 ;
+	_tmp10 = 1 ;
+	_tmp11 = 0 ;
+	_tmp12 = _tmp10 < _tmp11 ;
+	_tmp13 = _tmp10 == _tmp11 ;
+	_tmp14 = _tmp12 || _tmp13 ;
+	PushParam _tmp14 ;
+	LCall _PrintBool ;
+	PopParams 4 ;
+	EndFunc ;
