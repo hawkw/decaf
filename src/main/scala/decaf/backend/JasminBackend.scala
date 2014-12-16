@@ -56,7 +56,8 @@ object JasminBackend extends Backend{
     node.state match {
     case Some(st) => st
     case None if node.parent != null => getEnclosingScope(node.parent)
-    case _ => ???
+    case _ => ??? // this shouldn't happen - Hawk, 12/13/14
+                  // but it does           - Hawk, 12/15/14
   }
 
   @tailrec private def inAssignExpr(node: ASTNode): Boolean =
@@ -77,6 +78,9 @@ object JasminBackend extends Backend{
                    localVars: mutable.Map[String, Int] = mutable.Map[String, Int](),
                    tabLevel: Int = 0,
                    breakable: Option[String] = None): String = node match {
+    // To those who are about to read my code, I am terribly, terribly sorry.
+    // We thank you for your sacrifice.
+    //    ~ hawk
     case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
