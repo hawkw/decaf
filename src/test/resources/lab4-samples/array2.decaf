@@ -1,0 +1,24 @@
+void TakeArray(int[] x) {
+  Print(x[4],x[5],x.length());
+}
+
+int[] MakeArray(int size)
+{
+    int[] b;
+    b = NewArray(size, int);
+    b[0] = 5;
+    return b;
+}
+
+void main() {
+  int[] y;
+  int[] b;
+
+  y = NewArray(10, int);
+  y[4] = 3;
+  y[5] = 4;
+
+  TakeArray(y);
+  b = MakeArray(10);
+  Print(b[0], b.length(), MakeArray(5).length());
+}

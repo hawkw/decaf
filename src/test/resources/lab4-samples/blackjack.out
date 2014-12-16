@@ -1,0 +1,91 @@
+Welcome to CMPSC 420 BlackJack!
+---------------------------
+Please enter a random number seed: Shuffling...done.
+How many players do we have today? What is the name of player #1? What is the name of player #2? What is the name of player #3? 
+First, let's take bets.
+Janyl, you have $1000.
+How much would you like to bet? Imaginary1, you have $1000.
+How much would you like to bet? Imaginary2, you have $1000.
+How much would you like to bet? 
+Dealer starts. Dealer was dealt a 3.
+
+Janyl's turn.
+Janyl was dealt a 4.
+Janyl was dealt a 6.
+Would you like to double down? (y/n) Janyl was dealt a 11.
+Janyl, your total is 21.
+Janyl stays at 21.
+
+Imaginary1's turn.
+Imaginary1 was dealt a 8.
+Imaginary1 was dealt a 2.
+Would you like to double down? (y/n) Imaginary1, your total is 10.
+Would you like a hit? (y/n) Imaginary1 was dealt a 10.
+Imaginary1, your total is 20.
+Would you like a hit? (y/n) Imaginary1 stays at 20.
+
+Imaginary2's turn.
+Imaginary2 was dealt a 9.
+Imaginary2 was dealt a 10.
+Imaginary2, your total is 19.
+Would you like a hit? (y/n) Imaginary2 stays at 19.
+
+Dealer's turn.
+Dealer was dealt a 5.
+Dealer was dealt a 7.
+Dealer was dealt a 9.
+Dealer busts with the big 24!
+
+Time to resolve bets.
+Janyl, you won $110.
+Imaginary1, you won $190.
+Imaginary2, you won $275.
+
+Do you want to play another hand? (y/n) 
+First, let's take bets.
+Janyl, you have $1110.
+How much would you like to bet? Imaginary1, you have $1190.
+How much would you like to bet? Imaginary2, you have $1275.
+How much would you like to bet? 
+Dealer starts. Dealer was dealt a 3.
+
+Janyl's turn.
+Janyl was dealt a 11.
+Janyl was dealt a 11.
+Jan, your total is 12.
+Would you like a hit? (y/n) Janyl was dealt a 7.
+Janyl, your total is 19.
+Would you like a hit? (y/n) Janyl stays at 19.
+
+Imaginary1's turn.
+Imaginary1 was dealt a 11.
+Imaginary1 was dealt a 10.
+Imaginary1, your total is 21.
+Would you like a hit? (y/n) Imaginary1 stays at 21.
+
+Imaginary2's turn.
+Imaginary2 was dealt a 7.
+Imaginary2 was dealt a 5.
+Imaginary2, your total is 12.
+Would you like a hit? (y/n) Imaginary2 was dealt a 11.
+Imaginary2, your total is 13.
+Would you like a hit? (y/n) Imaginary2 was dealt a 7.
+Imaginary2, your total is 20.
+Would you like a hit? (y/n) Imaginary2 stays at 20.
+
+Dealer's turn.
+Dealer was dealt a 6.
+Dealer was dealt a 5.
+Dealer was dealt a 10.
+Dealer busts with the big 24!
+
+Time to resolve bets.
+Janyl, you won $300.
+Imaginary1, you won $100.
+Imaginary2, you won $200.
+
+Do you want to play another hand? (y/n) Janyl, you have $1410.
+Imaginary1, you have $1390.
+Imaginary2, you have $1475.
+Thank you for playing...come again soon.
+

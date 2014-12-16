@@ -1,0 +1,93 @@
+Welcome to CMPSC 420 BlackJack!
+---------------------------
+Please enter a random number seed: Shuffling...done.
+How many players do we have today? What is the name of player #1? What is the name of player #2? What is the name of player #3? 
+First, let's take bets.
+Jan, you have $1000.
+How much would you like to bet? Yves, you have $1000.
+How much would you like to bet? Cam, you have $1000.
+How much would you like to bet? 
+Dealer starts. Dealer was dealt a 3.
+
+Jan's turn.
+Jan was dealt a 4.
+Jan was dealt a 6.
+Would you like to double down? (y/n) Jan was dealt a 11.
+Jan, your total is 21.
+Jan stays at 21.
+
+Yves's turn.
+Yves was dealt a 8.
+Yves was dealt a 2.
+Would you like to double down? (y/n) Yves, your total is 10.
+Would you like a hit? (y/n) Yves was dealt a 10.
+Yves, your total is 20.
+Would you like a hit? (y/n) Yves stays at 20.
+
+Cam's turn.
+Cam was dealt a 9.
+Cam was dealt a 10.
+Cam, your total is 19.
+Would you like a hit? (y/n) Cam stays at 19.
+
+Dealer's turn.
+Dealer was dealt a 5.
+Dealer was dealt a 7.
+Dealer was dealt a 9.
+Dealer busts with the big 24!
+
+Time to resolve bets.
+Jan, you won $110.
+Yves, you won $190.
+Cam, you won $275.
+
+Do you want to play another hand? (y/n) 
+First, let's take bets.
+Jan, you have $1110.
+How much would you like to bet? Yves, you have $1190.
+How much would you like to bet? Cam, you have $1275.
+How much would you like to bet? 
+Dealer starts. Dealer was dealt a 3.
+
+Jan's turn.
+Jan was dealt a 11.
+Jan was dealt a 11.
+Jan, your total is 12.
+Would you like a hit? (y/n) Jan was dealt a 7.
+Jan, your total is 19.
+Would you like a hit? (y/n) Jan stays at 19.
+
+Yves's turn.
+Yves was dealt a 11.
+Yves was dealt a 10.
+Yves, your total is 21.
+Would you like a hit? (y/n) Yves stays at 21.
+
+Cam's turn.
+Cam was dealt a 7.
+Cam was dealt a 5.
+Cam, your total is 12.
+Would you like a hit? (y/n) Cam was dealt a 11.
+Cam, your total is 13.
+Would you like a hit? (y/n) Cam was dealt a 7.
+Cam, your total is 20.
+Would you like a hit? (y/n) Cam stays at 20.
+
+Dealer's turn.
+Dealer was dealt a 6.
+Dealer was dealt a 5.
+Dealer was dealt a 10.
+Dealer busts with the big 24!
+
+Time to resolve bets.
+Jan, you won $300.
+Yves, you won $100.
+Cam, you won $200.
+
+Do you want to play another hand? (y/n) Jan, you have $1410.
+Yves, you have $1390.
+Cam, you have $1475.
+Thank you for playing...come again soon.
+
+CS143 BlackJack Copyright (c) 1999 by Peter Mork.
+(2001 mods by jdz)

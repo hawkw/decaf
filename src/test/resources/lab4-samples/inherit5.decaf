@@ -1,0 +1,49 @@
+class Animal {
+  void Method() { Print("Hello from Animal\n"); }
+
+  void Method1() {
+    Print("Animal");
+  }
+
+  void AMethod() { Print("not overridden\n"); }
+}
+
+class Cow extends Animal {
+
+   void Method() { Print("Hello from Cow"); }
+
+   void Method2() {
+      Print("Cow2");
+	Method1();
+   }
+   void Method1() {
+    Print("Cow");
+  }
+
+   void AMethod() {}
+}
+class Jersey extends Cow {
+
+   void Method() { Print("Hello from Jersey."); }
+
+   void Method3() {
+	Print("Jersey3");
+      Method2();
+   }
+   void Method1() {
+      Print("Jersey");
+   }
+}
+
+void main() {
+  Cow a;
+  Jersey j;
+
+  a = new Cow;
+  a.Method2();
+  j = new Jersey;
+  a = j;
+  a.Method2();
+  j.Method3();
+  a.Method();
+}

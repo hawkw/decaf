@@ -52,12 +52,16 @@ object JasminBackend extends Backend{
     case _ => getFnDecl(node.parent)
   }
 
-  @tailrec private def getEnclosingScope(node: ASTNode): ScopeNode = node.state match {
+  @tailrec private def getEnclosingScope(node: ASTNode): ScopeNode =
+    node.state match {
     case Some(st) => st
     case None if node.parent != null => getEnclosingScope(node.parent)
+    case _ => ??? // this shouldn't happen - Hawk, 12/13/14
+                  // but it does           - Hawk, 12/15/14
   }
 
-  @tailrec private def inAssignExpr(node: ASTNode): Boolean = node match {
+  @tailrec private def inAssignExpr(node: ASTNode): Boolean =
+    node match {
       // this is a hack and probably could be made much less slow
     case AssignExpr(_,_,_) => true
     case Program(_,_) => false
@@ -74,6 +78,9 @@ object JasminBackend extends Backend{
                    localVars: mutable.Map[String, Int] = mutable.Map[String, Int](),
                    tabLevel: Int = 0,
                    breakable: Option[String] = None): String = node match {
+    // To those who are about to read my code, I am terribly, terribly sorry.
+    // We thank you for your sacrifice.
+    //    ~ hawk
     case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
     case VarDecl(n, t) => node.parent match {
       case _: Program => s".field public $n ${emit(t)}\n"
@@ -265,20 +272,49 @@ object JasminBackend extends Backend{
           if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           ) + "\n"
-      case AssignExpr(_,left,right) =>
-        emit(left,localVars,tabLevel,breakable) +
-          emit(right,localVars,tabLevel,breakable)
+      case a: AssignExpr =>
+        emit(a.lhs,localVars,tabLevel,breakable) + emit(a.rhs,localVars,tabLevel,breakable)
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
         val label = rand.nextInt()
-        ("\t" * tabLevel) + s"LoopBegin$label:\n"                     +
-          emit(body, localVars, tabLevel + 1, Some(label.toString))   +
-          emit(test, localVars, tabLevel + 1, Some(label.toString))   +
-          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
+        ("\t" * tabLevel) + s"LoopBegin$label:\n" +
+          emit(body, localVars, tabLevel + 1, Some(label.toString)) +
+          emit(test, localVars, tabLevel + 1, Some(label.toString)) +
+          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n" +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
-          ("\t" * tabLevel)       + s"End$label:\n"
+          ("\t" * tabLevel) + s"End$label:\n"
     }
+
+    case IfStmt(test,testBody,None) =>
+      val label = rand.nextInt()
+      ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
+        emit(test,localVars,tabLevel+1,breakable)               +
+        ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
+        ("\t" * (tabLevel + 1)) + s"if_icmpne\t\tIfNot$label\n" +
+        ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
+        emit(testBody,localVars,tabLevel + 1, breakable)        +
+        ("\t" * tabLevel) + s"IfNot$label:\n"
+
+    case IfStmt(test,testBody,Some(elseBody)) =>
+      // this is special-cased because if I generate the if
+      // and if-else statements seperately, I can save a label
+      // and a couple of jumps in the if-without-else case.
+      val label= rand.nextInt()
+      ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
+        emit(test,localVars,tabLevel+1,breakable)               +
+        ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
+        ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tIf$label\n"    +
+        ("\t" * (tabLevel + 1)) + s"goto\t\tIfElse$label\n"     +
+        ("\t" * tabLevel) + s"If$label:\n"                      +
+        ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
+        emit(testBody,localVars,tabLevel + 1, breakable)        +
+        ("\t" * (tabLevel + 1)) + s"goto\t\tIfDone$label\n"     +
+        ("\t" * tabLevel) + s"IfElse$label:\n"                  +
+        ("\t" * tabLevel) + s".line ${elseBody.pos.line}\n"     +
+        emit(elseBody,localVars,tabLevel + 1, breakable)        +
+        ("\t" * tabLevel) + s"IfDone$label:\n"
+
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +

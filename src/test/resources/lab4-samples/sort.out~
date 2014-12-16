@@ -1,0 +1,10 @@
+SPIM Version 7.4 of January 1, 2009
+Copyright 1990-2004 by James R. Larus (larus@cs.wisc.edu).
+All Rights Reserved.
+See the file README for a full copyright notice.
+Loaded: /usr/class/cs143/bin/exceptions.s
+
+This program will read in a bunch of numbers and print them
+back out in sorted order.
+
+How many scores? Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Enter next number: Sorted results: -12 1 2 5 8 10 35 45 45 50 
