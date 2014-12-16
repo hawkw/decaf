@@ -281,6 +281,7 @@ object JasminBackend extends Backend{
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
     }
+
     case IfStmt(test,testBody,None) =>
       val label = rand.nextInt()
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
@@ -290,6 +291,26 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
         emit(testBody,localVars,tabLevel + 1, breakable)        +
         ("\t" * tabLevel) + s"IfNot$label:\n"
+
+    case IfStmt(test,testBody,Some(elseBody)) =>
+      // this is special-cased because if I generate the if
+      // and if-else statements seperately, I can save a label
+      // and a couple of jumps in the if-without-else case.
+      val label= rand.nextInt()
+      ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
+        emit(test,localVars,tabLevel+1,breakable)               +
+        ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
+        ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tIf$label\n"    +
+        ("\t" * (tabLevel + 1)) + s"goto\t\tIfElse$label\n"     +
+        ("\t" * tabLevel) + s"If$label:\n"                      +
+        ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
+        emit(testBody,localVars,tabLevel + 1, breakable)        +
+        ("\t" * (tabLevel + 1)) + s"goto\t\tIfDone$label\n"     +
+        ("\t" * tabLevel) + s"IfElse$label:\n"                  +
+        ("\t" * tabLevel) + s".line ${elseBody.pos.line}\n"     +
+        emit(elseBody,localVars,tabLevel + 1, breakable)        +
+        ("\t" * tabLevel) + s"IfDone$label:\n"
+
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
