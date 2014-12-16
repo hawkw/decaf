@@ -1,2 +1,2 @@
-*.tac language=Assembly
-*.j language=Assembly
+*.tac linguist-language=Assembly
+*.j linguist-language=Assembly
