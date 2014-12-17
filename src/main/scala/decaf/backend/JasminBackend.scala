@@ -146,8 +146,8 @@ object JasminBackend extends Backend{
             case ASTOperator(_, "==") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType => // the following is a TERRIBLE HACK
-                  val lab = rand.nextInt() // to put a bool on the stack
-                  // (hey, that rhymes!)
+                  val lab = rand.nextInt(Integer.MAX_VALUE) // to put a bool on the stack
+                                                  // (hey, that rhymes!)
                   ("\t" * (tabLevel + 1)) + s"if_icmpeq\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -155,7 +155,7 @@ object JasminBackend extends Backend{
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpDone$lab:\n"
                 case _: StringType | _: NamedType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
@@ -167,7 +167,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, "!=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmpne\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -175,7 +175,7 @@ object JasminBackend extends Backend{
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpDone$lab:\n"
                 case _: StringType | _: NamedType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_acmpne\t\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -192,7 +192,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, ">=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -204,7 +204,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, "<=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmple\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -216,7 +216,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, ">") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -282,7 +282,7 @@ object JasminBackend extends Backend{
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
-        val label = rand.nextInt()
+        val label = rand.nextInt(Integer.MAX_VALUE);
         ("\t" * tabLevel) + s"LoopBegin$label:\n" +
           emit(body, localVars, tabLevel + 1, Some(label.toString)) +
           emit(test, localVars, tabLevel + 1, Some(label.toString)) +
@@ -292,7 +292,7 @@ object JasminBackend extends Backend{
     }
 
     case IfStmt(test,testBody,None) =>
-      val label = rand.nextInt()
+      val label = rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
         emit(test,localVars,tabLevel+1,breakable)               +
         ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
@@ -305,7 +305,7 @@ object JasminBackend extends Backend{
       // this is special-cased because if I generate the if
       // and if-else statements seperately, I can save a label
       // and a couple of jumps in the if-without-else case.
-      val label= rand.nextInt()
+      val label= rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
         emit(test,localVars,tabLevel+1,breakable)               +
         ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
