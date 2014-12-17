@@ -191,7 +191,7 @@ object JasminBackend extends Backend{
           (op match {
             case ASTOperator(_, ">=") =>
               e.typeof(getEnclosingScope(e)) match {
-                case _: IntType =>
+                case _: IntType | _: BoolType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
@@ -203,7 +203,7 @@ object JasminBackend extends Backend{
               }
             case ASTOperator(_, "<=") =>
               e.typeof(getEnclosingScope(e)) match {
-                case _: IntType =>
+                case _: IntType | _: BoolType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1)) + s"if_icmple\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
@@ -215,7 +215,7 @@ object JasminBackend extends Backend{
               }
             case ASTOperator(_, ">") =>
               e.typeof(getEnclosingScope(e)) match {
-                case _: IntType =>
+                case _: IntType | _: BoolType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
@@ -227,7 +227,7 @@ object JasminBackend extends Backend{
               }
             case ASTOperator(_, "<") =>
               e.typeof(getEnclosingScope(e)) match {
-                case _: IntType =>
+                case _: IntType | _: BoolType =>
                   val lab = rand.nextInt()
                   ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
