@@ -87,7 +87,7 @@ object JasminBackend extends Backend{
       case _ =>
         var fnName = getFnName(node)
         localVars += (n.name -> getNextVar(localVars))
-        s".var ${getNextVar(localVars)} is ${n.name} ${t.typeName} from Begin$fnName to End$fnName"
+        s".var ${getNextVar(localVars)} is ${n.name} ${t.typeName} from Begin$fnName to End$fnName\n"
 
     } // TODO:
     case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) =>
