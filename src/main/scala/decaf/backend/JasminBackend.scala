@@ -71,7 +71,7 @@ object JasminBackend extends Backend{
   private def getFnName(node: ASTNode): String = getFnDecl(node).state.get.boundName
 
   private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2 match {
-    case it if it isEmpty => 1
+    case it if it isEmpty => 0
     case it => it.max + 1
   }
   private def emit(node: ASTNode,
