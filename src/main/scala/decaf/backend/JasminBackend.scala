@@ -143,47 +143,52 @@ object JasminBackend extends Backend{
         emit(left, localVars, tabLevel + 1) +
           emit(right, localVars, tabLevel + 1) +
           (op match {
-            case ASTOperator(_,"==") =>
-                e.typeof(getEnclosingScope(e)) match {
-                  case _: IntType | _: BoolType =>  // the following is a TERRIBLE HACK
-                    val lab = rand.nextInt()        // to put a bool on the stack
-                                                    // (hey, that rhymes!)
-                    ("\t" * (tabLevel + 1))   + s"if_icmpeq\tCmp$lab\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                      ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                      ("\t" * tabLevel)       + s"Cmp$lab:\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                      ("\t" * tabLevel)       + s"CmpDone$lab:\n"
-                  case _: StringType | _: NamedType =>
-                    val lab = rand.nextInt()
-                    ("\t" * (tabLevel + 1))   + s"if_acmpeq\tCmp$lab\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                      ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                      ("\t" * tabLevel)       + s"Cmp$lab:\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                      ("\t" * tabLevel)       + s"CmpDone$lab:\n"
-                  case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
-                }
-            case ASTOperator(_,"!=") =>
-                e.typeof(getEnclosingScope(e)) match {
-                  case _: IntType | _: BoolType =>
-                    val lab = rand.nextInt()
-                    ("\t" * (tabLevel + 1))   + s"if_icmpne\tCmp$lab\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                      ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                      ("\t" * tabLevel)       + s"Cmp$lab:\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                      ("\t" * tabLevel)       + s"CmpDone$lab:\n"
-                  case _: StringType | _: NamedType =>
-                    val lab = rand.nextInt()
-                    ("\t" * (tabLevel + 1))   + s"if_acmpne\t\tCmp$lab\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                      ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                      ("\t" * tabLevel)       + s"Cmp$lab:\n" +
-                      ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                      ("\t" * tabLevel)      + s"CmpDone$lab:\n"
-                  case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
-                }
+            case ASTOperator(_, "==") =>
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType | _: BoolType => // the following is a TERRIBLE HACK
+                  val lab = rand.nextInt() // to put a bool on the stack
+                  // (hey, that rhymes!)
+                  ("\t" * (tabLevel + 1)) + s"if_icmpeq\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: StringType | _: NamedType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
+              }
+            case ASTOperator(_, "!=") =>
+              e.typeof(getEnclosingScope(e)) match {
+                case _: IntType | _: BoolType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_icmpne\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: StringType | _: NamedType =>
+                  val lab = rand.nextInt()
+                  ("\t" * (tabLevel + 1)) + s"if_acmpne\t\tCmp$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
+                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
+              }
+          })
+      case RelationalExpr(_, left, op, right) =>
+        emit(left, localVars, tabLevel + 1) +
+          emit(right, localVars, tabLevel + 1) +
+          (op match {
             case ASTOperator(_, ">=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType =>
