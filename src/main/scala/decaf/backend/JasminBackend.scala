@@ -220,40 +220,40 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType => // the following is a TERRIBLE HACK
                   val lab = rand.nextInt(Integer.MAX_VALUE) // to put a bool on the stack
                                                   // (hey, that rhymes!)
-                  ("\t" * (tabLevel + 1)) + s"if_icmpeq\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmpeq\tCmpEQ$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpEQDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpEQ$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpEQDone$lab:\n"
                 case _: StringType | _: NamedType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE)
-                  ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmp$lab\n" +
+                  val lab = rand.nextInt(Integer.MAX_VALUE)`
+                  ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmpEQ$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpEQDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpEQ$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpEQDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               }
             case ASTOperator(_, "!=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE)
-                  ("\t" * (tabLevel + 1)) + s"if_icmpne\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmpne\tCmpNE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpNEDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpNE$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpNEDone$lab:\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
-                  ("\t" * (tabLevel + 1)) + s"if_acmpne\t\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_acmpne\t\tCmpNE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpNEDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpNE$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpNEDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               }
           })
@@ -265,48 +265,48 @@ object JasminBackend extends Backend{
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
-                  ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmpGE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpGEDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpGE$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpGEDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
             case ASTOperator(_, "<=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
-                  ("\t" * (tabLevel + 1)) + s"if_icmple\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmple\tCmpLE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLEDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpLE$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpLEDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
             case ASTOperator(_, ">") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
-                  ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmpGT$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpGTDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpGT$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpGTDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
             case ASTOperator(_, "<") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE)
-                  ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmp$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmpLT$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
-                    ("\t" * tabLevel) + s"Cmp$lab:\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLtDone$lab\n" +
+                    ("\t" * tabLevel) + s"CmpLT$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
-                    ("\t" * tabLevel) + s"CmpDone$lab:\n"
+                    ("\t" * tabLevel) + s"CmpLTDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
           })
@@ -390,9 +390,10 @@ object JasminBackend extends Backend{
           (step match {
             case Some(_: EmptyExpr) => ""
             case Some(expr: Expr) =>
-              emit(expr,localVars,tabLevel+1)
+              emit(expr,localVars,tabLevel+1, breakable)
             case None => ""
           })                                                          +
+          emit(test,localVars,tabLevel+1,breakable)                   +
           ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
