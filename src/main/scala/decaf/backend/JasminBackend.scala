@@ -303,7 +303,7 @@ object JasminBackend extends Backend{
                   val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmpLT$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLtDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLTDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpLT$lab:\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpLTDone$lab:\n"
