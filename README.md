@@ -44,6 +44,8 @@ If you'd like to actually write programs in Decaf, the file [`decaf.pdf`](decaf.
 
 Additionally, the [`src/test/resources`](src/test/resources) contains a number of sample Decaf programs which are used by our test suite for various phases of the compiler. These could be very useful to get an understanding of Decaf's syntax. Of particular interest are the [samples](src/test/resources/lab3-samples) used by the parser test suite, which contain whole working Decaf programs.
 
+The Decaf compiler's code generation component is currently a work in progress, and a number of language features described in the specification are not yet implemented. Currently, object-oriented features such as class and interface definitions are not yet implemented, and function calls are not completely implemented.
+
 ##### Differences from Decaf Specification
 
 Coming soon.
