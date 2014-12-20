@@ -380,10 +380,18 @@ object JasminBackend extends Backend{
           ("\t" * tabLevel) + s"End$label:\n"
       case ForStmt(init,test,step,body) =>
         val label = rand.nextInt(Integer.MAX_VALUE)
-        init.map(emit(_,localVars,tabLevel+1)).getOrElse("")          +
+        (init match {
+          case Some(_: EmptyExpr) => ""
+          case Some(expr: Expr) => emit(expr,localVars,tabLevel+1)
+          case None => ""
+        })                                                            +
           ("\t" * tabLevel) + s"LoopBegin$label:\n"                   +
           emit(body,localVars,tabLevel+1,Some(label.toString))        +
-          step.map(emit(_,localVars,tabLevel+1)).getOrElse("")        +
+          (step match {
+            case Some(_: EmptyExpr) => ""
+            case Some(expr: Expr) => emit(expr,localVars,tabLevel+1)
+            case None => ""
+          })                                                          +
           ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
