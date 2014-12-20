@@ -62,6 +62,8 @@ You can build the Decaf compiler, `dcc`, using our Gradle build script. Simply t
 
 Decaf's default backend generates Java bytecode using the [Jasmin](http://jasmin.sourceforge.net) assembly language. Invoking the Decaf compiler (`dcc`) on a Decaf source code file will produce Jasmin assembly files with the file extension `.j`. In order to produce executable `.class` files, the Jasmin assembler must be invoked on those `.j` files. You can download an executable Jasmin jarfile [here](http://sourceforge.net/projects/jasmin/files/).
 
+Currently, the Jasmin assembly output by the Jasmin backend is printed by the compiler to stdout. You can pipe this output into a file and then invoke Jasmin on it (`java -jar dcc.jar aprogram.decaf > aprogram.j && jasmin aprogram.j` or similar). This is for debugging purposes. Eventually, this output will be written to the current working directory instead, with each class in the program being output to its' own class file (once object-oriented programming is implemented).
+
 ##### Running Tests 
 
 Running our test suites is very easy - all you have to do is navigate to this repository's root directory and type `./gradlew test`. 
