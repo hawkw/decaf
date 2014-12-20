@@ -221,18 +221,18 @@ object JasminBackend extends Backend{
                   val lab = rand.nextInt(Integer.MAX_VALUE) // to put a bool on the stack
                                                   // (hey, that rhymes!)
                   ("\t" * (tabLevel + 1)) + s"if_icmpeq\tCmpEQ$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpEQDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpEQDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpEQ$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpEQDone$lab:\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmpEQ$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpEQDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpEQ$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpEQDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               }
@@ -241,18 +241,18 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmpne\tCmpNE$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpNEDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpNEDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpNE$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpNEDone$lab:\n"
                 case _: StringType | _: NamedType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
-                  ("\t" * (tabLevel + 1)) + s"if_acmpne\t\tCmpNE$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpNEDone$lab\n" +
+                  ("\t" * (tabLevel + 1)) + s"if_acmpne\tCmpNE$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpNEDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpNE$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpNEDone$lab:\n"
                 case _: DoubleType => ("\t" * (tabLevel + 1)) + s"dcmpg\n"
               }
@@ -266,10 +266,10 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmpGE$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpGEDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpGEDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpGE$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpGEDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
@@ -278,10 +278,10 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmple\tCmpLE$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLEDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpLEDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpLE$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpLEDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
@@ -290,10 +290,10 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE);
                   ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmpGT$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpGTDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpGTDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpGT$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpGTDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
@@ -302,10 +302,10 @@ object JasminBackend extends Backend{
                 case _: IntType | _: BoolType =>
                   val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmpLT$lab\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
-                    ("\t" * (tabLevel + 1)) + s"goto\t\tCmpLTDone$lab\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
+                    ("\t" * (tabLevel + 1)) + s"goto\tCmpLTDone$lab\n" +
                     ("\t" * tabLevel) + s"CmpLT$lab:\n" +
-                    ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
+                    ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpLTDone$lab:\n"
                 case _: DoubleType => ??? //todo: implement for doubles
               }
@@ -337,9 +337,9 @@ object JasminBackend extends Backend{
           ("\t" * (tabLevel + 1)) + "ldc 0x1\n" +
           ("\t" * (tabLevel + 1)) + "ixor\n"
 
-      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString.toUpperCase}\n"
-      case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
-      case ASTStringConstant(_,chars) => ("\t" * tabLevel) + s"ldc\t\t$chars\n"
+      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t0x${value.toHexString.toUpperCase}\n"
+      case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t0x" + (if (value) 1 else 0) + "\n"
+      case ASTStringConstant(_,chars) => ("\t" * tabLevel) + s"ldc\t$chars\n"
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
         localVars get name match {
           case Some(varNum) => // it's a local var to the function
@@ -353,20 +353,20 @@ object JasminBackend extends Backend{
               case _: StringType | _: NamedType =>
                 if (inAssignExpr (e))   "astore"
                 else                    "aload"
-            }) + s"\t\t$varNum\n"
+            }) + s"\t$varNum\n"
           case None => // it's a field in the class (NYI)
             val className = e.state.get.table.get("this").get.getName
             ("\t" * tabLevel) + (
-              if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
-              else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+              if (inAssignExpr(e))  s"putfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+              else                  s"getfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
               ) + "\n"
         }
       case FieldAccess(_, Some(otherClass), ASTIdentifier(_, name)) =>
         // IDK if this is right
         val className = emit(otherClass)
         ("\t" * tabLevel) + (
-          if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
-          else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+          if (inAssignExpr(e))  s"putfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+          else                  s"getfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           ) + "\n"
      }
     case l: LoopStmt => l match {
@@ -375,8 +375,8 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s"LoopBegin$label:\n"                     +
           emit(body, localVars, tabLevel + 1, Some(label.toString))   +
           emit(test, localVars, tabLevel + 1, Some(label.toString))   +
-          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
-          ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
+          ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                    +
+          ("\t" * (tabLevel + 1)) + s"if_icmpeq\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
       case ForStmt(init,test,step,body) =>
         val label = rand.nextInt(Integer.MAX_VALUE)
@@ -394,8 +394,8 @@ object JasminBackend extends Backend{
             case None => ""
           })                                                          +
           emit(test,localVars,tabLevel+1,breakable)                   +
-          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
-          ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
+          ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                    +
+          ("\t" * (tabLevel + 1)) + s"if_icmpeq\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
     }
 
@@ -403,8 +403,8 @@ object JasminBackend extends Backend{
       val label = rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
         emit(test,localVars,tabLevel+1,breakable)               +
-        ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
-        ("\t" * (tabLevel + 1)) + s"if_icmpne\t\tIfNot$label\n" +
+        ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                +
+        ("\t" * (tabLevel + 1)) + s"if_icmpne\tIfNot$label\n" +
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
         emit(testBody,localVars,tabLevel + 1, breakable)        +
         ("\t" * tabLevel) + s"IfNot$label:\n"
@@ -416,13 +416,13 @@ object JasminBackend extends Backend{
       val label= rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
         emit(test,localVars,tabLevel+1,breakable)               +
-        ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                +
-        ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tIf$label\n"    +
-        ("\t" * (tabLevel + 1)) + s"goto\t\tIfElse$label\n"     +
+        ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                +
+        ("\t" * (tabLevel + 1)) + s"if_icmpeq\tIf$label\n"    +
+        ("\t" * (tabLevel + 1)) + s"goto\tIfElse$label\n"     +
         ("\t" * tabLevel) + s"If$label:\n"                      +
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
         emit(testBody,localVars,tabLevel + 1, breakable)        +
-        ("\t" * (tabLevel + 1)) + s"goto\t\tIfDone$label\n"     +
+        ("\t" * (tabLevel + 1)) + s"goto\tIfDone$label\n"     +
         ("\t" * tabLevel) + s"IfElse$label:\n"                  +
         ("\t" * tabLevel) + s".line ${elseBody.pos.line}\n"     +
         emit(elseBody,localVars,tabLevel + 1, breakable)        +
@@ -430,18 +430,18 @@ object JasminBackend extends Backend{
 
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => /*exprs match {
-        case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
+        case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\tjava/lang/System/out Ljava/io/PrintStream;\n" +
           emit(e, localVars, tabLevel) +
-          ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
+          ("\t" * (tabLevel + 1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
         case _ =>*/
           exprs.map(e =>
-            ("\t" * (tabLevel+1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
+            ("\t" * (tabLevel+1)) + "getstatic\tjava/lang/System/out Ljava/io/PrintStream;\n" +
             emit(e, localVars, tabLevel+1, breakable) +
-              ("\t" * (tabLevel+1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
+              ("\t" * (tabLevel+1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
           ).mkString + "\n"
       //}
       case BreakStmt(_) => breakable match {
-        case Some(label) => ("\t" * tabLevel) + s"goto\t\tEnd$label\n"
+        case Some(label) => ("\t" * tabLevel) + s"goto\tEnd$label\n"
         case None => // this shouldn't happen
           throw new IllegalArgumentException(s"got break statement while not inside loop or switch\n$s")
       }
