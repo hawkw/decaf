@@ -45,7 +45,7 @@ object JasminBackend extends Backend{
    * @return a String containing the header for the Jasmin bytecode class file
    */
   private def makeHeader(name: String, sup: String="java/lang/Object") =
-    s".class public $name\n.super $sup\n" + makeInitializer(sup)
+    s".source $name.decaf\n.class public $name\n.super $sup\n${makeInitializer(sup)}"
 
   /**
    * Generates the initializer for a Jasmin bytecode class definition.
