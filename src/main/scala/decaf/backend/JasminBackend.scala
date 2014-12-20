@@ -341,6 +341,7 @@ object JasminBackend extends Backend{
 
       case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString}\n"
       case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
+      case ASTStringConstant(_,chars) => ("\t" * tabLevel) + s"ldc\t\t$chars\n"
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
         localVars get name match {
           case Some(varNum) => // it's a local var to the function
