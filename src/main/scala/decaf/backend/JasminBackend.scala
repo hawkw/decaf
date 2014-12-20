@@ -429,12 +429,17 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s"IfDone$label:\n"
 
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
-      case PrintStmt(exprs, _) => exprs match {
+      case PrintStmt(exprs, _) => /*exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
           emit(e, localVars, tabLevel) +
           ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
-        case _ => exprs.foreach(emit(_, localVars, tabLevel, breakable))
-      }
+        case _ =>*/
+          ("\t" * (tabLevel+1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
+          exprs.map(e =>
+            emit(e, localVars, tabLevel+1, breakable) +
+              ("\t" * (tabLevel+1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
+          ).mkString + "\n"
+      //}
       case BreakStmt(_) => breakable match {
         case Some(label) => ("\t" * tabLevel) + s"goto\t\tEnd$label\n"
         case None => // this shouldn't happen
