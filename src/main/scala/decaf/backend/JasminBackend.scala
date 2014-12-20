@@ -161,12 +161,13 @@ object JasminBackend extends Backend{
       s".method public static $name(" +
         (
           if (name == "main") "[Ljava/lang/String;"
-          else {args.map(emit(_)).mkString(";")}
+          else {args.map(v => emit(v.t)).mkString}
           ) +
         s")${emit(rt,localVars,tabLevel)}\n"+
       s"\n.limit locals ${code.decls.length + args.length + (if (name == "main") 1 else 0)}\n" +
       s".limit stack 5\n" + //TODO: dynamically figure out stack sizes
-      s"Begin${node.state.get.boundName}:\n" +
+      args.map(v=> emit(v,localVars)).mkString    +
+      s"Begin${node.state.get.boundName}:\n"      +
       s"${emit(code, localVars, tabLevel + 1)}\n" +
       s"End${node.state.get.boundName}:\n${if (name == "main") "return\n"}.end method\n"
     case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
@@ -183,6 +184,14 @@ object JasminBackend extends Backend{
     case ReturnStmt(loc, Some(EmptyExpr(_))) =>
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
         ("\t" * tabLevel) + "return\n"
+    case ReturnStmt(loc, Some(expr)) =>
+      emit(expr,localVars, tabLevel, breakable) +
+        ("\t" * tabLevel) + (expr.typeof(getEnclosingScope(expr)) match {
+          case _:DoubleType => "dreturn\n"
+          case _:IntType | _:BoolType=> "ireturn\n"
+          case _:ArrayType | _:NamedType | _:StringType =>"areturn\n"
+
+      })
     case e: Expr => e match {
       case a: AssignExpr =>
         emit(a.rhs,localVars,tabLevel,breakable) + emit(a.lhs,localVars,tabLevel,breakable)
@@ -453,6 +462,7 @@ object JasminBackend extends Backend{
       case _: BoolType => "Z"
       case _: StringType => "Ljava/lang/String;"
       case ArrayType(_, elemType) => s"[${emit(elemType)}"
+      case _: NamedType => ??? //todo: implement
   }
     case _ => println(s"ignored $node"); ""
 
