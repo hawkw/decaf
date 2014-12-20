@@ -300,7 +300,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, "<") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt()
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmplt\tCmp$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\t\tCmpDone$lab\n" +
@@ -393,7 +393,6 @@ object JasminBackend extends Backend{
               emit(expr,localVars,tabLevel+1)
             case None => ""
           })                                                          +
-          emit(test,localVars,tabLevel+1,Some(label.toString))        +
           ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
