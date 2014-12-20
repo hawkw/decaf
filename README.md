@@ -36,11 +36,24 @@ inherited <- classState.parent.get.table.get(thing) if !classState.table.get(thi
 Using Decaf
 -----------
 
-##### Running the Decaf compiler
+#### Programming in Decaf
+
+Decaf is a simple object-oriented language with a C-like syntax that produces Java bytecode. Essentially, it is a watered-down version of Java (hence the name). 
+
+If you'd like to actually write programs in Decaf, the file [`decaf.pdf`](decaf.pdf) contains a brief specification of the Decaf language, written by Julie Zelenski and updated by Janyl Jumadinova. Our implementation deviates from the specification in a few ways, documented in the next section. 
+
+Additionally, the [`src/test/resources`](src/test/resources) contains a number of sample Decaf programs which are used by our test suite for various phases of the compiler. These could be very useful to get an understanding of Decaf's syntax. Of particular interest are the [samples](src/test/resources/lab3-samples) used by the parser test suite, which contain whole working Decaf programs.
+
+##### Differences from Decaf Specification
+
+Coming soon.
+
+#### Using the Decaf compiler
 
 You can build the Decaf compiler, `dcc`, using our Gradle build script. Simply type the command `./gradlew dccJar`. This will build Decaf, run our ScalaTest test suite, and then generate the runnable `dcc` jar file. The jar file is output to `build/libs/dcc.jar` relative to the root of the repository, and can be run with `java -jar dcc.jar path/to/source/code/file.decaf`. The Decaf compiler currently takes one argument, a Decaf source code file to compile. If you pass more or less arguments, at this point, the compiler will do nothing and issue a warning.
 
 Decaf's default backend generates Java bytecode using the [Jasmin](http://jasmin.sourceforge.net) assembly language. Invoking the Decaf compiler (`dcc`) on a Decaf source code file will produce Jasmin assembly files with the file extension `.j`. In order to produce executable `.class` files, the Jasmin assembler must be invoked on those `.j` files. You can download an executable Jasmin jarfile [here](http://sourceforge.net/projects/jasmin/files/).
+
 ##### Running Tests 
 
 Running our test suites is very easy - all you have to do is navigate to this repository's root directory and type `./gradlew test`. 
