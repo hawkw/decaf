@@ -1,1 +1,11 @@
 language: java
+before_success: gradle dccJar
+deploy:
+  provider: releases
+  api_key:
+    secure: Vei4/vyoNs6rA1NbgTxSuF3Va/ZfTkbB9F8f3GoazIefhql7OHyWCJ8nxsVZWlcvenKSNCsJZyFZrHv7yFkB7MDMVTBLsQ5ZvkWRxyE/A90hAY8/1RUWYrN4ZsghiUc8i1LJ7ZYE0wYMuTHVKnC8WsFugARU/I0CCcvaTv5po+k=
+  file: build/libs/dcc.jar
+  skip_cleanup: true
+  on:
+    tags: true
+    all_branches: true
