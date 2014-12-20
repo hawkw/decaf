@@ -181,6 +181,9 @@ object JasminBackend extends Backend{
     case ReturnStmt(loc, None) =>
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
       ("\t" * tabLevel) + "return"
+    case ReturnStmt(loc, Some(EmptyExpr(_))) =>
+      ("\t" * tabLevel) + s".line ${loc.line}\n" +
+        ("\t" * tabLevel) + "return\n"
     case e: Expr => e match {
       case a: AssignExpr =>
         emit(a.rhs,localVars,tabLevel,breakable) + emit(a.lhs,localVars,tabLevel,breakable)
