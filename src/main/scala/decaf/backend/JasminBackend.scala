@@ -1,4 +1,5 @@
-package decaf.backend
+package decaf
+package backend
 /*                                        *\
 **                                        **
 ** Decaf: Like Java but less so           **
@@ -35,7 +36,24 @@ object JasminBackend extends Backend{
   override def compile(program: Program, fileName: Option[String]): String = s"${makeHeader(fileName.getOrElse("Program"))}\n${emit(program)}"
   //todo: shouldn't actually work this way (should fork on each class def)
 
-  private def makeHeader(name: String, sup: String="java/lang/Object") = s".class public $name\n.super $sup\n" + makeInitializer(sup)
+  /**
+   * Generates the "header" string of a Jasmin bytecode class definition.
+   *
+   * Note that this always generates public classes (since the Decaf language doesn't support private inner classes).
+   * @param name the name of the class being generated
+   * @param sup the super class of the class being generated, defaults to `java.lang.Object`
+   * @return a String containing the header for the Jasmin bytecode class file
+   */
+  private def makeHeader(name: String, sup: String="java/lang/Object") =
+    s".class public $name\n.super $sup\n" + makeInitializer(sup)
+
+  /**
+   * Generates the initializer for a Jasmin bytecode class definition.
+   *
+   * TODO: this currently does not support classes with constructor parameters (all initializers are just calls to the java.lang.Object initializer)
+   * @param sup the super class of the class being generated
+   * @return
+   */
   private def makeInitializer(sup: String) = sup match {
     case "java/lang/Object" =>   ";\n; standard initializer (calls java.lang.Object's initializer)\n" +
       ";\n" +
@@ -47,11 +65,29 @@ object JasminBackend extends Backend{
     case _ => ??? //TODO: this is where classes would actually happen
   }
 
+  /**
+   * Finds the [[AST.FnDecl function declaration]] containing the specified [[AST.ASTNode AST node]].
+   *
+   * Recursively walks the AST backwards from the given node until it finds a [[AST.FnDecl FnDecl node]].
+   *
+   * TODO: handle nodes not contained in functions - either throw an error, or return None
+   *
+   * @param node the AST node to find the corresponding FnDecl for
+   * @return the [[AST.FnDecl FnDecl]] containing the node
+   */
   @tailrec private def getFnDecl(node: ASTNode): FnDecl = node match {
     case d: FnDecl => d
     case _ => getFnDecl(node.parent)
   }
 
+  /**
+   * Finds the first scope containing the specified [[AST.ASTNode AST node]].
+   *
+   * Recursively walks the AST backwards from the given node until it finds a node with a defined scope.
+   *
+   * @param node the AST node to find the enclosing scope for
+   * @return the [[ScopeNode]] for the first scope containing the specified node
+   */
   @tailrec private def getEnclosingScope(node: ASTNode): ScopeNode =
     node.state match {
     case Some(st) => st
@@ -60,20 +96,52 @@ object JasminBackend extends Backend{
                   // but it does           - Hawk, 12/15/14
   }
 
+  /**
+   * Determines if the specified [[AST.ASTNode AST node]] is within an assignment expression.
+   *
+   * @param node the node to determine if it is in an assignment expression
+   * @return true if the node is in an assign expression, false otherwise
+   */
   @tailrec private def inAssignExpr(node: ASTNode): Boolean =
     node match {
-      // this is a hack and probably could be made much less slow
+      // TODO: this is a hack and probably could be made much less slow
     case AssignExpr(_,_,_) => true
     case Program(_,_) => false
     case _ => inAssignExpr(node.parent)
   }
 
+  /**
+   * Gets the name of the function containing an [[AST.ASTNode AST node]].
+   * @param node the AST node to find the name of the enclosing function for
+   * @return a String containing the name of the node
+   */
   private def getFnName(node: ASTNode): String = getFnDecl(node).state.get.boundName
 
+  /**
+   * Gets the next variable number from a local variables mapping
+   * @param localVars the mapping of String -> Int representing the currently defined var table
+   * @return the next integer value for a local var
+   */
   private def getNextVar(localVars: mutable.Map[String,Int]) = localVars.unzip._2 match {
     case it if it isEmpty => 0
     case it => it.max + 1
   }
+
+  /**
+   * Recursively emit Jasmin assembly code for a [[AST.ASTNode Decaf AST node]].
+   *
+   * Basically, this is a giant pattern match that recursively walks the AST from the top down.
+   * This could be much cleaner if each AST node knew how to emit its' own bytecode, since we could use
+   * the visitor pattern, but due to the way our AST tree is implemented, that would be nontrivial
+   * (the AST is essentially a direct port of the C++ implementation provided by Dr. Jumadinova). Thus,
+   * the giant pattern match. It's really ugly, but may actually be faster (smaller call stack).
+   *
+   * @param node a [[AST.ASTNode Decaf AST node]] to emite bytecode for
+   * @param localVars the local variables mapping (String -> Int) for the current function scope (defaults to empty map)
+   * @param tabLevel the indentation level (defaults to 0)
+   * @param breakable An optional String the name of any loop that can be broken out of (defaults to None)
+   * @return the Jasmin assembly code for the specified AST node
+   */
   private def emit(node: ASTNode,
                    localVars: mutable.Map[String, Int] = mutable.Map[String, Int](),
                    tabLevel: Int = 0,
