@@ -92,8 +92,9 @@ object JasminBackend extends Backend{
     node.state match {
     case Some(st) => st
     case None if node.parent != null => getEnclosingScope(node.parent)
-    case _ => ??? // this shouldn't happen - Hawk, 12/13/14
-                  // but it does           - Hawk, 12/15/14
+    case _ => throw new Exception(s"Node $node didn't have enclosing scope")
+      // this shouldn't happen - Hawk, 12/13/14
+      // but it does           - Hawk, 12/15/14
   }
 
   /**
