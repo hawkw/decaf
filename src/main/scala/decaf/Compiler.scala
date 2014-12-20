@@ -1,23 +1,48 @@
+/*                                        *\
+**                                        **
+** Decaf: Like Java but less so           **
+**                                        **
+**    by Hawk Weisman & Max Clive         **
+**    for Prof. Jumadinova's CMPSC420     **
+**    at Allegheny College                **
+**                                        **
+\*                                        */
+
 package decaf
 import decaf.frontend.{DecafSyntactical, DecafSemantic}
+import decaf.backend.JasminBackend
 import scala.io.Source
 
 /**
  * Quick driver class for command-line invocation of the compiler.
  *
- * @author Hawk Weisman
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ * @author Max Clive <mattrulz127@gmail.com>
+ *
  * Created by hawk on 10/10/14.
  */
 object Compiler extends App {
   val parser = new DecafSyntactical
-  args.length match {
-    case 0 => println("Please enter a Decaf source code file to compile.")
-    case 1 =>
-      val source = Source.fromFile(args(0)).mkString
-      val ast = parser.parse(source)
-      DecafSemantic.analyze(ast)
-      println(ast)
-    case _ => println("Too many arguments!")
+  val (source: String, fileName: Option[String]) = args match {
+    case Array() =>
+      (Source.fromInputStream(System.in).mkString, None)  // should detect EOF automagically?
+    case Array(path: String, _*) =>
+      (Source
+        .fromFile(path)
+        .mkString,
+        Some(path
+          .split('/')
+          .last
+          .split('.')
+          .head)
+        )
   }
+  lazy val ast = parser.parse(source)
+  lazy val (scopes, errors) = DecafSemantic.analyze(ast)
+  errors match {
+    case Nil => println(JasminBackend.compile(ast, fileName))
+    case errors: List[Exception] => errors.foreach(System.err.println(_))
+  }
+
 
 }

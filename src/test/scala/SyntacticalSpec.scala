@@ -7,17 +7,18 @@ import scala.util.parsing.input.CharArrayReader
 /**
  * Created by hawk on 10/1/14.
  */
-class ParserSpec extends FlatSpec with Matchers {
+class SyntacticalSpec extends FlatSpec with Matchers {
 
   val target = new DecafSyntactical
 
-  def testOneLiner(source: String) = target.parse(source)
-
   def ol(source:String) = oluw("void main() { " + source + " }")
-  def oluw(source:String) = { //System.out.println(
+
+  def oluw(source:String) = { System.out.println(
     testOneLiner(source)
-  //)
+  )
   }
+
+  def testOneLiner(source: String) = target.parse(source)
 
   "The parser" should "correctly parse a single statement" in {
     val ast = testOneLiner("sigv[][] a;")

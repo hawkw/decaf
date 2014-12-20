@@ -11,6 +11,8 @@
 
 package decaf.frontend
 
+import decaf.AST._
+
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.Reader
 
@@ -46,8 +48,8 @@ import scala.util.parsing.input.Reader
  * own decisions on the correct course of action. These interpretation choices are documented in source code comments
  * in this file.
  *
- * @author Hawk Weisman
- * @author Max Clive
+ * @author Hawk Weisman <hawk@meteorcodelabs.com>
+ * @author Max Clive <mattrulz127@gmail.com>
  *
  * Created by hawk on 9/28/14.
  */

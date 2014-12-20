@@ -1,0 +1,46 @@
+main:
+	BeginFunc 104 ;
+	_tmp0 = 27 ;
+	_tmp1 = 4 ;
+	_tmp2 = 0 ;
+	_tmp3 = _tmp0 < _tmp2 ;
+	_tmp4 = _tmp0 == _tmp2 ;
+	_tmp5 = _tmp3 || _tmp4 ;
+	IfZ _tmp5 Goto _L0 ;
+	_tmp6 = "Decaf runtime error: Array size is <= 0\n" ;
+	PushParam _tmp6 ;
+	LCall _PrintString ;
+	PopParams 4 ;
+	LCall _Halt ;
+_L0:
+	_tmp7 = _tmp0 * _tmp1 ;
+	_tmp8 = _tmp1 + _tmp7 ;
+	PushParam _tmp8 ;
+	_tmp9 = LCall _Alloc ;
+	PopParams 4 ;
+	*(_tmp9) = _tmp0 ;
+	arr = _tmp9 ;
+	_tmp10 = 27 ;
+	_tmp11 = 0 ;
+	_tmp12 = *(arr) ;
+	_tmp13 = _tmp10 < _tmp11 ;
+	_tmp14 = _tmp12 < _tmp10 ;
+	_tmp15 = _tmp12 == _tmp10 ;
+	_tmp16 = _tmp14 || _tmp15 ;
+	_tmp17 = _tmp16 || _tmp13 ;
+	IfZ _tmp17 Goto _L1 ;
+	_tmp18 = "Decaf runtime error: Array subscript out of bound..." ;
+	PushParam _tmp18 ;
+	LCall _PrintString ;
+	PopParams 4 ;
+	LCall _Halt ;
+_L1:
+	_tmp19 = 4 ;
+	_tmp20 = _tmp10 * _tmp19 ;
+	_tmp21 = _tmp20 + _tmp19 ;
+	_tmp22 = arr + _tmp21 ;
+	_tmp23 = *(_tmp22) ;
+	PushParam _tmp23 ;
+	LCall _PrintInt ;
+	PopParams 4 ;
+	EndFunc ;

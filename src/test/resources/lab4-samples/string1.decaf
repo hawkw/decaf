@@ -1,0 +1,10 @@
+string s;
+
+void main()
+{
+    string t;
+     s = "hello";
+    Print(s);
+    t = ReadLine();
+    Print(t);
+}

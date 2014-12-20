@@ -1,0 +1,51 @@
+____f:
+	BeginFunc 0 ;
+	PushParam fe ;
+	LCall _PrintInt ;
+	PopParams 4 ;
+	EndFunc ;
+____ff:
+	BeginFunc 4 ;
+	_tmp0 = 34 ;
+	PushParam _tmp0 ;
+	LCall ____f ;
+	PopParams 4 ;
+	EndFunc ;
+____g:
+	BeginFunc 0 ;
+	PushParam c ;
+	LCall _PrintBool ;
+	PopParams 4 ;
+	PushParam b ;
+	LCall _PrintString ;
+	PopParams 4 ;
+	PushParam a ;
+	LCall _PrintInt ;
+	PopParams 4 ;
+	EndFunc ;
+main:
+	BeginFunc 44 ;
+	_tmp1 = 12 ;
+	PushParam _tmp1 ;
+	LCall ____f ;
+	PopParams 4 ;
+	LCall ____ff ;
+	_tmp2 = 2 ;
+	_tmp3 = " and " ;
+	_tmp4 = 1 ;
+	PushParam _tmp4 ;
+	PushParam _tmp3 ;
+	PushParam _tmp2 ;
+	LCall ____g ;
+	PopParams 12 ;
+	_tmp5 = 10 ;
+	_tmp6 = 3 ;
+	_tmp7 = 2 ;
+	_tmp8 = _tmp6 % _tmp7 ;
+	_tmp9 = _tmp5 + _tmp8 ;
+	_tmp10 = 5 ;
+	_tmp11 = _tmp9 + _tmp10 ;
+	PushParam _tmp11 ;
+	LCall ____f ;
+	PopParams 4 ;
+	EndFunc ;
