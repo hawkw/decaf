@@ -322,9 +322,7 @@ object JasminBackend extends Backend{
               case ASTOperator(_, "--") =>  "0xFF"
             }) + "\n"
         case _ => ??? //todo: implement postfix incrdecr on non-local fields
-    }
-
-
+      }
       case LogicalExpr(_, Some(left), op, right) =>
         emit(left, localVars, tabLevel + 1) +
           emit(right, localVars, tabLevel + 1) + (op match {
@@ -373,11 +371,20 @@ object JasminBackend extends Backend{
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
-        val label = rand.nextInt(Integer.MAX_VALUE);
-        ("\t" * tabLevel) + s"LoopBegin$label:\n" +
-          emit(body, localVars, tabLevel + 1, Some(label.toString)) +
-          emit(test, localVars, tabLevel + 1, Some(label.toString)) +
-          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n" +
+        val label = rand.nextInt(Integer.MAX_VALUE)
+        ("\t" * tabLevel) + s"LoopBegin$label:\n"                     +
+          emit(body, localVars, tabLevel + 1, Some(label.toString))   +
+          emit(test, localVars, tabLevel + 1, Some(label.toString))   +
+          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
+          ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
+          ("\t" * tabLevel) + s"End$label:\n"
+      case ForStmt(init,test,step,body) =>
+        val label = rand.nextInt(Integer.MAX_VALUE)
+        init.map(emit(_,localVars,tabLevel+1)).getOrElse("")          +
+          ("\t" * tabLevel) + s"LoopBegin$label:\n"                   +
+          emit(body,localVars,tabLevel+1,Some(label.toString))        +
+          step.map(emit(_,localVars,tabLevel+1)).getOrElse("")        +
+          ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
     }
