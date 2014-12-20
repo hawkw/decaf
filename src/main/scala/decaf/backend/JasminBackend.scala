@@ -227,7 +227,7 @@ object JasminBackend extends Backend{
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpEQDone$lab:\n"
                 case _: StringType | _: NamedType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE)`
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_acmpeq\tCmpEQ$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpEQDone$lab\n" +
