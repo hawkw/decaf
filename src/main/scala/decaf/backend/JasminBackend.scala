@@ -311,6 +311,20 @@ object JasminBackend extends Backend{
                 case _: DoubleType => ??? //todo: implement for doubles
               }
           })
+      case PostfixExpr(loc, op, field: FieldAccess) => field match {
+        case FieldAccess(_,None,ASTIdentifier(_, name)) =>
+        // special case for local vars using "iinc" bytecode
+        // should only be valid if the right-hand side is a field access
+        ("\t" * tabLevel) + s".line ${loc.line}\n"          +
+          ("\t" * tabLevel) + s"iinc\t${localVars(name)}\t" +
+          (op match {
+              case ASTOperator(_, "++") =>  "0x01"
+              case ASTOperator(_, "--") =>  "0xFF"
+            }) + "\n"
+        case _ => ??? //todo: implement postfix incrdecr on non-local fields
+    }
+
+
       case LogicalExpr(_, Some(left), op, right) =>
         emit(left, localVars, tabLevel + 1) +
           emit(right, localVars, tabLevel + 1) + (op match {
