@@ -59,7 +59,7 @@ tasks.withType(ScalaDoc) {
 dependencies {
     compile "org.scala-lang:scala-library:2.11.4"
     compile "org.scala-lang:scala-parser-combinators:2.11.0-M4"
-    compile "com.github.scopt:scopt_2.11.0-RC3:3.3.0"
+    compile "com.github.scopt:scopt_2.11:3.3.0"
     testCompile 'org.scalatest:scalatest_2.11:2.2.0'
     //scoverage 'org.scoverage:scalac-scoverage-plugin_2.11:0.99.5'
 }
