@@ -389,9 +389,11 @@ object JasminBackend extends Backend{
           emit(body,localVars,tabLevel+1,Some(label.toString))        +
           (step match {
             case Some(_: EmptyExpr) => ""
-            case Some(expr: Expr) => emit(expr,localVars,tabLevel+1)
+            case Some(expr: Expr) =>
+              emit(expr,localVars,tabLevel+1)
             case None => ""
           })                                                          +
+          emit(test,localVars,tabLevel+1,Some(label.toString))        +
           ("\t" * (tabLevel + 1)) + "ldc\t\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\t\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
