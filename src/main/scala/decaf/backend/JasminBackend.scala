@@ -103,12 +103,10 @@ object JasminBackend extends Backend{
    * @param node the node to determine if it is in an assignment expression
    * @return true if the node is in an assign expression, false otherwise
    */
-  @tailrec private def inAssignExpr(node: ASTNode): Boolean =
-    node match {
-      // TODO: this is a hack and probably could be made much less slow
-    case AssignExpr(_,_,_) => true
-    case Program(_,_) => false
-    case _ => inAssignExpr(node.parent)
+  private def inAssignExpr(node: ASTNode): Boolean =
+    node.parent match {
+    case AssignExpr(_,lhs,_) => lhs == node
+    case _ => false
   }
 
   /**
