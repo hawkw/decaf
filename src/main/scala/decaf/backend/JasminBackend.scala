@@ -337,7 +337,7 @@ object JasminBackend extends Backend{
           ("\t" * (tabLevel + 1)) + "ldc 0x1\n" +
           ("\t" * (tabLevel + 1)) + "ixor\n"
 
-      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString}\n"
+      case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString.toUpperCase}\n"
       case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
       case ASTStringConstant(_,chars) => ("\t" * tabLevel) + s"ldc\t\t$chars\n"
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
@@ -434,8 +434,8 @@ object JasminBackend extends Backend{
           emit(e, localVars, tabLevel) +
           ("\t" * (tabLevel + 1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
         case _ =>*/
-          ("\t" * (tabLevel+1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
           exprs.map(e =>
+            ("\t" * (tabLevel+1)) + "getstatic\t\tjava/lang/System/out Ljava/io/PrintStream;\n" +
             emit(e, localVars, tabLevel+1, breakable) +
               ("\t" * (tabLevel+1)) + s"invokevirtual\t\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
           ).mkString + "\n"
