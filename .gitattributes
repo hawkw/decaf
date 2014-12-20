@@ -1,2 +1,2 @@
-src/test/resources/* linguist-vendored
 src/test/resources/lab4-samples/passed/* linguist-vendored=false
+*.tac linguist-language=Assembly
