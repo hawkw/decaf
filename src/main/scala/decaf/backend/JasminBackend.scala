@@ -320,6 +320,12 @@ object JasminBackend extends Backend{
           case ASTOperator(_, "&&") => ("\t" * (tabLevel + 1)) + "iand\n"
           case ASTOperator(_,"||") => ("\t" * (tabLevel + 1)) + "ior\n"
         })
+      case LogicalExpr(_, None, op, right) =>
+        // AFAIK, unary-not is the only unary logical expr
+        emit(right, localVars, tabLevel + 1)    +
+          ("\t" * (tabLevel + 1)) + "ldc 0x1\n" +
+          ("\t" * (tabLevel + 1)) + "ixor\n"
+
       case ASTIntConstant(_, value) => ("\t" * tabLevel) + s"ldc\t\t0x${value.toHexString}\n"
       case ASTBoolConstant(_, value) => ("\t" * tabLevel) + "ldc\t\t0x" + (if (value) 1 else 0) + "\n"
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
