@@ -114,6 +114,8 @@ object JasminBackend extends Backend{
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
       ("\t" * tabLevel) + "return"
     case e: Expr => e match {
+      case a: AssignExpr =>
+        emit(a.rhs,localVars,tabLevel,breakable) + emit(a.lhs,localVars,tabLevel,breakable)
       case ArithmeticExpr(_, left, op, right) =>
         emit(left, localVars, tabLevel + 1, breakable)    +
           emit(right, localVars, tabLevel + 1, breakable) +
@@ -277,8 +279,6 @@ object JasminBackend extends Backend{
           if (inAssignExpr(e))  s"putfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           else                  s"getfield\t\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
           ) + "\n"
-      case a: AssignExpr =>
-        emit(a.lhs,localVars,tabLevel,breakable) + emit(a.rhs,localVars,tabLevel,breakable)
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
