@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Decaf by hawkw</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Decaf</h1>
+        <p>like Java, but less so</p>
+
+        <p class="view"><a href="https://github.com/hawkw/decaf">View the Project on GitHub <small>hawkw/decaf</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/hawkw/decaf/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/hawkw/decaf/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/hawkw/decaf">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="decaf" class="anchor" href="#decaf" aria-hidden="true"><span class="octicon octicon-link"></span></a>decaf</h1>
+
+<p><a href="https://travis-ci.org/hawkw/decaf"><img src="https://travis-ci.org/hawkw/decaf.svg" alt="Build Status"></a></p>
+
+<p>Decaf is an alleged programming language. It's kinda like Java but a lot less so.</p>
+
+<p>Decaf was implemented by Hawk Weisman (<a href="https://github.com/hawkw" class="user-mention">@hawkw</a>) and Max Clive (<a href="https://github.com/ArcticLight" class="user-mention">@ArcticLight</a>) for Professor Janyl Jumadinova's CMPSC420 at Allegheny College. We apologize in advance.</p>
+
+<p>This Scala implementation of the Decaf compiler (<code>dcc</code>) is based on the C++/Flex/Bison reference implementation provided by Professor Jumadinova.</p>
+
+<p><img src="http://4.bp.blogspot.com/_QonjXrwiEbY/SfYav8aEppI/AAAAAAAAJz8/qphPXYzKWEc/s400/decaf-coffee.jpg" alt="An image describing how great Decaf is"></p>
+
+<h2>
+<a id="rave-reviews" class="anchor" href="#rave-reviews" aria-hidden="true"><span class="octicon octicon-link"></span></a>Rave Reviews</h2>
+
+<blockquote>
+<p>... [I]mmense sadness that the first thought that ran through my mind after typing "^this" was "*** this used in incorrect context", demonstrating that clearly I have spent FAR too much time on this project.</p>
+</blockquote>
+
+<p>~ Max Clive</p>
+
+<blockquote>
+<p>I've seen other languages with support for recursive descent parsing, for instance, but for the shear, nightmare glory of an LALR parser, nothing more than superficially more elegant (sic) than Flex/Bison.</p>
+</blockquote>
+
+<p>~ Andrew Thall, Ph.D</p>
+
+<blockquote>
+<p>You're making a compiler named after coffee? That's so dorky.</p>
+</blockquote>
+
+<p>~ Cara Brosius</p>
+
+<blockquote>
+<p><code>No errors and 468 warnings detected.</code></p>
+</blockquote>
+
+<p>~ IntelliJ IDEA</p>
+
+<h1>
+<a id="using-decaf" class="anchor" href="#using-decaf" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using Decaf</h1>
+
+<h3>
+<a id="programming-in-decaf" class="anchor" href="#programming-in-decaf" aria-hidden="true"><span class="octicon octicon-link"></span></a>Programming in Decaf</h3>
+
+<p>Decaf is a simple object-oriented language with a C-like syntax that produces Java bytecode. Essentially, it is a watered-down version of Java (hence the name). </p>
+
+<p>If you'd like to actually write programs in Decaf, the file <a href="decaf.pdf"><code>decaf.pdf</code></a> contains a brief specification of the Decaf language, written by Julie Zelenski and updated by Janyl Jumadinova. Our implementation deviates from the specification in a few ways, documented in <a href="https://github.com/hawkw/decaf#differences-from-decaf-specification">the next section</a>. </p>
+
+<p>Additionally, the <a href="src/test/resources"><code>src/test/resources</code></a> contains a number of sample Decaf programs which are used by our test suite for various phases of the compiler. These could be very useful to get an understanding of Decaf's syntax. Of particular interest are the <a href="src/test/resources/lab3-samples">samples</a> used by the parser test suite, which contain whole working Decaf programs.</p>
+
+<p>The Decaf compiler's code generation component is currently a work in progress, and a number of language features described in the specification are not yet implemented. Currently, object-oriented features such as class and interface definitions are not yet implemented, and function calls are not completely implemented.</p>
+
+<h5>
+<a id="differences-from-decaf-specification" class="anchor" href="#differences-from-decaf-specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Differences from Decaf Specification</h5>
+
+<ul>
+<li>Since the Decaf specification states that "Decaf does not support encapsulation", we chose to make all names globally visible, rather than making all fields private and all methods public, as we determined that the latter option sounds dangerously close to encapsulation. Since our implementation of <code>dcc</code> generates Java bytecode, implementing support for Java-style encapsulation in Decaf would be very easy, and may be implemented at a later date.</li>
+<li>Although the Decaf spec does not support type lifting, we chose to implement type lifting from <code>int</code> to <code>double</code>. This is because Decaf has no casting mechanism, and therefore, there is no way to ever perform operations on mixed numeric types.</li>
+<li>We've added additional syntactical sugar for a couple of statements not documented in the original spec:
+
+<ul>
+<li>A <code>switch</code>/<code>case</code> statement, which functions almost identically to Java's <code>switch</code> statement</li>
+<li>Unary increment and decrement operators (<code>i++</code> and <code>i--</code>) which add or subract one from a numeric variable. These function identically to the similar operators in C and Java.</li>
+</ul>
+</li>
+<li>Some error messages generated by the semantic analysis stage are slightly different from those specified in the Decaf spec and samples. We wanted to make error messages as helpful as possible, and changed some messages when we thought that the wording in the spec was difficult to understand.</li>
+</ul>
+
+<p>Additionally, there are some internal implementation differences from the reference implementation, mostly in the parser and semantic analysis components. These differences don't impact programmers using Decaf, but if you're interested to read about them, they're in the Decaf <a href="https://github.com/hawkw/decaf#generating-documentation">ScalaDoc API documentation</a>.</p>
+
+<h3>
+<a id="using-the-decaf-compiler" class="anchor" href="#using-the-decaf-compiler" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using the Decaf compiler</h3>
+
+<p>You can build the Decaf compiler, <code>dcc</code>, using our Gradle build script. Simply type the command <code>./gradlew dccJar</code>. This will build Decaf, run our ScalaTest test suite, and then generate the runnable <code>dcc</code> jar file. The jar file is output to <code>build/libs/dcc.jar</code> relative to the root of the repository, and can be run with <code>java -jar dcc.jar path/to/source/code/file.decaf</code>. The Decaf compiler currently takes one argument, a Decaf source code file to compile. If you pass more or less arguments, at this point, the compiler will do nothing and issue a warning.</p>
+
+<p>Decaf's default backend generates Java bytecode using the <a href="http://jasmin.sourceforge.net">Jasmin</a> assembly language. Invoking the Decaf compiler (<code>dcc</code>) on a Decaf source code file will produce Jasmin assembly files with the file extension <code>.j</code>. In order to produce executable <code>.class</code> files, the Jasmin assembler must be invoked on those <code>.j</code> files. You can download an executable Jasmin jarfile <a href="http://sourceforge.net/projects/jasmin/files/">here</a>.</p>
+
+<p>Currently, the Jasmin assembly output by the Jasmin backend is printed by the compiler to stdout. You can pipe this output into a file and then invoke Jasmin on it (<code>java -jar dcc.jar aprogram.decaf &gt; aprogram.j &amp;&amp; jasmin aprogram.j</code> or similar). This is for debugging purposes. Eventually, this output will be written to the current working directory instead, with each class in the program being output to its' own class file (once object-oriented programming is implemented).</p>
+
+<h5>
+<a id="running-tests" class="anchor" href="#running-tests" aria-hidden="true"><span class="octicon octicon-link"></span></a>Running Tests</h5>
+
+<p>Running our test suites is very easy - all you have to do is navigate to this repository's root directory and type <code>./gradlew test</code>. </p>
+
+<p>This will trigger the Gradle wrapper to download the correct version of Gradle (if it is not already present), install all of Decaf's dependencies (currently the Scala parser-combinators library and ScalaTest), build Decaf, and then run our test cases. Note that the Gradle wrapper will install Gradle and all dependencies locally, so you don't need root access to the machine you wish to test Decaf on. If you have a local copy of Gradle installed, you can feel free to use that to run our test task, as well, but the Gradle wrapper will ensure the correct version of Gradle is used.</p>
+
+<h5>
+<a id="generating-documentation" class="anchor" href="#generating-documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generating Documentation</h5>
+
+<p>If you're interested in reading the ScalaDoc documentation we've written (and you might be, as it documents some of the decisions we've made regarding our interpretation of the Decaf spec), you can generate this documentation using the <code>./gradlew scaladoc</code> command. The documentation will be output to the <code>build/docs/scaladoc</code> directory, and you can read it by opening the <code>index.html</code> file in that directory.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/hawkw">hawkw</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
