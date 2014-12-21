@@ -393,6 +393,19 @@ object JasminBackend extends Backend{
             case None => throw new Exception(s"Could not find method annotation for $name")
           }) + "\n"
 
+      case Call(loc, base, ASTIdentifier(_,name), exprs) =>
+        ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
+          exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
+          ("\t" * tabLevel) + (getEnclosingScope(node).table.get(name) match {
+          case Some(MethodAnnotation(mname,rt,formals,_)) =>
+            // todo: determine whether static/virtual/nonvirtual ...somehow`
+            s"invokestatic $base/$mname"                        +
+              s"(${formals.map(emit(className, _)).mkString})"  +
+              s"${emit(className,rt)}"
+          case Some(_) => throw new Exception(s"Name $name was not a method")
+          case None => throw new Exception(s"Could not find method annotation for $name")
+        }) + "\n"
+
 
      }
     case l: LoopStmt => l match {
