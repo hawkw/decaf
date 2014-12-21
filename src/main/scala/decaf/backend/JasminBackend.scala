@@ -380,7 +380,9 @@ object JasminBackend extends Backend{
           if (inAssignExpr(e))  s"putfield\t$owner/$name ${emit(className,e typeof getEnclosingScope(e))}"
           else                  s"getfield\t$owner/$name ${emit(className,e typeof getEnclosingScope(e))}"
           ) + "\n"
-
+      case r: ReadIntegerExpr =>
+        ("\t" * tabLevel)   + "getstatic\tjava/lang/System/in Ljava/io/InputStream;\n" +
+          ("\t" * tabLevel) + "invokevirtual\tjava/io/InputStream/read()I\n"
       case Call(loc, None, ASTIdentifier(_,name), exprs) =>
         ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
           exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
