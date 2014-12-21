@@ -432,7 +432,7 @@ object JasminBackend extends Backend{
       case r: ReadIntegerExpr =>
           ("\t" * tabLevel) + s"invokestatic\t$className/readInt()I\n"
       case r: ReadLineExpr =>
-        ("\t" * tabLevel) + s"invokestatic\t$className/readLine()I\n"
+        ("\t" * tabLevel) + s"invokestatic\t$className/readLine()Ljava/lang/String;\n"
       case Call(loc, None, ASTIdentifier(_,name), exprs) =>
         ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
           exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
