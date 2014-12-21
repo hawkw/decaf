@@ -464,12 +464,10 @@ object JasminBackend extends Backend{
             // todo: determine whether static/virtual/nonvirtual ...somehow`
             s"invokestatic $base/$mname"                        +
               s"(${formals.map(emit(className, _)).mkString})"  +
-              s"${emit(className,rt)}"
+              s"${emit(className,rt)}\n"
           case Some(_) => throw new Exception(s"Name $name was not a method")
           case None => throw new Exception(s"Could not find method annotation for $name")
-        }) + "\n"
-
-
+        })
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
