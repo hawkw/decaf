@@ -34,6 +34,55 @@ object JasminBackend extends Backend{
 
   private val rand = new util.Random
 
+  // this is a hack to put the Decaf readInt/readLine methods
+  // at the top of every class's namespace. I have to do it this way
+  // because the Java stdlib is sufficiently braindead that reading
+  // an int from stdin requires creating two objects and like five
+  // method calls.
+  private val readInt = ".method public static readInt()I\n" +
+    "\t.limit stack 5\n" +
+    "\t.limit locals 1\n" +
+    "\t.line 4\n" +
+    "ReadIntBegin:\n" +
+    "\tnew\tjava/io/BufferedReader\n" +
+    "\tdup\n" +
+    "\tnew\tjava/io/InputStreamReader\n" +
+    "\tdup\n" +
+    "\tgetstatic\tjava/lang/System/in Ljava/io/InputStream;\n" +
+    "\tinvokespecial\tjava/io/InputStreamReader/<init>(Ljava/io/InputStream;)V\n" +
+    "\tinvokespecial\tjava/io/BufferedReader/<init>(Ljava/io/Reader;)V\n" +
+    "\tinvokevirtual\tjava/io/BufferedReader/readLine()Ljava/lang/String;\n" +
+    "\tinvokestatic\tjava/lang/Integer/parseInt(Ljava/lang/String;)I\n" +
+    "ReadIntReturn:\n" +
+    "\tireturn\n" +
+    "ReadIntCatch:\n" +
+    "\tastore_0\n" +
+    "\ticonst_0\n" +
+    "\tireturn\n" +
+    ".catch java/lang/Exception from ReadIntBegin to ReadIntReturn using ReadIntCatch\n" +
+    ".end method\n"
+
+  private val readLine = ".method public static readLine()Ljava/lang/String;\n" +
+    "\t.limit stack 5\n" +
+    ".limit locals 1\n" +
+    "ReadLineBegin:\n" +
+    "\tnew java/io/BufferedReader\n" +
+    "\tdup\n" +
+    "\tnew\tjava/io/InputStreamReader\n" +
+    "\tdup\n" +
+    "\tgetstatic\tjava/lang/System/in Ljava/io/InputStream;\n" +
+    "\tinvokespecial\tjava/io/InputStreamReader/<init>(Ljava/io/InputStream;)V\n" +
+    "\tinvokespecial\tjava/io/BufferedReader/<init>(Ljava/io/Reader;)V\n" +
+    "\tinvokevirtual\tjava/io/BufferedReader/readLine()Ljava/lang/String;\n" +
+    "ReadLineReturn:\n" +
+    "\tareturn\n" +
+    "ReadLineCatch:\n" +
+    "\tastore_0\n" +
+    "\tldc\t\"Fail\"\n" +
+    "\tareturn\n" +
+    ".catch\tjava/lang/Exception from ReadLineBegin to ReadLineReturn using ReadLineCatch" +
+    "\n.end method  "
+
   override def compile(program: Program, fileName: Option[String]): String =
     s"${makeHeader(fileName.getOrElse("Program"))}\n${emit(fileName.getOrElse("Program"), program)}"
   //todo: shouldn't actually work this way (should fork on each class def)
@@ -47,7 +96,7 @@ object JasminBackend extends Backend{
    * @return a String containing the header for the Jasmin bytecode class file
    */
   private def makeHeader(name: String, sup: String="java/lang/Object") =
-    s".source $name.decaf\n.class public $name\n.super $sup\n${makeInitializer(sup)}"
+    s".source $name.decaf\n.class public $name\n.super $sup\n${makeInitializer(sup)}$readInt\n$readLine\n"
 
   /**
    * Generates the initializer for a Jasmin bytecode class definition.
@@ -381,8 +430,9 @@ object JasminBackend extends Backend{
           else                  s"getfield\t$owner/$name ${emit(className,e typeof getEnclosingScope(e))}"
           ) + "\n"
       case r: ReadIntegerExpr =>
-        ("\t" * tabLevel)   + "getstatic\tjava/lang/System/in Ljava/io/InputStream;\n" +
-          ("\t" * tabLevel) + "invokevirtual\tjava/io/InputStream/read()I\n"
+          ("\t" * tabLevel) + s"invokestatic\t$className/readInt()I\n"
+      case r: ReadLineExpr =>
+        ("\t" * tabLevel) + s"invokestatic\t$className/readLine()I\n"
       case Call(loc, None, ASTIdentifier(_,name), exprs) =>
         ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
           exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
