@@ -1,0 +1,855 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>DecafSemantic - decaf build_7evthpmtifspjfc010k50ddo95$_run_closure1@546e61d5 API - decaf.frontend.DecafSemantic</title>
+          <meta name="description" content="DecafSemantic - decaf build 7evthpmtifspjfc010k50ddo95 run closure1 546e61d5 API - decaf.frontend.DecafSemantic" />
+          <meta name="keywords" content="DecafSemantic decaf build 7evthpmtifspjfc010k50ddo95 run closure1 546e61d5 API decaf.frontend.DecafSemantic" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'decaf.frontend.DecafSemantic$';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../lib/object_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="decaf">decaf</a>.<a href="package.html" class="extype" name="decaf.frontend">frontend</a></p>
+        <h1>DecafSemantic</h1> <span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <span class="name">DecafSemantic</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Contains the Semantic Analysis stuff</p><h4>Design Decisions</h4><p>While we have attempted to follow the Decaf specification faithfully, there are some cases
+in which our implementation's output differs from the sample output provided by
+Dr. Jumadinova, due to differing interpretations of the specification and/or cases in which
+we thought the specified behaviour was not conducive to effective programming in Decaf.</p><p> + Since the Decaf specification states that &quot;Decaf does not support encapsulation&quot;, we chose
+   not to implement the <code>*** Crayon field 'color' only accessible within class scope</code> error
+   that is present in some of the sample output for this assignment. We instead chose to make
+   all names globally visible, rather than making all variables private and all methods public,
+   as we determined that the latter option sounds dangerously close to encapsulation.
+ + Although the Decaf spec does not support type lifting, we chose to implement type lifting
+   from Integer to Double. This is because Decaf has no casting mechanism, and therefore, there
+   is no way to ever perform operations on mixed numeric operands. Therefore, we do not generate
+   the <code>*** Incompatible operands: double / int</code> that is present in some sample output.
+ + The samples provided call for the type of a logical expression to always be logical, even
+   when one or both operands is a TypeError. We've decided that this is wrong and inconsistent
+   with the way TypeErrors are propagated elsewhere in Decaf. Therefore, <code>LogicalExpr.typeof()</code>
+   forwards TypeError just as every other <code>Expr</code> does.
+ + The samples call for a &quot;*** No declaration for identifier&quot; error to be generated when a program
+   attempts to treat a method as though it were a field that can be accessed. We think that
+   the semantics of this error message isn't very helpful, since the identifier IS declared,
+   it just isn't bound to something that can be accessed. Therefore, we make an error message
+   saying &quot;*** Attempt to field access a method&quot; instead.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="decaf.frontend.DecafSemantic"><span>DecafSemantic</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@##():Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#analyze" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="analyze(top:decaf.AST.Program):(decaf.frontend.ScopeNode,List[Exception])"></a>
+      <a id="analyze(Program):(ScopeNode,List[Exception])"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">analyze</span><span class="params">(<span name="top">top: <a href="../AST/Program.html" class="extype" name="decaf.AST.Program">Program</a></span>)</span><span class="result">: (<a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>])</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@analyze(top:decaf.AST.Program):(decaf.frontend.ScopeNode,List[Exception])" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Performs the complete semantic analysis</p><div class="fullcomment"><div class="comment cmt"><p>Performs the complete semantic analysis</p><p>This works by <span class="extype" name="decorateScope()">decorating</span> the tree with <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a>s
+and then calling the three semantic analysis methods in order:</p><ol class="decimal"><li><span class="extype" name="pullDeclsToScope()">pullDeclsToScope()</span>
+ 2. <span class="extype" name="checkTypes()">checkTypes()</span>
+ 3. <span class="extype" name="checkClasses()">checkClasses()</span></li></ol><p>All errors generated during these three analysis passes are consed together
+into a List[Exception] that is then returned by this method at the end of
+analysis, along with the top-level <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a> of the tree. If the list
+is empty, then the program should be semantically valid.
+</p></div><dl class="paramcmts block"><dt class="param">top</dt><dd class="cmt"><p>The program to analyze</p></dd><dt>returns</dt><dd class="cmt"><p>The ScopeTree generated by the analysis
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#annotateClass" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="annotateClass(c:decaf.AST.ClassDecl):List[Exception]"></a>
+      <a id="annotateClass(ClassDecl):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">annotateClass</span><span class="params">(<span name="c">c: <a href="../AST/ClassDecl.html" class="extype" name="decaf.AST.ClassDecl">ClassDecl</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@annotateClass(c:decaf.AST.ClassDecl):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="decaf.frontend.DecafSemantic#annotateFunction" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="annotateFunction(fn:decaf.AST.FnDecl):List[Exception]"></a>
+      <a id="annotateFunction(FnDecl):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">annotateFunction</span><span class="params">(<span name="fn">fn: <a href="../AST/FnDecl.html" class="extype" name="decaf.AST.FnDecl">FnDecl</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@annotateFunction(fn:decaf.AST.FnDecl):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="decaf.frontend.DecafSemantic#annotateInterface" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="annotateInterface(i:decaf.AST.InterfaceDecl):List[Exception]"></a>
+      <a id="annotateInterface(InterfaceDecl):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">annotateInterface</span><span class="params">(<span name="i">i: <a href="../AST/InterfaceDecl.html" class="extype" name="decaf.AST.InterfaceDecl">InterfaceDecl</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@annotateInterface(i:decaf.AST.InterfaceDecl):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="decaf.frontend.DecafSemantic#annotateStmtBlock" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="annotateStmtBlock(b:decaf.AST.StmtBlock):List[Exception]"></a>
+      <a id="annotateStmtBlock(StmtBlock):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">annotateStmtBlock</span><span class="params">(<span name="b">b: <a href="../AST/StmtBlock.html" class="extype" name="decaf.AST.StmtBlock">StmtBlock</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@annotateStmtBlock(b:decaf.AST.StmtBlock):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="decaf.frontend.DecafSemantic#annotateVariable" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="annotateVariable(v:decaf.AST.VarDecl):List[Exception]"></a>
+      <a id="annotateVariable(VarDecl):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">annotateVariable</span><span class="params">(<span name="v">v: <a href="../AST/VarDecl.html" class="extype" name="decaf.AST.VarDecl">VarDecl</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@annotateVariable(v:decaf.AST.VarDecl):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#checkClasses" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="checkClasses(ast:decaf.AST.ASTNode):List[Exception]"></a>
+      <a id="checkClasses(ASTNode):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">checkClasses</span><span class="params">(<span name="ast">ast: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@checkClasses(ast:decaf.AST.ASTNode):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Performs the third walk across the AST, doing all semantic checks that require a complete symbol table.</p><div class="fullcomment"><div class="comment cmt"><p>Performs the third walk across the AST, doing all semantic checks that require a complete symbol table.
+Currently, this is limited to class integrity checking (<span class="extype" name="checkInheritance()">checkInheritance()</span>).</p></div><dl class="paramcmts block"><dt class="param">ast</dt><dd class="cmt"><p>the ASTNode over which to walk</p></dd><dt>returns</dt><dd class="cmt"><p>a list of errors that were generated during the walk
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#checkInheritance" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="checkInheritance(c:decaf.AST.ClassDecl):List[Exception]"></a>
+      <a id="checkInheritance(ClassDecl):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">checkInheritance</span><span class="params">(<span name="c">c: <a href="../AST/ClassDecl.html" class="extype" name="decaf.AST.ClassDecl">ClassDecl</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@checkInheritance(c:decaf.AST.ClassDecl):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Checks a ClassDecl for correct inheritance.</p><div class="fullcomment"><div class="comment cmt"><p>Checks a ClassDecl for correct inheritance.</p></div><dl class="paramcmts block"><dt class="param">c</dt><dd class="cmt"><p>the class declaration to check</p></dd><dt>returns</dt><dd class="cmt"><p>a list of <span class="extype" name="Exception">Exception</span>s generated during the check
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#checkTypeExists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="checkTypeExists(node:decaf.frontend.ScopeNode,pos:scala.util.parsing.input.Position,value:decaf.AST.Type,kind:String):List[Exception]"></a>
+      <a id="checkTypeExists(ScopeNode,Position,Type,String):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">checkTypeExists</span><span class="params">(<span name="node">node: <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a></span>, <span name="pos">pos: <span class="extype" name="scala.util.parsing.input.Position">Position</span></span>, <span name="value">value: <a href="../AST/Type.html" class="extype" name="decaf.AST.Type">Type</a></span>, <span name="kind">kind: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;type&quot;</span></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@checkTypeExists(node:decaf.frontend.ScopeNode,pos:scala.util.parsing.input.Position,value:decaf.AST.Type,kind:String):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Checks that a given type is declared</p><div class="fullcomment"><div class="comment cmt"><p>Checks that a given type is declared</p></div><dl class="paramcmts block"><dt class="param">node</dt><dd class="cmt"><p>the <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a> against which to check</p></dd><dt class="param">pos</dt><dd class="cmt"><p>the position (for error reporting)</p></dd><dt class="param">value</dt><dd class="cmt"><p>the <span class="extype" name="Type">Type</span> to check</p></dd><dt>returns</dt><dd class="cmt"><p>a <span class="extype" name="List">List</span> of <span class="extype" name="Exception">Exception</span>s for each error generated during the check
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#checkTypes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="checkTypes(ast:decaf.AST.ASTNode):List[Exception]"></a>
+      <a id="checkTypes(ASTNode):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">checkTypes</span><span class="params">(<span name="ast">ast: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@checkTypes(ast:decaf.AST.ASTNode):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Second walk over the AST.</p><div class="fullcomment"><div class="comment cmt"><p>Second walk over the AST. Most typechecking happens here.
+//TODO: explain this better</p><p>&quot;Because...types are supposed to make it safe...the program, and when it
+makes Object then it isn't safe.&quot;
+   ~ Gary Bernhardt, &quot;Useing You're Type's Good&quot;
+</p></div><dl class="paramcmts block"><dt class="param">ast</dt><dd class="cmt"><p>the <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">decaf.AST.ASTNode</a> over which to walk</p></dd><dt>returns</dt><dd class="cmt"><p>
+</p></dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@clone():Object" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#compileToSemantic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="compileToSemantic(progn:String):decaf.frontend.ScopeNode"></a>
+      <a id="compileToSemantic(String):ScopeNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">compileToSemantic</span><span class="params">(<span name="progn">progn: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@compileToSemantic(progn:String):decaf.frontend.ScopeNode" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Helper method for testing</p><div class="fullcomment"><div class="comment cmt"><p>Helper method for testing</p></div><dl class="paramcmts block"><dt class="param">progn</dt><dd class="cmt"><p>The program to compile</p></dd><dt>returns</dt><dd class="cmt"><p>The result of compiling the program, printing any errors that happened
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#decorateScope" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="decorateScope(tree:decaf.AST.ASTNode,scope:decaf.frontend.ScopeNode):Unit"></a>
+      <a id="decorateScope(ASTNode,ScopeNode):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">decorateScope</span><span class="params">(<span name="tree">tree: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>, <span name="scope">scope: <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@decorateScope(tree:decaf.AST.ASTNode,scope:decaf.frontend.ScopeNode):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Walks an <span class="extype" name="ASTNode">abstract syntax tree</span> and decorates each statement in the tree
+that corresponds to a scope with its' own scope node.</p><div class="fullcomment"><div class="comment cmt"><p>Walks an <span class="extype" name="ASTNode">abstract syntax tree</span> and decorates each statement in the tree
+that corresponds to a scope with its' own scope node.</p><p>This method should be called on the tree before the actual semantic analysis methods
+(<span class="extype" name="pullDeclsToScope()">pullDeclsToScope()</span>, <span class="extype" name="checkTypes()">checkTypes()</span>, <span class="extype" name="checkClasses()">checkClasses()</span>); if the semantic analysis
+methods are called on an un-decorated tree, Everything Will Go Wrong.
+</p></div><dl class="paramcmts block"><dt class="param">tree</dt><dd class="cmt"><p>the <span class="extype" name="ASTNode">ASTNode</span> to walk</p></dd><dt class="param">scope</dt><dd class="cmt"><p>the <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a> corresponding to that <span class="extype" name="ASTNode">ASTNode</span>
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#descent" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="descent(node:decaf.AST.ASTNode):List[decaf.AST.ASTNode]"></a>
+      <a id="descent(ASTNode):List[ASTNode]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">descent</span><span class="params">(<span name="node">node: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@descent(node:decaf.AST.ASTNode):List[decaf.AST.ASTNode]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#findReturnType" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findReturnType(node:decaf.AST.ASTNode):String"></a>
+      <a id="findReturnType(ASTNode):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findReturnType</span><span class="params">(<span name="node">node: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@findReturnType(node:decaf.AST.ASTNode):String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Walks backwards up the AST from a given node until it finds
+a function declaration and returns the return type.</p><div class="fullcomment"><div class="comment cmt"><p>Walks backwards up the AST from a given node until it finds
+a function declaration and returns the return type.</p></div><dl class="paramcmts block"><dt class="param">node</dt><dd class="cmt"></dd><dt>returns</dt><dd class="cmt"><p>
+</p></dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#locateAnywhere" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="locateAnywhere(node:decaf.frontend.ScopeNode,className:String):Option[decaf.frontend.ScopeNode]"></a>
+      <a id="locateAnywhere(ScopeNode,String):Option[ScopeNode]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">locateAnywhere</span><span class="params">(<span name="node">node: <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a></span>, <span name="className">className: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@locateAnywhere(node:decaf.frontend.ScopeNode,className:String):Option[decaf.frontend.ScopeNode]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="decaf.frontend.DecafSemantic#main" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="main(args:Array[String]):Unit"></a>
+      <a id="main(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">main</span><span class="params">(<span name="args">args: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@main(args:Array[String]):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@notify():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#pullDeclsToScope" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="pullDeclsToScope(tree:decaf.AST.ASTNode):List[Exception]"></a>
+      <a id="pullDeclsToScope(ASTNode):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pullDeclsToScope</span><span class="params">(<span name="tree">tree: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@pullDeclsToScope(tree:decaf.AST.ASTNode):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Annotates all declarations in the specified scope in that scope's symbol table.</p><div class="fullcomment"><div class="comment cmt"><p>Annotates all declarations in the specified scope in that scope's symbol table.
+This essentially performs the first walk</p></div><dl class="paramcmts block"><dt class="param">tree</dt><dd class="cmt"><p>the node to walk</p></dd><dt>returns</dt><dd class="cmt"><p>a <span class="extype" name="List">List</span> of <span class="extype" name="Exception">Exception</span>s for each error generated during the check
+</p></dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#scopedInheritance" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="scopedInheritance(ast:decaf.AST.ASTNode):List[Exception]"></a>
+      <a id="scopedInheritance(ASTNode):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">scopedInheritance</span><span class="params">(<span name="ast">ast: <a href="../AST/ASTNode.html" class="extype" name="decaf.AST.ASTNode">ASTNode</a></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@scopedInheritance(ast:decaf.AST.ASTNode):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@toString():String" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="decaf.frontend.DecafSemantic#verifyClassChain" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="verifyClassChain(scope:decaf.frontend.ScopeNode,seen:List[String],c:String,p:scala.util.parsing.input.Position):List[Exception]"></a>
+      <a id="verifyClassChain(ScopeNode,List[String],String,Position):List[Exception]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">verifyClassChain</span><span class="params">(<span name="scope">scope: <a href="ScopeNode.html" class="extype" name="decaf.frontend.ScopeNode">ScopeNode</a></span>, <span name="seen">seen: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="c">c: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="p">p: <span class="extype" name="scala.util.parsing.input.Position">Position</span></span>)</span><span class="result">: <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Exception">Exception</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@verifyClassChain(scope:decaf.frontend.ScopeNode,seen:List[String],c:String,p:scala.util.parsing.input.Position):List[Exception]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Check that all inheritance declarations are not cyclic</p><div class="fullcomment"><div class="comment cmt"><p>Check that all inheritance declarations are not cyclic</p></div><dl class="paramcmts block"><dt class="param">scope</dt><dd class="cmt"><p>The scope at which to conduct checks</p></dd><dt class="param">seen</dt><dd class="cmt"><p>a list of all the names we've seen so far</p></dd><dt class="param">c</dt><dd class="cmt"><p>the class to check</p></dd><dt class="param">p</dt><dd class="cmt"><p>the position</p></dd><dt>returns</dt><dd class="cmt"><p>a <span class="extype" name="List">List</span> of <span class="extype" name="Exception">Exception</span>s for each error generated during the check
+</p></dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@wait():Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#decaf.frontend.DecafSemantic$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
