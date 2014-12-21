@@ -11,6 +11,7 @@ package backend
 \*                                        */
 
 import decaf.AST._
+import decaf.AST.annotations.MethodAnnotation
 import decaf.frontend.ScopeNode
 
 import scala.language.postfixOps
@@ -33,7 +34,8 @@ object JasminBackend extends Backend{
 
   private val rand = new util.Random
 
-  override def compile(program: Program, fileName: Option[String]): String = s"${makeHeader(fileName.getOrElse("Program"))}\n${emit(program)}"
+  override def compile(program: Program, fileName: Option[String]): String =
+    s"${makeHeader(fileName.getOrElse("Program"))}\n${emit(fileName.getOrElse("Program"), program)}"
   //todo: shouldn't actually work this way (should fork on each class def)
 
   /**
@@ -141,42 +143,43 @@ object JasminBackend extends Backend{
    * @param breakable An optional String the name of any loop that can be broken out of (defaults to None)
    * @return the Jasmin assembly code for the specified AST node
    */
-  private def emit(node: ASTNode,
+  private def emit(className: String,
+                   node: ASTNode,
                    localVars: mutable.Map[String, Int] = mutable.Map[String, Int](),
                    tabLevel: Int = 0,
                    breakable: Option[String] = None): String = node match {
     // To those who are about to read my code, I am terribly, terribly sorry.
     // We thank you for your sacrifice.
     //    ~ hawk
-    case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(decl))
+    case Program(decls, _) => decls.foldLeft("")((acc, decl) => acc + emit(className, decl))
     case VarDecl(n, t) => node.parent match {
-      case _: Program => s".field public $n ${emit(t)}\n"
+      case _: Program => s".field public $n ${emit(className, t)}\n"
       case _ =>
         var fnName = getFnName(node)
         localVars += (n.name -> getNextVar(localVars))
-        s".var ${localVars(n.name)} is ${n.name} ${emit(t)} from Begin$fnName to End$fnName\n"
+        s".var ${localVars(n.name)} is ${n.name} ${emit(className,t)} from Begin$fnName to End$fnName\n"
 
     } // TODO:
     case FnDecl(ASTIdentifier(_,name), rt, args, Some(code)) =>
       s".method public static $name(" +
         (
           if (name == "main") "[Ljava/lang/String;"
-          else {args.map(v => emit(v.t)).mkString}
+          else {args.map(v => emit(className,v.t)).mkString}
           ) +
-        s")${emit(rt,localVars,tabLevel)}\n"+
+        s")${emit(className,rt,localVars,tabLevel)}\n"+
       s"\n.limit locals ${code.decls.length + args.length + (if (name == "main") 1 else 0)}\n" +
       s".limit stack 5\n" + //TODO: dynamically figure out stack sizes
-      args.map(v=> emit(v,localVars)).mkString    +
+      args.map(v=> emit(className,v,localVars)).mkString    +
       s"Begin${node.state.get.boundName}:\n"      +
-      s"${emit(code, localVars, tabLevel + 1)}\n" +
-      s"End${node.state.get.boundName}:\n${if (name == "main") "return\n"}.end method\n"
+      s"${emit(className,code, localVars, tabLevel + 1)}\n" +
+      s"End${node.state.get.boundName}:\n${if (name == "main") "return\n" else ""}.end method\n"
     case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case StmtBlock(declarations, code, _) =>
       declarations
-        .map(emit(_, localVars, tabLevel, breakable))
+        .map(emit(className,_, localVars, tabLevel, breakable))
         .mkString("\n") +
       code
-        .map(emit(_, localVars, tabLevel, breakable))
+        .map(emit(className,_, localVars, tabLevel, breakable))
         .mkString("\n")
     case ReturnStmt(loc, None) =>
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
@@ -185,7 +188,7 @@ object JasminBackend extends Backend{
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
         ("\t" * tabLevel) + "return\n"
     case ReturnStmt(loc, Some(expr)) =>
-      emit(expr,localVars, tabLevel, breakable) +
+      emit(className,expr,localVars, tabLevel, breakable) +
         ("\t" * tabLevel) + (expr.typeof(getEnclosingScope(expr)) match {
           case _:DoubleType => "dreturn\n"
           case _:IntType | _:BoolType=> "ireturn\n"
@@ -194,10 +197,10 @@ object JasminBackend extends Backend{
       })
     case e: Expr => e match {
       case a: AssignExpr =>
-        emit(a.rhs,localVars,tabLevel,breakable) + emit(a.lhs,localVars,tabLevel,breakable)
+        emit(className,a.rhs,localVars,tabLevel,breakable) + emit(className,a.lhs,localVars,tabLevel,breakable)
       case ArithmeticExpr(_, left, op, right) =>
-        emit(left, localVars, tabLevel + 1, breakable)    +
-          emit(right, localVars, tabLevel + 1, breakable) +
+        emit(className,left, localVars, tabLevel + 1, breakable)    +
+          emit(className,right, localVars, tabLevel + 1, breakable) +
           ("\t" * (tabLevel + 1)) + (op match {
             case ASTOperator(_, "+") => e.typeof(getEnclosingScope(e)) match {
               case _: IntType => "iadd\n"
@@ -221,8 +224,8 @@ object JasminBackend extends Backend{
             }
           })
       case EqualityExpr(_, left, op, right) =>
-        emit(left, localVars, tabLevel + 1) +
-          emit(right, localVars, tabLevel + 1) +
+        emit(className,left, localVars, tabLevel + 1) +
+          emit(className,right, localVars, tabLevel + 1) +
           (op match {
             case ASTOperator(_, "==") =>
               e.typeof(getEnclosingScope(e)) match {
@@ -256,7 +259,7 @@ object JasminBackend extends Backend{
                     ("\t" * (tabLevel + 1)) + s"ldc\t0x1\n" +
                     ("\t" * tabLevel) + s"CmpNEDone$lab:\n"
                 case _: StringType | _: NamedType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE);
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_acmpne\tCmpNE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpNEDone$lab\n" +
@@ -267,13 +270,13 @@ object JasminBackend extends Backend{
               }
           })
       case RelationalExpr(_, left, op, right) =>
-        emit(left, localVars, tabLevel + 1) +
-          emit(right, localVars, tabLevel + 1) +
+        emit(className,left, localVars, tabLevel + 1) +
+          emit(className,right, localVars, tabLevel + 1) +
           (op match {
             case ASTOperator(_, ">=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE);
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmpge\tCmpGE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpGEDone$lab\n" +
@@ -285,7 +288,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, "<=") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE);
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmple\tCmpLE$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpLEDone$lab\n" +
@@ -297,7 +300,7 @@ object JasminBackend extends Backend{
             case ASTOperator(_, ">") =>
               e.typeof(getEnclosingScope(e)) match {
                 case _: IntType | _: BoolType =>
-                  val lab = rand.nextInt(Integer.MAX_VALUE);
+                  val lab = rand.nextInt(Integer.MAX_VALUE)
                   ("\t" * (tabLevel + 1)) + s"if_icmpgt\tCmpGT$lab\n" +
                     ("\t" * (tabLevel + 1)) + s"ldc\t0x0\n" +
                     ("\t" * (tabLevel + 1)) + s"goto\tCmpGTDone$lab\n" +
@@ -332,8 +335,8 @@ object JasminBackend extends Backend{
         case _ => ??? //todo: implement postfix incrdecr on non-local fields
       }
       case LogicalExpr(_, Some(left), op, right) =>
-        emit(left, localVars, tabLevel + 1) +
-          emit(right, localVars, tabLevel + 1) + (op match {
+        emit(className,left, localVars, tabLevel + 1) +
+          emit(className,right, localVars, tabLevel + 1) + (op match {
             // this works because we're assuming logical exprs
             // can only happen when there are two bools on the stack
             // ...I hope
@@ -342,7 +345,7 @@ object JasminBackend extends Backend{
         })
       case LogicalExpr(_, None, op, right) =>
         // AFAIK, unary-not is the only unary logical expr
-        emit(right, localVars, tabLevel + 1)    +
+        emit(className,right, localVars, tabLevel + 1)    +
           ("\t" * (tabLevel + 1)) + "ldc 0x1\n" +
           ("\t" * (tabLevel + 1)) + "ixor\n"
 
@@ -366,24 +369,38 @@ object JasminBackend extends Backend{
           case None => // it's a field in the class (NYI)
             val className = e.state.get.table.get("this").get.getName
             ("\t" * tabLevel) + (
-              if (inAssignExpr(e))  s"putfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
-              else                  s"getfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+              if (inAssignExpr(e))  s"putfield\t$className/$name ${emit(className,e typeof getEnclosingScope(e))}"
+              else                  s"getfield\t$className/$name ${emit(className,e typeof getEnclosingScope(e))}"
               ) + "\n"
         }
       case FieldAccess(_, Some(otherClass), ASTIdentifier(_, name)) =>
         // IDK if this is right
-        val className = emit(otherClass)
+        val owner = emit(className,otherClass)
         ("\t" * tabLevel) + (
-          if (inAssignExpr(e))  s"putfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
-          else                  s"getfield\t$className/$name ${emit(e typeof getEnclosingScope(e))}"
+          if (inAssignExpr(e))  s"putfield\t$owner/$name ${emit(className,e typeof getEnclosingScope(e))}"
+          else                  s"getfield\t$owner/$name ${emit(className,e typeof getEnclosingScope(e))}"
           ) + "\n"
+
+      case Call(loc, None, ASTIdentifier(_,name), exprs) =>
+        ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
+          exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
+          ("\t" * tabLevel) + (getEnclosingScope(node).table.get(name) match {
+            case Some(MethodAnnotation(mname,rt,formals,_)) =>
+              s"invokestatic $className/$mname"                   +
+                s"(${formals.map(emit(className, _)).mkString})"  +
+                s"${emit(className,rt)}"
+            case Some(_) => throw new Exception(s"Name $name was not a method")
+            case None => throw new Exception(s"Could not find method annotation for $name")
+          }) + "\n"
+
+
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
         val label = rand.nextInt(Integer.MAX_VALUE)
         ("\t" * tabLevel) + s"LoopBegin$label:\n"                     +
-          emit(body, localVars, tabLevel + 1, Some(label.toString))   +
-          emit(test, localVars, tabLevel + 1, Some(label.toString))   +
+          emit(className,body, localVars, tabLevel + 1, Some(label.toString))   +
+          emit(className,test, localVars, tabLevel + 1, Some(label.toString))   +
           ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
@@ -391,18 +408,18 @@ object JasminBackend extends Backend{
         val label = rand.nextInt(Integer.MAX_VALUE)
         (init match {
           case Some(_: EmptyExpr) => ""
-          case Some(expr: Expr) => emit(expr,localVars,tabLevel+1)
+          case Some(expr: Expr) => emit(className,expr,localVars,tabLevel+1)
           case None => ""
         })                                                            +
           ("\t" * tabLevel) + s"LoopBegin$label:\n"                   +
-          emit(body,localVars,tabLevel+1,Some(label.toString))        +
+          emit(className,body,localVars,tabLevel+1,Some(label.toString))        +
           (step match {
             case Some(_: EmptyExpr) => ""
             case Some(expr: Expr) =>
-              emit(expr,localVars,tabLevel+1, breakable)
+              emit(className,expr,localVars,tabLevel+1, breakable)
             case None => ""
           })                                                          +
-          emit(test,localVars,tabLevel+1,breakable)                   +
+          emit(className,test,localVars,tabLevel+1,breakable)                   +
           ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                    +
           ("\t" * (tabLevel + 1)) + s"if_icmpeq\tLoopBegin$label\n" +
           ("\t" * tabLevel) + s"End$label:\n"
@@ -411,11 +428,11 @@ object JasminBackend extends Backend{
     case IfStmt(test,testBody,None) =>
       val label = rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
-        emit(test,localVars,tabLevel+1,breakable)               +
+        emit(className,test,localVars,tabLevel+1,breakable)               +
         ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                +
         ("\t" * (tabLevel + 1)) + s"if_icmpne\tIfNot$label\n" +
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
-        emit(testBody,localVars,tabLevel + 1, breakable)        +
+        emit(className,testBody,localVars,tabLevel + 1, breakable)        +
         ("\t" * tabLevel) + s"IfNot$label:\n"
 
     case IfStmt(test,testBody,Some(elseBody)) =>
@@ -424,29 +441,29 @@ object JasminBackend extends Backend{
       // and a couple of jumps in the if-without-else case.
       val label= rand.nextInt(Integer.MAX_VALUE);
       ("\t" * tabLevel) + s".line ${test.pos.line}\n"           +
-        emit(test,localVars,tabLevel+1,breakable)               +
+        emit(className,test,localVars,tabLevel+1,breakable)               +
         ("\t" * (tabLevel + 1)) + "ldc\t0x1\n"                +
         ("\t" * (tabLevel + 1)) + s"if_icmpeq\tIf$label\n"    +
         ("\t" * (tabLevel + 1)) + s"goto\tIfElse$label\n"     +
         ("\t" * tabLevel) + s"If$label:\n"                      +
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
-        emit(testBody,localVars,tabLevel + 1, breakable)        +
+        emit(className,testBody,localVars,tabLevel + 1, breakable)        +
         ("\t" * (tabLevel + 1)) + s"goto\tIfDone$label\n"     +
         ("\t" * tabLevel) + s"IfElse$label:\n"                  +
         ("\t" * tabLevel) + s".line ${elseBody.pos.line}\n"     +
-        emit(elseBody,localVars,tabLevel + 1, breakable)        +
+        emit(className,elseBody,localVars,tabLevel + 1, breakable)        +
         ("\t" * tabLevel) + s"IfDone$label:\n"
 
     case s: Stmt => ("\t" * tabLevel) + s".line ${s.pos.line}\n" + (s match {
       case PrintStmt(exprs, _) => /*exprs match {
         case e :: Nil => ("\t" * (tabLevel + 1)) + "getstatic\tjava/lang/System/out Ljava/io/PrintStream;\n" +
-          emit(e, localVars, tabLevel) +
-          ("\t" * (tabLevel + 1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
+          emit(className,e, localVars, tabLevel) +
+          ("\t" * (tabLevel + 1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(className,e typeof getEnclosingScope(e) )})V\n"
         case _ =>*/
           exprs.map(e =>
             ("\t" * (tabLevel+1)) + "getstatic\tjava/lang/System/out Ljava/io/PrintStream;\n" +
-            emit(e, localVars, tabLevel+1, breakable) +
-              ("\t" * (tabLevel+1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(e typeof getEnclosingScope(e) )})V\n"
+            emit(className,e, localVars, tabLevel+1, breakable) +
+              ("\t" * (tabLevel+1)) + s"invokevirtual\tjava/io/PrintStream/print(${emit(className,e typeof getEnclosingScope(e) )})V\n"
           ).mkString + "\n"
       //}
       case BreakStmt(_) => breakable match {
@@ -461,7 +478,7 @@ object JasminBackend extends Backend{
       case _: VoidType => "V"
       case _: BoolType => "Z"
       case _: StringType => "Ljava/lang/String;"
-      case ArrayType(_, elemType) => s"[${emit(elemType)}"
+      case ArrayType(_, elemType) => s"[${emit(className,elemType)}"
       case _: NamedType => ??? //todo: implement
   }
     case _ => println(s"ignored $node"); ""
