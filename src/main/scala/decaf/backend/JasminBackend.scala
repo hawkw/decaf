@@ -406,15 +406,16 @@ object JasminBackend extends Backend{
           case Some(varNum) => // it's a local var to the function
             ("\t" * tabLevel) + (e.typeof(getEnclosingScope(e)) match {
               case _: IntType | _: BoolType =>
-                if (inAssignExpr (e))   "istore"
-                else                    "iload"
+                if (inAssignExpr (e))   s"istore\t$varNum"
+                else                    s"iload\t$varNum\n"
               case _: DoubleType =>
-                if (inAssignExpr (e))   "dstore"
-                else                    "dload"
+                if (inAssignExpr (e))   s"dstore\t$varNum\n"
+                else                    s"dload\t$varNum\n"
               case _: StringType | _: NamedType =>
-                if (inAssignExpr (e))   "astore"
-                else                    "aload"
-            }) + s"\t$varNum\n"
+                if (inAssignExpr (e))   s"astore\t$varNum\n"
+                else                    s"aload\t$varNum\n"
+              case _: ArrayType => {} // skip
+            })
           case None => // it's a field in the class (NYI)
             val className = e.state.get.table.get("this").get.getName
             ("\t" * tabLevel) + (
@@ -483,16 +484,29 @@ object JasminBackend extends Backend{
           case _ =>
             ("\t" * tabLevel) + s".line ${loc.line}\n"          +
               emit(className,size,localVars,tabLevel,breakable) +
-              ("\t" * tabLevel) + "newarray\t" + (typ match {
-              case _: IntType | _: BoolType => "int"
-              case _: DoubleType => "double"
-              case _: StringType => "Ljava/lang/String;"
-              case _: NamedType => emit(className,typ)
+              ("\t" * tabLevel) + (typ match {
+              case _: IntType | _: BoolType => "newarray\tint"
+              case _: DoubleType => "newarray\tdouble"
+              case _: StringType => "anewarray\tLjava/lang/String;"
+              case _: NamedType => "anewarray\t" + emit(className,typ)
             }) + "\n" + ("\t" * tabLevel) + s"astore\t$num\n"
-
-
-
         }
+      case ArrayAccess(_,base,sub) =>
+        emit(className,sub,localVars,tabLevel) +
+          (e.typeof(getEnclosingScope(e)) match {
+          case _: IntType | _: BoolType =>
+            if (inAssignExpr(e))  "iastore"
+            else                  "iaload"
+          case _: DoubleType =>
+            if (inAssignExpr (e))   "dastore"
+            else                    "dload"
+          case _: StringType | _: NamedType =>
+            if (inAssignExpr (e))   "aastore"
+            else                    "aaload"
+        }) + "\t" + (base match {
+        case FieldAccess(_, None, ASTIdentifier(_, name)) => localVars(name)
+        case _ => ??? //todo: implement?
+      }) + "\n"
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
