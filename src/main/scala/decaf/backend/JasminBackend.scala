@@ -475,29 +475,35 @@ object JasminBackend extends Backend{
           case None => throw new Exception(s"Could not find method annotation for $name")
         })
 
-      case NewArrayExpr(loc, size, typ) =>
-        val name = node
+      case NewArrayExpr(loc, size, typ) => node.parent.asInstanceOf[AssignExpr].lhs match {
+          case FieldAccess(_,None,ASTIdentifier(_,name)) =>
+            val num: Int = localVars(name)      // we know this exists because the assign expr emits the lhs first
+            typ match {
+              case a: ArrayType =>
+                ("\t" * tabLevel) + s".line ${loc.line}\n" +
+                  ("\t" * tabLevel) + "multianewarray" + getMultiArray(className, a) + "\n"
+              case _ =>
+                ("\t" * tabLevel) + s".line ${loc.line}\n"          +
+                  emit(className,size,localVars,tabLevel,breakable) +
+                  ("\t" * tabLevel) + (typ match {
+                  case _: IntType | _: BoolType => "newarray\tint"
+                  case _: DoubleType => "newarray\tdouble"
+                  case _: StringType => "anewarray\tLjava/lang/String;"
+                  case _: NamedType => "anewarray\t" + emit(className,typ)
+                }) + "\n" + ("\t" * tabLevel) + s"astore\t$num\n"
+            }
+          case ArrayAccess(_,base,sub) => //todo: make this work
+
+      }
+        /*node
                     .parent                    // we know that new arrays will
                     .asInstanceOf[AssignExpr]  // only happen in assignment expressions
                     .lhs                       // ...I hope
                     .asInstanceOf[FieldAccess]
                     .field
                     .name
-        val num: Int = localVars(name)      // we know this exists because the assign expr emits the lhs first
-        typ match {
-          case a: ArrayType =>
-            ("\t" * tabLevel) + s".line ${loc.line}\n" +
-              ("\t" * tabLevel) + "multianewarray" + getMultiArray(className, a) + "\n"
-          case _ =>
-            ("\t" * tabLevel) + s".line ${loc.line}\n"          +
-              emit(className,size,localVars,tabLevel,breakable) +
-              ("\t" * tabLevel) + (typ match {
-              case _: IntType | _: BoolType => "newarray\tint"
-              case _: DoubleType => "newarray\tdouble"
-              case _: StringType => "anewarray\tLjava/lang/String;"
-              case _: NamedType => "anewarray\t" + emit(className,typ)
-            }) + "\n" + ("\t" * tabLevel) + s"astore\t$num\n"
-        }
+                    */
+
       case ArrayAccess(_,base,sub) =>
         emit(className,sub,localVars,tabLevel) +
           (e.typeof(getEnclosingScope(e)) match {
