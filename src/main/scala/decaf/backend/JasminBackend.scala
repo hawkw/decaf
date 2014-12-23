@@ -177,6 +177,11 @@ object JasminBackend extends Backend{
     case it => it.max + 1
   }
 
+  @tailrec private def getMultiArray(className: String, node: ArrayType, previous: Int = 0): String = node.elemType match {
+    case an: ArrayType => getMultiArray(className, an, previous+1)
+    case a: Type => ("[" * previous) + emit(className, a)
+  }
+
   /**
    * Recursively emit Jasmin assembly code for a [[AST.ASTNode Decaf AST node]].
    *
@@ -461,11 +466,11 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
           exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
           ("\t" * tabLevel) + (getEnclosingScope(node).table.get(name) match {
-          case Some(MethodAnnotation(mname,rt,formals,_)) =>
+          case Some(MethodAnnotation(mname,rt,formals,_)) =>(
             // todo: determine whether static/virtual/nonvirtual ...somehow`
             s"invokestatic $base/$mname"                        +
               s"(${formals.map(emit(className, _)).mkString})"  +
-              s"${emit(className,rt)}\n"
+              s"${emit(className,rt)}\n")
           case Some(_) => throw new Exception(s"Name $name was not a method")
           case None => throw new Exception(s"Could not find method annotation for $name")
         })
@@ -480,7 +485,9 @@ object JasminBackend extends Backend{
                     .name
         val num: Int = localVars(name)      // we know this exists because the assign expr emits the lhs first
         typ match {
-          case ArrayType(_, elemTyp) => ??? //todo: implement multidimensional arrays
+          case a: ArrayType =>
+            ("\t" * tabLevel) + s".line ${loc.line}\n" +
+              ("\t" * tabLevel) + "multianewarray" + getMultiArray(className, a) + "\n"
           case _ =>
             ("\t" * tabLevel) + s".line ${loc.line}\n"          +
               emit(className,size,localVars,tabLevel,breakable) +
