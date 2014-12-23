@@ -1,7 +1,7 @@
 decaf
 =====
 
-[![Build Status](https://travis-ci.org/hawkw/decaf.svg)](https://travis-ci.org/hawkw/decaf)
+[![Build Status](https://travis-ci.org/hawkw/decaf.svg)](https://travis-ci.org/hawkw/decaf) [![Latest ScalaDoc](https://img.shields.io/badge/scaladoc-latest-brightgreen.svg?style=flat)](https://hawkw.github.io/decaf/scaladoc/index.html) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 Decaf is an alleged programming language. It's kinda like Java but a lot less so.
 
@@ -43,7 +43,7 @@ If you'd like to actually write programs in Decaf, the file [`decaf.pdf`](decaf.
 
 Additionally, the [`src/test/resources`](src/test/resources) contains a number of sample Decaf programs which are used by our test suite for various phases of the compiler. These could be very useful to get an understanding of Decaf's syntax. Of particular interest are the [samples](src/test/resources/lab3-samples) used by the parser test suite, which contain whole working Decaf programs.
 
-The Decaf compiler's code generation component is currently a work in progress, and a number of language features described in the specification are not yet implemented. Currently, object-oriented features such as class and interface definitions are not yet implemented, and function calls are not completely implemented.
+The Decaf compiler's code generation component is currently a work in progress, and a number of language features described in the specification are not yet implemented. Currently, object-oriented features such as class and interface definitions are not yet implemented.
 
 ##### Differences from Decaf Specification
 
