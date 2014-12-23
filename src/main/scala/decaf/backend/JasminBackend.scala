@@ -468,6 +468,31 @@ object JasminBackend extends Backend{
           case Some(_) => throw new Exception(s"Name $name was not a method")
           case None => throw new Exception(s"Could not find method annotation for $name")
         })
+
+      case NewArrayExpr(loc, size, typ) =>
+        val name = node
+                    .parent                    // we know that new arrays will
+                    .asInstanceOf[AssignExpr]  // only happen in assignment expressions
+                    .lhs                       // ...I hope
+                    .asInstanceOf[FieldAccess]
+                    .field
+                    .name
+        val num: Int = localVars(name)      // we know this exists because the assign expr emits the lhs first
+        typ match {
+          case ArrayType(_, elemTyp) => ??? //todo: implement multidimensional arrays
+          case _ =>
+            ("\t" * tabLevel) + s".line ${loc.line}\n"          +
+              emit(className,size,localVars,tabLevel,breakable) +
+              ("\t" * tabLevel) + "newarray\t" + (typ match {
+              case _: IntType | _: BoolType => "int"
+              case _: DoubleType => "double"
+              case _: StringType => "Ljava/lang/String;"
+              case _: NamedType => emit(className,typ)
+            }) + "\n" + ("\t" * tabLevel) + s"astore\t$num\n"
+
+
+
+        }
      }
     case l: LoopStmt => l match {
       case WhileStmt(test, body) =>
