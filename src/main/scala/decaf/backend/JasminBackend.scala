@@ -21,11 +21,16 @@ import scala.collection.mutable
 /**
  * Backend for generating Java bytecode using the Jasmin assembler.
  *
- * Thisbackend generates Java bytecode using the [[http://jasmin.sourceforge.net Jasmin]] assembly language.
+ * This backend generates Java bytecode using the [[http://jasmin.sourceforge.net Jasmin]] assembly language.
  * Invoking the Decaf compiler (`dcc`) on a Decaf source code file will produce Jasmin assembly files with
  * the file extension `.j`. In order to produce executable `.class` files, the Jasmin assembler must be
  * invoked on those `.j` files. You can download an executable Jasmin jarfile
  * [[http://sourceforge.net/projects/jasmin/files/ here]].
+ *
+ * The Decaf `ReadLine()` and `ReadInteger()` functions are supported by attaching a static bytecode function
+ * to the top of each Decaf program's namespace. This is necessary due to the fact that console IO using the Java
+ * standard library is sufficiently complex and requires Java structures (like checked exceptions) which Decaf does
+ * not support. Trust me, this is the easiest way.
  *
  * @author Hawk Weisman <hawk@meteorcodelabs.com>
  * Created by hawk on 12/1/14.
