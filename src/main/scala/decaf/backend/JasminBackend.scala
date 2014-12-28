@@ -593,7 +593,14 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s"If$label:\n"                      +
         ("\t" * tabLevel) + s".line ${testBody.pos.line}\n"     +
         emit(className,testBody,localVars,tabLevel + 1, breakable)        +
-        ("\t" * (tabLevel + 1)) + s"goto\tIfDone$label\n"     +
+        (testBody match{
+          case StmtBlock(_,stmts,_) =>
+            if (!stmts.last.isInstanceOf[ReturnStmt])
+              ("\t" * (tabLevel + 1)) + s"goto\tIfDone$label\n"
+            else ""
+          case ReturnStmt(_,_) => ""
+          case _ => ("\t" * (tabLevel + 1)) + s"goto\tIfDone$label\n"
+        })    +
         ("\t" * tabLevel) + s"IfElse$label:\n"                  +
         ("\t" * tabLevel) + s".line ${elseBody.pos.line}\n"     +
         emit(className,elseBody,localVars,tabLevel + 1, breakable)        +
