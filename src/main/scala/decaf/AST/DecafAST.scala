@@ -306,7 +306,7 @@ import scala.util.parsing.input.{Position, Positional}
 
     op.parent = this
     right.parent = this
-    if (left.isDefined) left.get.parent = this
+    left.map(_.parent = this)
 
     def stringifyChildren(indentLevel: Int): String = {
       (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
@@ -396,6 +396,9 @@ import scala.util.parsing.input.{Position, Positional}
   }
 
   case class AssignExpr(l: Position, lhs: Expr, rhs: Expr) extends CompoundExpr(l, lhs, ASTOperator(l, "="), rhs) {
+    lhs.parent = this
+    rhs.parent = this
+
     override def stringifyChildren(indentLevel: Int): String = {
       right.stringify(indentLevel + 1) + op.stringify(indentLevel + 1) + (if (left.isDefined) { left.get.stringify(indentLevel + 1) }
       else {

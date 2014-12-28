@@ -156,7 +156,7 @@ object JasminBackend extends Backend{
    */
   private def inAssignExpr(node: ASTNode): Boolean =
     node.parent match {
-    case AssignExpr(_,lhs,_) => lhs == node
+    case AssignExpr(_,lhs,_) => (lhs == node)
     case _ => false
   }
 
@@ -233,7 +233,12 @@ object JasminBackend extends Backend{
         .map(emit(className,_, localVars, tabLevel, breakable))
         .mkString("\n") +
       code
-        .map(emit(className,_, localVars, tabLevel, breakable))
+        .map(s => {
+        // terrible hack to fix disappearing ast
+        s.parent = node
+        emit(className,s, localVars, tabLevel, breakable)
+        }
+        )
         .mkString("\n")
     case ReturnStmt(loc, None) =>
       ("\t" * tabLevel) + s".line ${loc.line}\n" +
@@ -249,30 +254,35 @@ object JasminBackend extends Backend{
           case _:ArrayType | _:NamedType | _:StringType =>"areturn\n"
 
       })
-    case e: Expr => e match {
-      case a: AssignExpr =>
-        emit(className,a.rhs,localVars,tabLevel,breakable) + emit(className,a.lhs,localVars,tabLevel,breakable)
+    case e: Expr => node match {
+      case AssignExpr(_,left,right) =>
+        // terrible hacky fix for the disappearing AST issue
+        left.parent = e
+        right.parent = e
+        emit(className,right,localVars,tabLevel,breakable)+
+          emit(className,left,localVars,tabLevel,breakable)
       case ArithmeticExpr(_, left, op, right) =>
+        // terrible hacky fix for the disappearing AST issue
         emit(className,left, localVars, tabLevel + 1, breakable)    +
           emit(className,right, localVars, tabLevel + 1, breakable) +
           ("\t" * (tabLevel + 1)) + (op match {
-            case ASTOperator(_, "+") => e.typeof(getEnclosingScope(e)) match {
+            case ASTOperator(_, "+") => e.typeof(getEnclosingScope(node)) match {
               case _: IntType => "iadd\n"
               case _: DoubleType => "dadd\n"
             }
-            case ASTOperator(_, "-") => e.typeof(getEnclosingScope(e)) match {
+            case ASTOperator(_, "-") => e.typeof(getEnclosingScope(node)) match {
               case _: IntType => "isub\n"
               case _: DoubleType => "dsub\n"
             }
-            case ASTOperator(_, "/") => e.typeof(getEnclosingScope(e)) match {
+            case ASTOperator(_, "/") => e.typeof(getEnclosingScope(node)) match {
               case _: IntType => "idiv\n"
               case _: DoubleType => "ddiv\n"
             }
-            case ASTOperator(_, "*") => e.typeof(getEnclosingScope(e)) match {
+            case ASTOperator(_, "*") => e.typeof(getEnclosingScope(node)) match {
               case _: IntType => "imul\n"
               case _: DoubleType => "dmul\n"
             }
-            case ASTOperator(_, "%") => e.typeof(getEnclosingScope(e)) match {
+            case ASTOperator(_, "%") => e.typeof(getEnclosingScope(node)) match {
               case _: IntType => "irem\n"
               case _: DoubleType => "drem\n"
             }
@@ -409,7 +419,7 @@ object JasminBackend extends Backend{
       case FieldAccess(_, None, ASTIdentifier(_,name)) =>
         localVars get name match {
           case Some(varNum) => // it's a local var to the function
-            ("\t" * tabLevel) + (e.typeof(getEnclosingScope(e)) match {
+            ("\t" * tabLevel) + (e.typeof(getEnclosingScope(node)) match {
               case _: IntType | _: BoolType =>
                 if (inAssignExpr (e))   s"istore\t$varNum"
                 else                    s"iload\t$varNum\n"
@@ -441,7 +451,10 @@ object JasminBackend extends Backend{
         ("\t" * tabLevel) + s"invokestatic\t$className/readLine()Ljava/lang/String;\n"
       case Call(loc, None, ASTIdentifier(_,name), exprs) =>
         ("\t" * tabLevel) + s".line ${loc.line}\n"                  +
-          exprs.map(emit(className,_,localVars,tabLevel,breakable)).mkString  +
+          exprs.map(ex => {
+            ex.parent = node //terrible hacky fix for disappearing AST
+            emit(className, ex, localVars, tabLevel, breakable)
+          }).mkString  +
           ("\t" * tabLevel) + (getEnclosingScope(node).table.get(name) match {
             case Some(MethodAnnotation(mname,rt,formals,_)) =>
               s"invokestatic $className/$mname"                   +
@@ -481,6 +494,7 @@ object JasminBackend extends Backend{
             typ match {
               case a: ArrayType =>
                 ("\t" * tabLevel) + s".line ${loc.line}\n" +
+                  emit(className,size,localVars,tabLevel,breakable) +
                   ("\t" * tabLevel) + "multianewarray" + getMultiArray(className, a) + "\n"
               case _ =>
                 ("\t" * tabLevel) + s".line ${loc.line}\n"          +
