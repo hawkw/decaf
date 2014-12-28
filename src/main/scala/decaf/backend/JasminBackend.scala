@@ -421,7 +421,7 @@ object JasminBackend extends Backend{
           case Some(varNum) => // it's a local var to the function
             ("\t" * tabLevel) + (e.typeof(getEnclosingScope(node)) match {
               case _: IntType | _: BoolType =>
-                if (inAssignExpr (e))   s"istore\t$varNum"
+                if (inAssignExpr (e))   s"istore\t$varNum\n"
                 else                    s"iload\t$varNum\n"
               case _: DoubleType =>
                 if (inAssignExpr (e))   s"dstore\t$varNum\n"
