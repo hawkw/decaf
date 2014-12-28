@@ -1,7 +1,7 @@
 decaf
 =====
 
-[![Build Status](https://travis-ci.org/hawkw/decaf.svg)](https://travis-ci.org/hawkw/decaf) [![Latest ScalaDoc](https://img.shields.io/badge/scaladoc-latest-brightgreen.svg?style=flat)](https://hawkw.github.io/decaf/scaladoc/index.html) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![Build Status](https://travis-ci.org/hawkw/decaf.svg)](https://travis-ci.org/hawkw/decaf) [![GitHub release](https://img.shields.io/github/release/hawkw/decaf.svg?style=flat)](https://github.com/hawkw/decaf/releases) [![Latest ScalaDoc](https://img.shields.io/badge/scaladoc-latest-brightgreen.svg?style=flat)](https://hawkw.github.io/decaf/scaladoc/index.html) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 Decaf is an alleged programming language. It's kinda like Java but a lot less so.
 
