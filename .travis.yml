@@ -1,6 +1,6 @@
 sudo: false
 language: java
-before_success: gradle dccJar
+before_deploy: gradle dccJar
 deploy:
   provider: releases
   api_key:
