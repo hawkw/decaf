@@ -231,7 +231,7 @@ object JasminBackend extends Backend{
       args.map(v=> emit(className,v,localVars)).mkString    +
       s"Begin${node.state.get.boundName}:\n"      +
       s"${emit(className,code, localVars, tabLevel + 1)}\n" +
-      s"End${node.state.get.boundName}:\n${if (name == "main") "return\n" else ""}.end method\n"
+      s"End${node.state.get.boundName}:\n${if (name == "main" || rt.isInstanceOf[VoidType]) "return\n" else ""}.end method\n"
     case FnDecl(name, rt, args, None) => ??? //NYI: interfaces aren't implemented
     case StmtBlock(declarations, code, _) =>
       declarations
