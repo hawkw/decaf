@@ -9,6 +9,8 @@ Decaf was implemented by Hawk Weisman (@hawkw) and Max Clive (@ArcticLight) for 
 
 This Scala implementation of the Decaf compiler (`dcc`) is based on the C++/Flex/Bison reference implementation provided by Professor Jumadinova.
 
+Decaf is open as in “source,” not as in “container.”
+
 ![An image describing how great Decaf is](http://4.bp.blogspot.com/_QonjXrwiEbY/SfYav8aEppI/AAAAAAAAJz8/qphPXYzKWEc/s400/decaf-coffee.jpg)
 
 Rave Reviews
